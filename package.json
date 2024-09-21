@@ -1,0 +1,18 @@
+{
+  "name": "litbindings",
+  "version": "1.0.0",
+  "description": "experimenting with lit bindings",
+  "type": "module",
+  "scripts": {
+    "fable": "dotnet fable ./sample/GettingStarted/GettingStarted.fsproj -s -o ./build",
+    "dev": "dotnet fable watch ./sample/GettingStarted/GettingStarted.fsproj -s -o ./build --run vite"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "lit": "^3.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.6"
+  }
+}
