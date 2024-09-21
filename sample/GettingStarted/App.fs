@@ -14,6 +14,7 @@ let start () =
     Lit.DefineCustomElement<SlottedStyling>("slotted-styling")
     Lit.DefineCustomElement<DynamicStyling>("dynamic-styling")
     Lit.DefineCustomElement<DynamicStyling2>("dynamic-styling2")
+    Lit.DefineCustomElement<ClockElement>("clock-element")
 
     let el = document.getElementById ("app")
 
@@ -33,6 +34,7 @@ let start () =
         </slotted-styling>
         <dynamic-styling></dynamic-styling>
         <dynamic-styling2></dynamic-styling2>
+        <clock-element tickRate=2000></clock-element>
 
     """
 

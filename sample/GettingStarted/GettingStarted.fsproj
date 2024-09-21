@@ -9,6 +9,7 @@
     <Compile Include="ReactiveProperties.fs" />
     <Compile Include="Styles.fs" />
     <Compile Include="Event.fs" />
+    <Compile Include="Controllers.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
