@@ -21,7 +21,7 @@ type CSSResult =
 type CSSResultOrNative = U2<CSSResult, CSSStyleSheet>
 
 [<Erase>]
-type CSSResultArray = CSSResultArray of U2<CSSResultOrNative, CSSResultArray>
+type CSSResultArray = CSSResultArray of U2<CSSResultOrNative, CSSResultArray>[]
 
 /// A single CSSResult, CSSStyleSheet, or an array or nested arrays of those.
 type CSSResultGroup = U2<CSSResultOrNative, CSSResultArray>
