@@ -36,6 +36,7 @@ type PropertyDeclaration<'Type>
         ?``type``: obj,
         ?converter: AttributeConverter
     ) =
+
     interface PropertyDeclaration
 
     /// <summary>
@@ -60,7 +61,7 @@ type PropertyDeclaration<'Type>
     /// Indicates the type of the property. This is used only as a hint for the
     /// `converter` to determine how to convert the attribute
     /// to/from a property.
-    /// use `jsConstructor` to specify a value.
+    /// use `jsConstructor` to specify a value. e.g `jsConstructor<Boolean>`.
     /// </summary>
     member val ``type``: obj option = jsNative with get
 

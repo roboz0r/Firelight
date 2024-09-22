@@ -3,10 +3,14 @@ module Lit.Directives
 
 open Fable.Core
 open Fable.Core.JsInterop
+open Browser.Types
 
 type ClassInfo = interface end
 type StyleInfo = interface end
 type DirectiveResult = interface end
+
+type Ref<'T when 'T :> Element> =
+    abstract value: 'T option
 
 [<Erase>]
 module ClassInfo =
@@ -20,8 +24,8 @@ module StyleInfo =
     /// On subsequent renders, any previously set style properties that are `None` are removed.
     let inline create (styles: #seq<(string * string option)>) : StyleInfo = !!(createObj !!styles)
 
-type KeyFn<'T> = delegate of item: 'T * index: int -> obj
-type ItemTemplate<'T> = delegate of item: 'T * index: int -> obj
+type KeyFn<'T, 'K when 'K: equality> = delegate of item: 'T * index: int -> 'K
+type ItemTemplate<'T> = delegate of item: 'T * index: int -> Renderable
 
 type Lit with
     /// <summary>
@@ -58,7 +62,7 @@ type Lit with
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#repeat"/>
     [<Import("repeat", "lit/directives/repeat.js")>]
-    static member inline repeat<'T>(items: seq<'T>, keyFn: KeyFn<'T>, template: ItemTemplate<'T>) : DirectiveResult =
+    static member inline repeat(items: seq<'T>, keyFn: KeyFn<'T, 'K>, template: ItemTemplate<'T>) : DirectiveResult =
         nativeOnly
 
     /// <summary>
@@ -82,4 +86,25 @@ type Lit with
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#ifdefined"/>
     [<Import("ifDefined", "lit/directives/if-defined.js")>]
-    static member inline ifDefined(value: obj option) : obj = nativeOnly
+    static member inline ifDefined<'T when 'T :> Renderable>(value: 'T option) : U2<'T, nothing> = nativeOnly
+
+    [<Import("ifDefined", "lit/directives/if-defined.js")>]
+    static member inline ifDefined(value: string option) : U2<Renderable, nothing> = nativeOnly
+
+    [<Import("ifDefined", "lit/directives/if-defined.js")>]
+    static member inline ifDefined(value: float option) : U2<Renderable, nothing> = nativeOnly
+
+    [<Import("ifDefined", "lit/directives/if-defined.js")>]
+    static member inline ifDefined(value: int option) : U2<Renderable, nothing> = nativeOnly
+
+    [<Import("ifDefined", "lit/directives/if-defined.js")>]
+    static member inline ifDefined(value: HTMLElement option) : U2<Renderable, nothing> = nativeOnly
+
+    [<Import("createRef", "lit/directives/ref.js")>]
+    static member inline createRef() : Ref<'T> = nativeOnly
+
+    [<Import("ref", "lit/directives/ref.js")>]
+    static member inline ref(_ref: Ref<'T>) : DirectiveResult = nativeOnly
+
+    [<Import("ref", "lit/directives/ref.js")>]
+    static member inline ref(callback: Element option -> unit) : DirectiveResult = nativeOnly

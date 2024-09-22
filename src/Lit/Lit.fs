@@ -6,6 +6,22 @@ open Fable.Core
 open Fable.Core.JsInterop
 open System.Collections.Generic
 
+/// <summary>
+/// A sentinel value that signals a ChildPart to fully clear its content.
+/// </summary>
+/// <seealso href="https://lit.dev/docs/api/templates/#nothing"/>
+type nothing =
+    inherit ChildPartRenderable
+    inherit symbol
+
+/// <summary>
+/// A sentinel value that signals a ChildPart to fully clear its content.
+/// </summary>
+/// <seealso href="https://lit.dev/docs/api/custom-directives/#noChange"/>
+type noChange =
+    inherit ChildPartRenderable
+    inherit symbol
+
 // LitElement should inherit HTMLElement but HTMLElement
 // is still implemented as interface in Fable.Browser
 [<Import("LitElement", "lit")>]
@@ -53,10 +69,11 @@ type LitElement() =
     /// <summary>
     /// Invoked on each update to perform rendering tasks. This method
     /// may return any value renderable by lit-html's `ChildPart` - typically
-    /// a `TemplateResult`. Setting properties inside this method will *not*
+    /// a `HTMLTemplateResult`. Setting properties inside this method will *not*
     /// trigger the element to update.
     /// </summary>
-    abstract member render: unit -> TemplateResult
+    /// <seealso href="https://lit.dev/docs/components/rendering/#renderable-values"/>
+    abstract member render: unit -> ChildPartRenderable
 
     member _.renderOptions: RenderOptions = nativeOnly
 
@@ -160,14 +177,14 @@ type Lit =
     /// </summary>
     /// <seealso href="https://lit.dev/docs/api/templates/#nothing"/>
     [<Import("nothing", "lit")>]
-    static member inline nothing: TemplateResult = nativeOnly
+    static member inline nothing: nothing = nativeOnly
 
     /// <summary>
     /// A sentinel value that signals a ChildPart to retain its content from the previous render.
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/custom-directives/#signaling-no-change"/>
     [<Import("noChange", "lit")>]
-    static member inline noChange: TemplateResult = nativeOnly
+    static member inline noChange: noChange = nativeOnly
 
     /// <summary>
     /// Renders a value, usually a lit-html TemplateResult, to the container.

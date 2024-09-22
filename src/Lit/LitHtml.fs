@@ -54,13 +54,26 @@ type RenderOptions
     /// <seealso href="https://lit.dev/docs/api/LitElement/#RenderOptions.isConnected"/>
     member val isConnected: bool option = nativeOnly with get, set
 
+/// <summary>
+/// Anything that Lit can render as the child of an HTML element
+/// </summary>
+/// <seealso href="https://lit.dev/docs/components/rendering/#renderable-values"/>
+[<AllowNullLiteral>]
+type Renderable = interface end
+
+[<AllowNullLiteral>]
+type ChildPartRenderable =
+    inherit Renderable
+
 /// The return type of the template tag functions.
 [<AllowNullLiteral>]
-type TemplateResult = interface end
+type TemplateResult =
+    inherit Renderable
 
 [<AllowNullLiteral>]
 type HTMLTemplateResult =
     inherit TemplateResult
+    inherit ChildPartRenderable
 
 [<AllowNullLiteral>]
 type SVGTemplateResult =
