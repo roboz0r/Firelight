@@ -14,7 +14,8 @@
     <Compile Include="LitDirectives.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Fable.Browser.Dom" Version="2.17.0" />
-    <PackageReference Include="Fable.Core" Version="4.3.0" />
+    <PackageReference Include="Fable.Browser.Dom" />
+    <PackageReference Include="Fable.Core" />
+    <PackageReference Include="FSharp.Core" />
   </ItemGroup>
 </Project>
