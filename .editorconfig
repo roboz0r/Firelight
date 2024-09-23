@@ -1,0 +1,16 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# https://fsprojects.github.io/fantomas/docs/end-users/Configuration.html#Settings-recommendations
+[*.{fs,fsx,fsi}]
+fsharp_bar_before_discriminated_union_declaration = true
+fsharp_multiline_block_brackets_on_same_column = true
+fsharp_multiline_bracket_style = aligned
+fsharp_single_argument_web_mode = true
+fsharp_multi_line_lambda_closing_newline = true
+fsharp_keep_max_number_of_blank_lines = 2
+
+[*.fs]
+fsharp_experimental_elmish = true

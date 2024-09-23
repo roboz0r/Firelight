@@ -14,11 +14,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{F2F85C
 		index.html = index.html
 		README.md = README.md
 		vite.config.js = vite.config.js
+		Directory.Packages.props = Directory.Packages.props
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{93B83DCC-4DD6-47B4-96B1-D81AC5FD06A7}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Lit", "src\Lit\Lit.fsproj", "{F3617E1B-3699-4B98-BA76-1D059AD4C9A3}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LitContext", "src\LitContext\LitContext.fsproj", "{F12CA419-4FB1-49E8-875A-2EDD675F228C}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Todo", "sample\Todo\Todo.fsproj", "{46B7AADA-131C-4B94-A60A-B8FAF05BB768}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,9 +43,19 @@ Global
 		{F3617E1B-3699-4B98-BA76-1D059AD4C9A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3617E1B-3699-4B98-BA76-1D059AD4C9A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3617E1B-3699-4B98-BA76-1D059AD4C9A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F12CA419-4FB1-49E8-875A-2EDD675F228C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F12CA419-4FB1-49E8-875A-2EDD675F228C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F12CA419-4FB1-49E8-875A-2EDD675F228C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F12CA419-4FB1-49E8-875A-2EDD675F228C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46B7AADA-131C-4B94-A60A-B8FAF05BB768}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46B7AADA-131C-4B94-A60A-B8FAF05BB768}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46B7AADA-131C-4B94-A60A-B8FAF05BB768}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46B7AADA-131C-4B94-A60A-B8FAF05BB768}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1BA13B51-5815-4D94-9436-92E0ED60A152} = {AFCBDFEB-9F94-406B-83AF-669BC7355774}
 		{F3617E1B-3699-4B98-BA76-1D059AD4C9A3} = {93B83DCC-4DD6-47B4-96B1-D81AC5FD06A7}
+		{F12CA419-4FB1-49E8-875A-2EDD675F228C} = {93B83DCC-4DD6-47B4-96B1-D81AC5FD06A7}
+		{46B7AADA-131C-4B94-A60A-B8FAF05BB768} = {AFCBDFEB-9F94-406B-83AF-669BC7355774}
 	EndGlobalSection
 EndGlobal

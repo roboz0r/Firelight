@@ -15,30 +15,35 @@ let start () =
     Lit.DefineCustomElement<DynamicStyling>("dynamic-styling")
     Lit.DefineCustomElement<DynamicStyling2>("dynamic-styling2")
     Lit.DefineCustomElement<ClockElement>("clock-element")
+    Lit.DefineCustomElement<MyContextElement>("my-context-element")
+    Lit.DefineCustomElement<MyContextApp>("my-context-app")
 
     let el = document.getElementById ("app")
+    if el <> null then
 
-    let content =
-        Lit.html
-            $"""
-        <simple-greeting></simple-greeting>
-        <simple-greeting name="Rob"></simple-greeting>
-        <my-page></my-page>
-        <my-reactive></my-reactive>
-        <custom-change-detection></custom-change-detection>
-        <class-styling></class-styling>
-        <class-styling class="blue"></class-styling>
-        <slotted-styling>
-            <p>Slotted content</p>
-            <span slot="hi">Slotted content with slot name</span>
-        </slotted-styling>
-        <dynamic-styling></dynamic-styling>
-        <dynamic-styling2></dynamic-styling2>
-        <clock-element tickRate=2000></clock-element>
+        let content =
+            Lit.html
+                $"""
+            <simple-greeting></simple-greeting>
+            <simple-greeting name="Rob"></simple-greeting>
+            <my-page></my-page>
+            <my-reactive></my-reactive>
+            <custom-change-detection></custom-change-detection>
+            <class-styling></class-styling>
+            <class-styling class="blue"></class-styling>
+            <slotted-styling>
+                <p>Slotted content</p>
+                <span slot="hi">Slotted content with slot name</span>
+            </slotted-styling>
+            <dynamic-styling></dynamic-styling>
+            <dynamic-styling2></dynamic-styling2>
+            <clock-element tickRate=2000></clock-element>
+            <my-context-app>
+                <my-context-element></my-context-element>
+            </my-context-app>
 
-    """
-
-    let rootPart = Lit.render (content, el)
-    ()
+        """
+        let rootPart = Lit.render (content, el)
+        ()
 
 do start ()

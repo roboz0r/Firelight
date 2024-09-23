@@ -398,4 +398,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Fable Build files
-build/
+**/build/
+**/dist/

@@ -10,9 +10,11 @@
     <Compile Include="Styles.fs" />
     <Compile Include="Event.fs" />
     <Compile Include="Controllers.fs" />
+    <Compile Include="Context.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Lit\Lit.fsproj" />
+    <ProjectReference Include="..\..\src\LitContext\LitContext.fsproj" />
   </ItemGroup>
 </Project>
