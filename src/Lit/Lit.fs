@@ -72,14 +72,30 @@ type LitElement() =
     /// a `HTMLTemplateResult`. Setting properties inside this method will *not*
     /// trigger the element to update.
     /// </summary>
+    /// <remarks>
+    /// <p>Updates? No. Property changes inside this method do not trigger an element update.</p>
+    /// <p>Call super? Not necessary.</p>
+    /// <p>Called on server? Yes.</p>
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/components/rendering/#renderable-values"/>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#render"/>
     abstract member render: unit -> ChildPartRenderable
 
     member _.renderOptions: RenderOptions = nativeOnly
 
-    // Updates
-    // https://lit.dev/docs/api/LitElement/#LitElement/updates
-    member _.update(_changedProperties: Dictionary<string, obj>) : unit = nativeOnly
+
+    /// <summary>
+    /// Called to update the component's DOM.
+    /// </summary>
+    /// <remarks>
+    /// <p>Updates? No. Property changes inside this method do not trigger an element update.</p>
+    /// <p>Call super? Yes. Without a super call, the element’s attributes and template will not update.</p>
+    /// <p>Called on server? No.</p>
+    /// </remarks>
+    /// <param name="changedProperties">Map with keys that are the names of changed properties and values that are the corresponding previous values.</param>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#update"/>
+    abstract member update: changedProperties: Dictionary<string, obj> -> unit
+    default _.update(changedProperties: Dictionary<string, obj>) : unit = nativeOnly
 
 type LitEventHandler<'TEvent when 'TEvent :> Event> = delegate of ev: 'TEvent -> unit
 
@@ -109,8 +125,6 @@ type LitEventListener<'TEvent when 'TEvent :> Event>
         member this.passive
             with get (): bool = nativeOnly
             and set (v: bool): unit = nativeOnly
-
-
 
 
 [<Erase>]

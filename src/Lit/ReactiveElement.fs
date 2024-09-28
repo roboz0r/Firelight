@@ -223,9 +223,26 @@ type ReactiveElement() =
     // https://lit.dev/docs/api/LitElement/#LitElement/updates
 
     member _.enableUpdating(_requestedUpdate: bool) : unit = nativeOnly
-    abstract member firstUpdated: _changedProperties: Dictionary<string, obj> -> unit
-    default _.firstUpdated(_changedProperties: Dictionary<string, obj>) : unit = nativeOnly
 
+    /// <summary>
+    /// Called after the component's DOM has been updated the first time, immediately before `updated()` is called.
+    /// </summary>
+    /// <remarks>
+    /// <p>Updates? Yes. Property changes inside this method schedule a new update cycle.</p>
+    /// <p>Call super? Not necessary.</p>
+    /// <p>Called on server? No.</p>
+    /// </remarks>
+    /// <param name="changedProperties">Map with keys that are the names of changed properties and values that are the corresponding previous values.</param>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#firstupdated"/>
+    abstract member firstUpdated: changedProperties: Dictionary<string, obj> -> unit
+    default _.firstUpdated(changedProperties: Dictionary<string, obj>) : unit = nativeOnly
+
+    /// <summary>
+    /// To await additional conditions before fulfilling the `updateComplete` promise, override the
+    /// `getUpdateComplete()` method. For example, it may be useful to await the update of a child
+    /// element. First await `super.getUpdateComplete()`, then any subsequent state.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#getUpdateComplete"/>
     abstract member getUpdateComplete: unit -> JS.Promise<bool>
     default _.getUpdateComplete() : JS.Promise<bool> = nativeOnly
 
@@ -238,13 +255,51 @@ type ReactiveElement() =
     abstract member scheduleUpdate: unit -> unit
     default _.scheduleUpdate() : unit = nativeOnly
 
-    member _.shouldUpdate(_changedProperties: Dictionary<string, obj>) : bool = nativeOnly
+    /// <summary>
+    /// Called to determine whether an update cycle is required.
+    /// </summary>
+    /// <remarks>
+    /// <p>Updates? No. Property changes inside this method do not trigger an element update.</p>
+    /// <p>Call super? Not necessary.</p>
+    /// <p>Called on server? No.</p>
+    /// </remarks>
+    /// <param name="changedProperties">Map with keys that are the names of changed properties and values that are the corresponding previous values.</param>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#shouldupdate"/>
+    abstract member shouldUpdate: changedProperties: Dictionary<string, obj> -> bool
+    default _.shouldUpdate(changedProperties: Dictionary<string, obj>) : bool = nativeOnly
 
+    /// <summary>
     /// Returns a promise that will resolve when the element has finished updating.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#updatecomplete"/>
     member _.updateComplete: JS.Promise<bool> = nativeOnly
 
-    member _.updated(_changedProperties: Dictionary<string, obj>) : unit = nativeOnly
-    member _.willUpdate(_changedProperties: Dictionary<string, obj>) : unit = nativeOnly
+
+    /// <summary>
+    /// Called whenever the component’s update finishes and the element's DOM has been updated and rendered.
+    /// </summary>
+    /// <remarks>
+    /// <p>Updates? Yes. Property changes inside this method schedule a new update cycle.</p>
+    /// <p>Call super? Not necessary.</p>
+    /// <p>Called on server? No.</p>
+    /// </remarks>
+    /// <param name="changedProperties">Map with keys that are the names of changed properties and values that are the corresponding previous values.</param>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#updated"/>
+    abstract member updated: changedProperties: Dictionary<string, obj> -> unit
+    default _.updated(changedProperties: Dictionary<string, obj>) : unit = nativeOnly
+
+    /// <summary>
+    /// Called before `update()` to compute values needed during the update.
+    /// </summary>
+    /// <remarks>
+    /// <p>Updates? No. Property changes inside this method do not trigger an element update.</p>
+    /// <p>Call super? Not necessary.</p>
+    /// <p>Called on server? Yes.</p>
+    /// </remarks>
+    /// <param name="changedProperties">Map with keys that are the names of changed properties and values that are the corresponding previous values.</param>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#shouldupdate"/>
+    abstract member willUpdate: changedProperties: Dictionary<string, obj> -> unit
+    default _.willUpdate(changedProperties: Dictionary<string, obj>) : unit = nativeOnly
 
     member _.shadowRoot: ShadowRoot = nativeOnly
     member _.isConnected: bool = nativeOnly
