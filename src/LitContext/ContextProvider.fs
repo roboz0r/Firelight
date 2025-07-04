@@ -9,8 +9,7 @@ module ContextProvider =
     [<Global>]
     type Options<'C, 'ValueType when 'C :> Context<'ValueType>>
         [<ParamObject; Emit("$0")>]
-        (context: 'C, ?initialValue: 'ValueType
-        ) =
+        (context: 'C, ?initialValue: 'ValueType) =
         member val context: 'C = nativeOnly with get, set
         member val initialValue: 'ValueType option = nativeOnly with get, set
 

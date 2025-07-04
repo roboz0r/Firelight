@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Fable.Browser.Css" Version="2.5.0" />
     <PackageVersion Include="Fable.Browser.Dom" Version="2.17.0" />
     <PackageVersion Include="Fable.Core" Version="4.3.0" />
     <PackageVersion Include="FSharp.Core" Version="8.0.400" />

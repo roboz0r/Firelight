@@ -1,6 +1,7 @@
 namespace Lit
 
 open System
+open Browser
 open Browser.Types
 open Fable.Core
 open Fable.Core.JsInterop
@@ -223,4 +224,4 @@ type Lit =
     /// Maps the name to the `LitElement` as an autonomous custom element.
     [<RequiresExplicitTypeArguments>]
     static member inline DefineCustomElement<'T when 'T :> LitElement>(name: string) =
-        customElements.define (name, jsConstructor<'T>)
+        window.customElements.define (name, jsConstructor<'T>)

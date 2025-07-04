@@ -1,12 +1,27 @@
 [<AutoOpen>]
 module Lit.Directives
 
+open System
 open Fable.Core
 open Fable.Core.JsInterop
 open Browser.Types
+open Fable.Core.JS
 
+/// A key-value set of class names to truthy values.
 type ClassInfo = interface end
+
+/// <summary>
+/// A key-value set of CSS properties and values.
+/// </summary>
+/// <remarks>
+/// The key should be either a valid CSS property name string, like
+/// `'background-color'`, or a valid JavaScript camel case property name
+/// for CSSStyleDeclaration like `backgroundColor`.
+/// </remarks>
 type StyleInfo = interface end
+
+/// A generated directive function doesn't evaluate the directive, but just
+/// returns a DirectiveResult object that captures the arguments.
 type DirectiveResult = interface end
 
 type Ref<'T when 'T :> Element> =
@@ -100,11 +115,155 @@ type Lit with
     [<Import("ifDefined", "lit/directives/if-defined.js")>]
     static member inline ifDefined(value: HTMLElement option) : U2<Renderable, nothing> = nativeOnly
 
+    /// <summary>
+    /// Caches rendered DOM when changing templates rather than discarding the DOM. You can use this directive to optimize rendering performance when frequently switching between large templates.
+    /// </summary>
+    /// <remarks>
+    /// When the value passed to cache changes between one or more TemplateResults, the rendered DOM nodes for a given template are cached when they're not in use. When the template changes, the directive caches the current DOM nodes before switching to the new value, and restores them from the cache when switching back to a previously-rendered value, rather than creating the DOM nodes anew.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#cache"/>
+    [<Import("cache", "lit/directives/cache.js")>]
+    static member inline cache(value: TemplateResult option) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Associates a renderable value with a unique key. When the key changes, the previous DOM is removed and disposed before rendering the next value, even if the value—such as a template—is the same.
+    /// </summary>
+    /// <remarks>
+    /// keyed is useful when you're rendering stateful elements and you need to ensure that all state of the element is cleared when some critical data changes. It essentially opts-out of Lit's default DOM reuse strategy.
+    /// keyed is also useful in some animation scenarios if you need to force a new element for "enter" or "exit" animations.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#keyed"/>
+    [<Import("keyed", "lit/directives/keyed.js")>]
+    static member inline keyed(key: obj option, value: obj option) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Only re-evaluates the template when one of its dependencies changes, to optimize rendering performance by preventing unnecessary work.
+    /// </summary>
+    /// <remarks>
+    /// Renders the value returned by valueFn, and only re-evaluates valueFn when one of the dependencies changes identity.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#guard"/>
+    /// <param name="dependencies">
+    /// An array of dependencies that, when changed, will cause the directive to re-evaluate
+    /// </param>
+    /// <param name="valueFn">
+    /// A function that returns the value to render when the dependencies change.
+    /// </param>
+    [<Import("guard", "lit/directives/guard.js")>]
+    static member inline guard(dependencies: array<obj option>, valueFn: unit -> obj option) : DirectiveResult =
+        nativeOnly
+
+    /// <summary>
+    /// Sets an attribute or property if it differs from the live DOM value rather than the last-rendered value.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#live"/>
+    [<Import("live", "lit/directives/live.js")>]
+    static member inline live(value: obj option) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Renders the content of a `&lt;template&gt;` element.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#templatecontent"/>
+    [<Import("templateContent", "lit/directives/template-content.js")>]
+    static member inline templateContent(templateElement: HTMLTemplateElement) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Renders a string as HTML rather than text.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#unsafehtml"/>
+    [<Import("unsafeHTML ", "lit/directives/unsafe-html.js")>]
+    static member inline unsafeHTML(html: string) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Renders a string as SVG rather than text.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#unsafesvg"/>
+    [<Import("unsafeSVG", "lit/directives/unsafe-svg.js")>]
+    static member inline unsafeSVG(svg: string) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Creates a reference cell that can be used to access an element in the DOM.
+    /// Use the `ref` directive to set the reference on an element.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#ref"/>
     [<Import("createRef", "lit/directives/ref.js")>]
-    static member inline createRef() : Ref<'T> = nativeOnly
+    static member inline createRef<'T when 'T :> Element>() : Ref<'T> = nativeOnly
 
+    /// <summary>
+    /// When placed on an element in the template, the ref directive will retrieve a reference to that element once rendered.
+    /// The ref directive can be used to access the element in the DOM, allowing you to manipulate it directly.
+    /// </summary>
+    /// <remarks>
+    /// After rendering, the `Ref`'s `value` property will be set to the element, where it can be accessed in post-render lifecycle like `updated`.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#ref"/>
     [<Import("ref", "lit/directives/ref.js")>]
-    static member inline ref(_ref: Ref<'T>) : DirectiveResult = nativeOnly
+    static member inline ref<'T when 'T :> Element>(_ref: Ref<'T>) : DirectiveResult = nativeOnly
 
+    /// <summary>
+    /// The passed callback will be called each time the referenced element changes.
+    /// </summary>
+    /// <remarks>
+    /// If a ref callback is rendered to a different element position or is removed in a subsequent render, it will first be
+    /// called with `undefined`, followed by another call with the new element it was rendered to (if any). Note that in a
+    /// `LitElement`, the callback will be called bound to the host element automatically.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#ref"/>
     [<Import("ref", "lit/directives/ref.js")>]
-    static member inline ref(callback: Element option -> unit) : DirectiveResult = nativeOnly
+    static member inline ref<'T when 'T :> Element>(callback: 'T option -> unit) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Renders placeholder content until one or more promises resolve.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
+    [<Import("until", "lit/directives/until.js")>]
+    static member inline until
+        ([<ParamArray>] values: U2<Promise<Renderable option>, Renderable option>[])
+        : DirectiveResult =
+        nativeOnly
+
+    /// <summary>
+    /// Appends values from an `AsyncIterable` into the DOM as they are yielded.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#asyncappend"/>
+    [<Import("asyncAppend", "lit/directives/async-append.js")>]
+    static member inline asyncAppend(iterable: AsyncIterable<Renderable>) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Appends values from an `AsyncIterable` into the DOM as they are yielded.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#asyncappend"/>
+    [<Import("asyncAppend", "lit/directives/async-append.js")>]
+    static member inline asyncAppend(iterable: AsyncIterable<'T>, mapper: 'T -> Renderable) : DirectiveResult =
+        nativeOnly
+
+    /// <summary>
+    /// Appends values from an `AsyncIterable` into the DOM as they are yielded.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#asyncappend"/>
+    [<Import("asyncAppend", "lit/directives/async-append.js")>]
+    static member inline asyncAppend(iterable: AsyncIterable<'T>, mapper: 'T -> int -> Renderable) : DirectiveResult =
+        nativeOnly
+
+    /// <summary>
+    /// Renders the latest value from an `AsyncIterable` into the DOM as it is yielded.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#asyncreplace"/>
+    [<Import("asyncReplace", "lit/directives/async-replace.js")>]
+    static member inline asyncReplace(iterable: AsyncIterable<Renderable>) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Renders the latest value from an `AsyncIterable` into the DOM as it is yielded.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#asyncreplace"/>
+    [<Import("asyncReplace", "lit/directives/async-replace.js")>]
+    static member inline asyncReplace(iterable: AsyncIterable<'T>, mapper: 'T -> Renderable) : DirectiveResult =
+        nativeOnly
+
+    /// <summary>
+    /// Renders the latest value from an `AsyncIterable` into the DOM as it is yielded.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#asyncreplace"/>
+    [<Import("asyncReplace", "lit/directives/async-replace.js")>]
+    static member inline asyncReplace(iterable: AsyncIterable<'T>, mapper: 'T -> int -> Renderable) : DirectiveResult =
+        nativeOnly

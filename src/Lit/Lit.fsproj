@@ -12,8 +12,10 @@
     <Compile Include="LitHtml.fs" />
     <Compile Include="Lit.fs" />
     <Compile Include="LitDirectives.fs" />
+    <Compile Include="StaticHTML.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Fable.Browser.Css" />
     <PackageReference Include="Fable.Browser.Dom" />
     <PackageReference Include="Fable.Core" />
     <PackageReference Include="FSharp.Core" />
