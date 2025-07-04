@@ -221,7 +221,17 @@ type Lit =
         : RootPart =
         nativeOnly
 
+    /// <summary>
     /// Maps the name to the `LitElement` as an autonomous custom element.
+    /// </summary>
+    /// <remarks>
+    /// Allows you to declare a custom element in HTML using the registered name.
+    /// The name must be a <a href="https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/define#valid_custom_element_names">valid custom element name</a>,
+    /// which must start with ASCII lowercase (a-z), contain a hyphen, and not contain ASCII uppercase letters.
+    /// </remarks>
+    /// <typeparam name="T">The type of the custom element, which must inherit from `LitElement`.</typeparam>
+    /// <param name="name">The name of the custom element. e.g. "my-element"</param>
+    /// <seealso href="https://lit.dev/docs/tools/publishing/#self-define-elements"/>
     [<RequiresExplicitTypeArguments>]
-    static member inline DefineCustomElement<'T when 'T :> LitElement>(name: string) =
+    static member inline defineElement<'T when 'T :> LitElement>(name: string) =
         window.customElements.define (name, jsConstructor<'T>)
