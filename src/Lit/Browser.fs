@@ -45,3 +45,8 @@ type HTMLTemplateElement =
     abstract member shadowRootDelegatesFocus: bool option with get, set
     abstract member shadowRootClonable: bool option with get, set
     abstract member shadowRootSerializable: bool option with get, set
+
+type HTMLAnchorElement with
+    /// Returns a string containing the Unicode serialization of the origin of the &lt;a&gt; element's href.
+    [<Emit("$0.origin")>]
+    member _.origin: string = nativeOnly

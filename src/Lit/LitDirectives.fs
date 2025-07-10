@@ -217,9 +217,7 @@ type Lit with
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
     [<Import("until", "lit/directives/until.js")>]
-    static member inline until
-        ([<ParamArray>] values: U2<Promise<Renderable option>, Renderable option>[])
-        : DirectiveResult =
+    static member inline until([<ParamArray>] values: U2<Promise<Renderable>, Renderable>[]) : DirectiveResult =
         nativeOnly
 
     /// <summary>

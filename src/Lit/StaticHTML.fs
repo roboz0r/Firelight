@@ -27,6 +27,7 @@ open StaticHTML
 /// </summary>
 /// <seealso href="https://lit.dev/docs/templates/expressions/#static-expressions"/>
 /// <seealso href="https://lit.dev/docs/api/static-html/"/>
+[<Erase>]
 type StaticHTML =
 
     [<Import("html", "lit/static-html.js")>]
