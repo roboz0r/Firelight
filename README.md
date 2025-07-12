@@ -1,2 +1,3 @@
-# LitBindings
- An experiment defining class based bindings for Lit
+# Firelight
+
+Web Components for F#. Powered by [Lit](https://lit.dev/).

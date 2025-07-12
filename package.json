@@ -1,7 +1,7 @@
 {
-  "name": "litbindings",
+  "name": "firelight",
   "version": "1.0.0",
-  "description": "experimenting with lit bindings",
+  "description": "Lit bindings for Fable",
   "type": "module",
   "scripts": {
     "fable": "dotnet fable ./sample/GettingStarted/GettingStarted.fsproj -s -o ./build",

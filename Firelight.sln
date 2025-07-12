@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{F2F85C14-4F88-4F8E-B7DB-074A7A8658FB}"
+	ProjectSection(SolutionItems) = preProject
+		package.json = package.json
+		.gitignore = .gitignore
+		index.html = index.html
+		README.md = README.md
+		vite.config.js = vite.config.js
+		Directory.Packages.props = Directory.Packages.props
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Firelight", "src\Firelight\Firelight.fsproj", "{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Firelight.Context", "src\Firelight.Context\Firelight.Context.fsproj", "{68DC871D-A157-4691-960C-5385F74DA71F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Debug|x64.Build.0 = Debug|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Debug|x86.Build.0 = Debug|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Release|x64.ActiveCfg = Release|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Release|x64.Build.0 = Release|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Release|x86.ActiveCfg = Release|Any CPU
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}.Release|x86.Build.0 = Release|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Debug|x64.Build.0 = Debug|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Debug|x86.Build.0 = Debug|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Release|x64.ActiveCfg = Release|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Release|x64.Build.0 = Release|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Release|x86.ActiveCfg = Release|Any CPU
+		{68DC871D-A157-4691-960C-5385F74DA71F}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B6475928-A272-44B1-B4B7-15DE9A8B6D8E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{68DC871D-A157-4691-960C-5385F74DA71F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+	EndGlobalSection
+EndGlobal

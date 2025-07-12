@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>fable-javascript;lit;web-components;html</PackageTags>
+    <FablePackageType>binding</FablePackageType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CreateContext.fs" />
+    <Compile Include="ContextRequestEvent.fs" />
+    <Compile Include="ContextConsumer.fs" />
+    <Compile Include="ValueNotifier.fs" />
+    <Compile Include="ContextProvider.fs" />
+    <Compile Include="ContextRoot.fs" />
+    <Compile Include="LitContext.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Browser.Dom" />
+    <PackageReference Include="Fable.Core" />
+    <PackageReference Include="Fable.Package.SDK">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Firelight\Firelight.fsproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <NpmDependencies>
+      <NpmPackage Name="lit" Version="gt 3.0.0 lt 4.0.0" ResolutionStrategy="Max" />
+      <NpmPackage Name="@lit/context" Version="gt 1.1.0 lt 2.0.0" ResolutionStrategy="Max" />
+    </NpmDependencies>
+  </PropertyGroup>
+</Project>
