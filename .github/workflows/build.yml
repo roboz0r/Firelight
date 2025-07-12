@@ -1,0 +1,53 @@
+name: Build main
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup necessary dotnet SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '>=22.17.0'
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
+
+      - name: Build via Bash
+        if: runner.os != 'Windows'
+        run: |
+          dotnet tool restore
+          npm install
+          dotnet fable ./src/Firelight/Firelight.fsproj
+          dotnet fable ./src/Firelight.Context/Firelight.Context.fsproj
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+          CI: true
+      - name: Build via Windows
+        if: runner.os == 'Windows'
+        run: |
+          dotnet tool restore
+          npm install
+          dotnet fable ./src/Firelight/Firelight.fsproj
+          dotnet fable ./src/Firelight.Context/Firelight.Context.fsproj
+        env:
+          CONFIGURATION: ${{ matrix.configuration }}
+          CI: true

@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -20,6 +20,12 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Firelight", "src\Firelight\Firelight.fsproj", "{B6475928-A272-44B1-B4B7-15DE9A8B6D8E}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Firelight.Context", "src\Firelight.Context\Firelight.Context.fsproj", "{68DC871D-A157-4691-960C-5385F74DA71F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4D8D5709-1118-49D5-8CBD-466B04A9165D}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+		.github\workflows\publish.yml = .github\workflows\publish.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
