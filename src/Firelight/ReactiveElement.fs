@@ -32,6 +32,7 @@ type PropertyDeclaration<'Type>
         ?attribute: U2<bool, string>,
         ?noAccessor: bool,
         ?reflect: bool,
+        ?useDefault: bool,
         ?hasChanged: PropertyDeclaration.HasChanged<'Type>,
         ?``type``: obj,
         ?converter: AttributeConverter
@@ -87,6 +88,15 @@ type PropertyDeclaration<'Type>
     /// from the `converter` property option.
     /// </summary>
     member val reflect: bool option = jsNative with get
+
+    /// <summary>
+    /// When `true`, the property's initial default value is not treated as a
+    /// change when the property is reflected to an attribute. This avoids an
+    /// unnecessary update cycle on first render when <c>reflect</c> is <c>true</c>.
+    /// Only applicable when <c>reflect</c> is <c>true</c>.
+    /// </summary>
+    /// <seealso href="https://lit.dev/docs/components/properties/#property-options"/>
+    member val useDefault: bool option = jsNative with get
 
     /// <summary>
     /// A function that indicates if a property should be considered changed when
