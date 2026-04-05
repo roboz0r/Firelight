@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Defining.fs" />
+    <Compile Include="Rendering.fs" />
+    <Compile Include="ReactiveProperties.fs" />
+    <Compile Include="Styles.fs" />
+    <Compile Include="Event.fs" />
+    <Compile Include="Controllers.fs" />
+    <Compile Include="Context.fs" />
+    <Compile Include="Components.fs" />
+    <Compile Include="Elmish.fs" />
+    <Compile Include="App.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Thoth.Json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Firelight\Firelight.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Context\Firelight.Context.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Elmish\Firelight.Elmish.fsproj" />
+  </ItemGroup>
+</Project>
