@@ -20,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Fable.Browser.Css" />
     <PackageReference Include="Fable.Browser.Dom" />
+    <PackageReference Include="Fable.Browser.Event" />
     <PackageReference Include="Fable.Core" />
     <PackageReference Include="FSharp.Core" />
     <PackageReference Include="Fable.Package.SDK">

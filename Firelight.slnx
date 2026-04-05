@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Config/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="package.json" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/GitHub/">
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/publish.yml" />
+  </Folder>
+  <Folder Name="/sample/">
+    <Project Path="sample/GettingStarted/GettingStarted.fsproj" />
+    <Project Path="sample/Kanban.E2E/Kanban.E2E.fsproj" />
+    <Project Path="sample/Kanban.Tests/Kanban.Tests.fsproj" />
+    <Project Path="sample/Kanban/Kanban.fsproj" />
+    <Project Path="sample/Todo/Todo.fsproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Firelight.Context/Firelight.Context.fsproj" />
+    <Project Path="src/Firelight.Elmish/Firelight.Elmish.fsproj" />
+    <Project Path="src/Firelight/Firelight.fsproj" />
+  </Folder>
+</Solution>

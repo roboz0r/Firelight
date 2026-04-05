@@ -50,3 +50,15 @@ type HTMLAnchorElement with
     /// Returns a string containing the Unicode serialization of the origin of the &lt;a&gt; element's href.
     [<Emit("$0.origin")>]
     member _.origin: string = nativeOnly
+
+open System
+open System.Runtime.InteropServices
+
+type Browser.Types.Event with
+  static member inline customEvent(typeName: string, detail: 'T, [<Optional; DefaultParameterValue(true)>] bubbles: bool, [<Optional; DefaultParameterValue(true)>] composed: bool) =
+    let eventInit = Fable.Core.JsInterop.jsOptions<CustomEventInit<'T>> (fun o ->
+        o.detail <- Some detail
+        o.bubbles <- bubbles
+        o.composed <- composed
+    )
+    CustomEvent.Create(typeName, eventInit)
