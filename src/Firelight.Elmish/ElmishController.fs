@@ -20,8 +20,7 @@ open Firelight
 ///       Program.mkProgram init update (fun _ _ -> ())
 ///       |> Program.withConsoleTrace
 ///       |> fun p -> ElmishController(this, p)
-type ElmishController<'Model, 'Msg>
-    (host: ReactiveControllerHost, program: Program<unit, 'Model, 'Msg, unit>) as this =
+type ElmishController<'Model, 'Msg>(host: ReactiveControllerHost, program: Program<unit, 'Model, 'Msg, unit>) as this =
 
     let mutable _model: 'Model = Unchecked.defaultof<_>
     let mutable _dispatch: 'Msg -> unit = ignore
@@ -29,11 +28,15 @@ type ElmishController<'Model, 'Msg>
 
     do
         host.addController this
+
         program
         |> Program.withSetState (fun model dispatch ->
             _model <- model
             _dispatch <- dispatch
-            if _alive then host.requestUpdate())
+
+            if _alive then
+                host.requestUpdate ()
+        )
         |> Program.runWith ()
 
     /// Current model — always valid (initialised synchronously on construction).
@@ -45,7 +48,8 @@ type ElmishController<'Model, 'Msg>
     interface ReactiveController with
         member _.hostConnected() =
             _alive <- true
-            host.requestUpdate()
+            host.requestUpdate ()
+
         member _.hostDisconnected() = _alive <- false
         member _.hostUpdate() = ()
         member _.hostUpdated() = ()
@@ -55,11 +59,7 @@ type ElmishController<'Model, 'Msg>
 module ElmishController =
 
     /// Create a simple loop — init and update return only the model, no Cmds.
-    let simple
-        (host: ReactiveControllerHost)
-        (init: unit -> 'Model)
-        (update: 'Msg -> 'Model -> 'Model)
-        =
+    let simple (host: ReactiveControllerHost) (init: unit -> 'Model) (update: 'Msg -> 'Model -> 'Model) =
         ElmishController(host, Program.mkSimple init update (fun _ _ -> ()))
 
     /// Create a loop with Cmd support — init and update return the new model and a Cmd.

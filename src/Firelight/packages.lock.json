@@ -52,9 +52,9 @@
       },
       "FSharp.Core": {
         "type": "Direct",
-        "requested": "[9.0.300, )",
-        "resolved": "9.0.300",
-        "contentHash": "TVt2J7RCE1KCS2IaONF+p8/KIZ1eHNbW+7qmKF6hGoD4tXl+o07ja1mPtFjMqRa5uHMFaTrGTPn/m945WnDLiQ=="
+        "requested": "[10.1.201, )",
+        "resolved": "10.1.201",
+        "contentHash": "s5w9LWYurZ9yZdIppoIaYLkRadyT5s3u0wbQCb0J4bQd3ubIlIWQ3Nd5+ll1y3pv5OnTS373dP8T1S/BP46QXg=="
       },
       "NETStandard.Library": {
         "type": "Direct",

@@ -82,31 +82,40 @@ module DevTools =
         let mutable nonce = 0
 
         let restore () =
-            window.localStorage.getItem key
-            |> Option.ofObj
-            |> Option.bind decode
+            window.localStorage.getItem key |> Option.ofObj |> Option.bind decode
 
         let debouncedSave (model: 'Model) : Cmd<'Msg> =
             nonce <- nonce + 1
             let savedNonce = nonce
-            [ fun (_: 'Msg -> unit) ->
-                window.setTimeout(
-                    (fun () ->
-                        if nonce = savedNonce then
-                            window.localStorage.setItem(key, encode model)),
-                    delay)
-                |> ignore ]
+
+            [
+                fun (_: 'Msg -> unit) ->
+                    window.setTimeout (
+                        (fun () ->
+                            if nonce = savedNonce then
+                                window.localStorage.setItem (key, encode model)
+                        ),
+                        delay
+                    )
+                    |> ignore
+            ]
 
         program
         |> Program.map
             (fun init ->
                 fun arg ->
                     let model, cmd = init arg
+
                     match restore () with
                     | Some saved -> saved, cmd
-                    | None       -> model, cmd)
+                    | None -> model, cmd
+            )
             (fun update ->
                 fun msg model ->
                     let newModel, cmd = update msg model
-                    newModel, Cmd.batch [ cmd; debouncedSave newModel ])
-            id id id id
+                    newModel, Cmd.batch [ cmd; debouncedSave newModel ]
+            )
+            id
+            id
+            id
+            id

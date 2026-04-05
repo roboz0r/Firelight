@@ -55,10 +55,18 @@ open System
 open System.Runtime.InteropServices
 
 type Browser.Types.Event with
-  static member inline customEvent(typeName: string, detail: 'T, [<Optional; DefaultParameterValue(true)>] bubbles: bool, [<Optional; DefaultParameterValue(true)>] composed: bool) =
-    let eventInit = Fable.Core.JsInterop.jsOptions<CustomEventInit<'T>> (fun o ->
-        o.detail <- Some detail
-        o.bubbles <- bubbles
-        o.composed <- composed
-    )
-    CustomEvent.Create(typeName, eventInit)
+    static member inline customEvent
+        (
+            typeName: string,
+            detail: 'T,
+            [<Optional; DefaultParameterValue(true)>] bubbles: bool,
+            [<Optional; DefaultParameterValue(true)>] composed: bool
+        ) =
+        let eventInit =
+            Fable.Core.JsInterop.jsOptions<CustomEventInit<'T>> (fun o ->
+                o.detail <- Some detail
+                o.bubbles <- bubbles
+                o.composed <- composed
+            )
+
+        CustomEvent.Create(typeName, eventInit)
