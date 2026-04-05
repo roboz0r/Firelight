@@ -1,0 +1,28 @@
+{
+  "name": "litbindings",
+  "version": "1.0.0",
+  "description": "experimenting with lit bindings",
+  "type": "module",
+  "scripts": {
+    "preinstall": "dotnet tool restore",
+    "clean:build": "rimraf build",
+    "clean:dist": "rimraf dist",
+    "clean": "npm run clean:build && npm run clean:dist",
+    "dev": "dotnet fable watch ./ -o ./build/ -s --run vite",
+    "build:fable": "dotnet fable ./ -o ./build/ --run vite build",
+    "build": "npm run clean && npm run build:fable",
+    "preview": "vite preview"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@lit/context": "1.1.6",
+    "lit": "3.3.1"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "tailwindcss": "^4.2.2",
+    "@tailwindcss/vite": "^4.2.2",
+    "vite": "8.0.3"
+  }
+}
