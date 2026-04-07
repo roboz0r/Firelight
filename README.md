@@ -13,6 +13,7 @@ Firelight gives you idiomatic F# bindings to Lit's lightweight Web Components pl
 | `Firelight` | Core bindings: `LitElement`, `html`/`css` templates, directives, reactive properties |
 | `Firelight.Context` | Context protocol for sharing state across component trees without prop drilling |
 | `Firelight.Elmish` | Elmish (MVU) integration via reactive controllers |
+| `Firelight.Router` | Client-side routing via the [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) |
 
 ## Quick Start
 
@@ -95,12 +96,50 @@ let provider = ContextProvider(host, dispatchContext, dispatch)
 let consumer = ContextConsumer(host, dispatchContext)
 ```
 
+## Router
+
+`Firelight.Router` provides client-side routing built on the browser's [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern). Define routes as URL patterns with typed extractors, and use `RouterController` to wire routing into Lit's reactive lifecycle:
+
+```fsharp
+open Firelight
+open Firelight.Router
+open type Firelight.Lit
+
+type Page = Home | About | User of id: string | NotFound
+
+let matchUser (result: URLPatternResult) =
+    match result.pathname.groups.["id"] with
+    | Some id -> User id
+    | None -> NotFound
+
+[<AttachMembers>]
+type MyApp() as this =
+    inherit LitElement()
+
+    let router =
+        [ "/", (fun _ -> Home)
+          "/about", (fun _ -> About)
+          "/users/:id", matchUser ]
+        |> createRouter NotFound
+
+    let routing = RouterController(this, router)
+
+    override _.render() =
+        match routing.route with
+        | Home -> html $"<h1>Home</h1>"
+        | About -> html $"<h1>About</h1>"
+        | User id -> html $"<h1>User {id}</h1>"
+        | NotFound -> html $"<h1>Not Found</h1>"
+```
+
+The `RouterController` handles `popstate` events, intercepts internal link clicks (including hash links with smooth scrolling), and manages `history.pushState` navigation automatically. A `urlpattern-polyfill` npm dependency is included for browsers without native support.
+
 ## Documentation
 
 - [Official Lit Documentation](https://lit.dev/docs/) - for a complete API reference
 - [Components and Templates](docs/components-and-templates.md) - architectural guide covering component patterns, template composition, and communication strategies
 - [Elmish DevTools](docs/elmish-devtools.md) - persisting Elmish state to `localStorage` for better HMR development experience
-- [Sample Projects](sample/README.md) - annotated examples from a basic tutorial to a full drag-and-drop Kanban board
+- [Sample Projects](sample/README.md) - annotated examples from a basic tutorial to a full drag-and-drop Kanban board and multi-page routing
 
 ## Getting Started
 

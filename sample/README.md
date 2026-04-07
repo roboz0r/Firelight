@@ -89,6 +89,20 @@ End-to-end browser tests for the Kanban app using [Playwright](https://playwrigh
 - Writing browser-level test scenarios against real Web Components in a Chromium context
 - Testing drag-and-drop interactions and UI state changes end-to-end
 
+## MultiPage
+
+**`sample/MultiPage/`**
+
+A multi-page app demonstrating client-side routing with `Firelight.Router`.
+
+**What it covers:**
+
+- Defining a route union (`Home`, `About`, `User of id`, `NotFound`) and pattern-matching extractors
+- Using `createRouter` with URL Pattern API strings (e.g. `/users/:id`) to build a typed router
+- Wiring `RouterController` into a `LitElement` for automatic `popstate`/click handling
+- Extracting named groups from `URLPatternResult` (e.g. `result.pathname.groups.["id"]`)
+- Separating the route model (`MultiPageModel.fs`) from the component (`App.fs`)
+
 ## Running the Samples
 
 Each sample uses Vite as the dev server. From a sample directory (e.g. `sample/GettingStarted`):
