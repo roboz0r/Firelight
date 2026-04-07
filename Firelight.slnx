@@ -17,11 +17,14 @@
     <Project Path="sample/Kanban.E2E/Kanban.E2E.fsproj" />
     <Project Path="sample/Kanban.Tests/Kanban.Tests.fsproj" />
     <Project Path="sample/Kanban/Kanban.fsproj" />
+    <Project Path="sample/MultiPage.Tests/MultiPage.Tests.fsproj" />
+    <Project Path="sample/MultiPage/MultiPage.fsproj" />
     <Project Path="sample/Todo/Todo.fsproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Firelight.Context/Firelight.Context.fsproj" />
     <Project Path="src/Firelight.Elmish/Firelight.Elmish.fsproj" />
+    <Project Path="src/Firelight.Router/Firelight.Router.fsproj" />
     <Project Path="src/Firelight/Firelight.fsproj" />
   </Folder>
 </Solution>

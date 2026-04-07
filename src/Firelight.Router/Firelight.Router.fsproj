@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>fable-javascript;lit;web-components;router;urlpattern</PackageTags>
+    <FablePackageType>library</FablePackageType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="URLPattern.fs" />
+    <Compile Include="Router.fs" />
+    <Compile Include="RouterController.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Browser.Dom" />
+    <PackageReference Include="Fable.Core" />
+    <PackageReference Include="FSharp.Core" />
+    <PackageReference Include="Fable.Package.SDK">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Firelight\Firelight.fsproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <NpmDependencies>
+      <NpmPackage Name="urlpattern-polyfill" Version="gt 10.0.0 lt 11.0.0" ResolutionStrategy="Max" />
+    </NpmDependencies>
+  </PropertyGroup>
+</Project>

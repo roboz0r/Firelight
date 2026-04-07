@@ -30,6 +30,7 @@ jobs:
           dotnet tool restore
           dotnet fable ./src/Firelight/Firelight.fsproj
           dotnet fable ./src/Firelight.Context/Firelight.Context.fsproj
+          dotnet fable ./src/Firelight.Router/Firelight.Router.fsproj
         env:
           CONFIGURATION: ${{ matrix.configuration }}
           CI: true
@@ -40,6 +41,7 @@ jobs:
           dotnet tool restore
           dotnet fable ./src/Firelight/Firelight.fsproj
           dotnet fable ./src/Firelight.Context/Firelight.Context.fsproj
+          dotnet fable ./src/Firelight.Router/Firelight.Router.fsproj
         env:
           CONFIGURATION: ${{ matrix.configuration }}
           CI: true
