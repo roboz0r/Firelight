@@ -44,10 +44,14 @@ jobs:
       - name: Pack Published Projects
         shell: pwsh
         run: |
+          [xml]$props = Get-Content Directory.Build.props
+          $v = ($props.Project.PropertyGroup | ForEach-Object { $_.PackageVersion } | Where-Object { $_ }).Trim()
+          Write-Host "Package version: '$v'"
+
           dotnet restore
           dotnet list package
           dotnet pack
-          
-          dotnet nuget push "./src/Firelight/bin/Release/Firelight.$env:PACKAGE_VERSION.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
-          dotnet nuget push "./src/Firelight.Context/bin/Release/Firelight.Context.$env:PACKAGE_VERSION.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
-          dotnet nuget push "./src/Firelight.Router/bin/Release/Firelight.Router.$env:PACKAGE_VERSION.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+
+          dotnet nuget push "./src/Firelight/bin/Release/Firelight.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Context/bin/Release/Firelight.Context.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Router/bin/Release/Firelight.Router.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
