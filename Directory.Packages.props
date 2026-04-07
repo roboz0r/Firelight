@@ -9,7 +9,7 @@
     <PackageVersion Include="Fable.Core" Version="4.5.0" />
     <PackageVersion Include="Fable.Elmish" Version="5.0.2" />
     <PackageVersion Include="Fable.Package.SDK" Version="1.3.2" />
-    <PackageVersion Include="FSharp.Core" Version="10.1.201" />
+    <PackageVersion Include="FSharp.Core" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <PackageVersion Include="Microsoft.Playwright" Version="1.58.0" />
