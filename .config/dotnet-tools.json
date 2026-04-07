@@ -15,6 +15,13 @@
         "fable"
       ],
       "rollForward": false
+    },
+    "nugetpackageserver": {
+      "version": "0.1.0",
+      "commands": [
+        "nuget-package-server"
+      ],
+      "rollForward": false
     }
   }
 }
