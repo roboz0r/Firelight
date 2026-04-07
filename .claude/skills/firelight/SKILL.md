@@ -1,7 +1,7 @@
 ---
 name: firelight
-description: Guide for building web UIs with the Firelight F# Lit bindings library. Covers components, templates, Elmish integration, context, communication patterns, and architectural decisions.
-trigger: When the user asks to build, modify, or architect UI using Firelight, Lit, F# web components, or Fable with Lit bindings.
+description: Guide for building web UIs with the Firelight F# Lit bindings library. Covers components, templates, Elmish integration, context, routing, communication patterns, and architectural decisions.
+trigger: When the user asks to build, modify, or architect UI using Firelight, Lit, F# web components, Fable with Lit bindings, or client-side routing.
 ---
 
 # Firelight Development Guide
@@ -13,8 +13,9 @@ Firelight provides F# bindings for [Lit](https://lit.dev/) 3.x web components vi
 | **Firelight** | Core Lit bindings: `html`, `css`, `LitElement`, directives, reactive properties |
 | **Firelight.Context** | `@lit/context` bindings: `ContextProvider`, `ContextConsumer` |
 | **Firelight.Elmish** | Elmish integration: `ElmishController`, `DevTools` |
+| **Firelight.Router** | Client-side routing via the URL Pattern API: `Router`, `RouterController` |
 
-NPM peer dependencies: `lit` (3.x), `@lit/context` (1.x).
+NPM peer dependencies: `lit` (3.x), `@lit/context` (1.x), `urlpattern-polyfill` (10.x, for `Firelight.Router`).
 
 All F# code compiles to JavaScript via Fable. The output runs in the browser as standard Web Components.
 
@@ -439,6 +440,119 @@ The nonce pattern ensures the async loop stops cleanly when the host disconnects
 
 ---
 
+## Client-Side Routing
+
+`Firelight.Router` provides client-side routing built on the browser's [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern). It consists of three files:
+
+- **`URLPattern.fs`** — F# bindings for the `URLPattern` Web API (types in the `Browser.Types.URLPattern` namespace)
+- **`Router.fs`** — `Router<'Route>` type for matching URLs to routes, plus `createRouter` / `createRouterWithBaseUrl` helpers, click/popstate event handlers, and hash-link smooth scrolling
+- **`RouterController.fs`** — `RouterController<'Route>`, a `ReactiveController` that wires routing into Lit's lifecycle
+
+### Defining routes
+
+Routes are defined as a list of `(pattern, extractor)` tuples. The pattern is a [URL Pattern string](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API). The extractor receives a `URLPatternResult` and returns your route union:
+
+```fsharp
+open Browser.Types.URLPattern
+open Firelight.Router
+
+type Page = Home | About | User of id: string | NotFound
+
+let matchUser (result: URLPatternResult) : Page =
+    match result.pathname.groups.["id"] with
+    | Some id -> User id
+    | None -> NotFound
+
+let router =
+    [ "/", (fun _ -> Home)
+      "/:page?", (fun r ->
+          match r.pathname.groups.["page"] with
+          | Some "about" -> About
+          | _ -> NotFound)
+      "/users/:id", matchUser ]
+    |> createRouter NotFound
+```
+
+`createRouter` uses `window.location.origin` as the base URL. Use `createRouterWithBaseUrl` for a custom base.
+
+### RouterController
+
+`RouterController` is a `ReactiveController` that:
+- Initializes `route` from the current URL on construction
+- Listens for `popstate` events (browser back/forward)
+- Intercepts internal link clicks, calls `history.pushState`, and updates the route
+- Handles hash links (`#section`) with smooth scrolling, piercing shadow DOM boundaries
+- Cleans up event listeners on disconnect
+
+```fsharp
+open Firelight
+open Firelight.Router
+open type Firelight.Lit
+
+[<AttachMembers>]
+type MyApp() as this =
+    inherit LitElement()
+
+    let router =
+        [ "/", (fun _ -> Home)
+          "/about", (fun _ -> About)
+          "/users/:id", matchUser ]
+        |> createRouter NotFound
+
+    let routing = RouterController(this, router)
+
+    override _.render() =
+        match routing.route with
+        | Home -> html $"<h1>Home</h1>"
+        | About -> html $"<h1>About</h1>"
+        | User id -> html $"<h1>User {id}</h1>"
+        | NotFound -> html $"<h1>Not Found</h1>"
+```
+
+### Domain model separation
+
+Follow the same pattern as Elmish — define the route union and match functions in a separate model file:
+
+```fsharp
+// MultiPageModel.fs
+namespace MultiPage
+
+open Browser.Types.URLPattern
+
+type Page = Home | About | User of id: string | NotFound
+
+module MultiPageModel =
+    let matchRoute (result: URLPatternResult) : Page =
+        match result.pathname.groups.["page"] with
+        | Some "about" -> About
+        | _ -> NotFound
+
+    let matchUser (result: URLPatternResult) : Page =
+        match result.pathname.groups.["id"] with
+        | Some id -> User id
+        | None -> NotFound
+```
+
+### URLPattern polyfill
+
+The `Firelight.Router` package includes an npm dependency on `urlpattern-polyfill` for browsers without native `URLPattern` support. Import the polyfill at app startup:
+
+```fsharp
+open Browser.Types.URLPattern
+
+// Call once at the top level of your app module:
+importPolyfill ()
+```
+
+### Key behaviors
+
+- The `Router.Match` method always returns a value (falls back to the `notFound` route). Use `Router.TryMatch` for `Option<'Route>`
+- Internal link detection skips: links with `target`, `download`, `rel="external"`, different origins, `mailto:`, `javascript:`, and `tel:` URLs
+- Hash links trigger smooth scrolling and `history.replaceState` (no route change)
+- `RouterController` calls `host.requestUpdate()` after route changes, integrating with Lit's batched rendering
+
+---
+
 ## Directives Quick Reference
 
 All accessed via `open type Firelight.Lit`:
@@ -721,11 +835,3 @@ open Firelight.Elmish
 - **Don't put non-serializable values in the Elmish model.** API clients, DOM refs, and functions belong in controllers or context, not in model state.
 - **Don't forget `[<AttachMembers>]`.** Without it, Fable won't attach members to the JS prototype and Lit's property system won't find them.
 - **Don't use `mutable` for UI state in template functions.** Mutating a local variable does not trigger a Lit re-render — the template has already returned and Lit will not call the function again. UI state must live in the Elmish model (dispatch a message) or in a component's reactive property (call `requestUpdate()`). The only safe use of `mutable` inside a template function is for values that don't affect rendering (e.g. accumulating a result before the template is built).
-
----
-
-## File References
-
-- Source: `src/Firelight/`, `src/Firelight.Context/`, `src/Firelight.Elmish/`
-- Samples: `sample/GettingStarted/`, `sample/Todo/`, `sample/Kanban/`
-- Docs: `docs/components-and-templates.md`, `docs/elmish-devtools.md`
