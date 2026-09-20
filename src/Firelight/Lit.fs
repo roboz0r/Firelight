@@ -82,6 +82,14 @@ type LitElement() =
     abstract member update: changedProperties: Dictionary<string, obj> -> unit
     default _.update(changedProperties: Dictionary<string, obj>) : unit = nativeOnly
 
+/// Renders into the host element itself instead of a shadow root.
+/// Light DOM lets document styles, ids, labels and hash anchors work without any copying or piercing.
+[<AbstractClass; AttachMembers>]
+type LightDomElement() =
+    inherit LitElement()
+
+    member this.createRenderRoot() : obj = this
+
 type LitEventHandler<'TEvent when 'TEvent :> Event> = delegate of ev: 'TEvent -> unit
 
 /// <summary>
