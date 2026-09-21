@@ -138,6 +138,7 @@ The `RouterController` handles `popstate` events, intercepts internal link click
 
 - [Official Lit Documentation](https://lit.dev/docs/) - for a complete API reference
 - [Components and Templates](docs/components-and-templates.md) - architectural guide covering component patterns, template composition, and communication strategies
+- [Styling Components](docs/styling.md) - getting global CSS (Tailwind, design systems, icon fonts) into shadow roots via constructed stylesheets
 - [Elmish DevTools](docs/elmish-devtools.md) - persisting Elmish state to `localStorage` for better HMR development experience
 - [Sample Projects](sample/README.md) - annotated examples from a basic tutorial to a full drag-and-drop Kanban board and multi-page routing
 

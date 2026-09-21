@@ -156,6 +156,32 @@ static member styles =
     css $""":host {{ color: {Color.red}; }}"""
 ```
 
+**Global stylesheets (Tailwind, design systems) inside shadow roots.** A `<link>` in `index.html` does not cross the shadow boundary. Import the CSS as a string at build time and adopt it as a constructed stylesheet — do **not** scrape `document.styleSheets` at runtime:
+
+```fsharp
+module Styles
+
+open Fable.Core
+open Browser
+
+[<ImportDefault("./App.css?inline")>]
+let private appCss: string = jsNative
+
+let private makeSheet (cssText: string) =
+    let sheet = CSSStyleSheet.Create()
+    sheet.replaceSync cssText
+    sheet
+
+let allComponentStyles = [| makeSheet appCss |]
+
+// In the component:
+static member styles = Styles.allComponentStyles
+```
+
+`styles` accepts native `CSSStyleSheet` values (`CSSResultOrNative`), so sheets and `css` literals compose in a `cssResultGroup`. Keep `@font-face` rules in a separate file loaded by `<link>` in `index.html` — font faces register on the document, not on a shadow root, and are ignored inside an adopted sheet.
+
+Do **not** reach for CSS module scripts (`import sheet from './x.css' with { type: 'css' }`) yet: Fable cannot emit import attributes, and Safari does not support them. See `docs/styling.md`.
+
 ### 6. `render()` override
 Return an `HTMLTemplateResult` using the `html` tagged template.
 
@@ -834,4 +860,5 @@ open Firelight.Elmish
 - **Don't fight the DOM.** Lit is a thin wrapper over native browser APIs. Use standard Web Component patterns, not framework-specific abstractions.
 - **Don't put non-serializable values in the Elmish model.** API clients, DOM refs, and functions belong in controllers or context, not in model state.
 - **Don't forget `[<AttachMembers>]`.** Without it, Fable won't attach members to the JS prototype and Lit's property system won't find them.
+- **Don't scrape `document.styleSheets` to style shadow roots.** Copying `cssRules` out of `<link>` elements at render time, or re-emitting `<link>` tags inside a shadow root, is timing-dependent (`link.sheet` is `null` until loaded), breaks on cross-origin sheets, and re-parses the CSS per component. Import the CSS as a string at build time (`?inline`) and adopt a constructed `CSSStyleSheet` instead — see `docs/styling.md`. When a component should simply inherit document styles, inherit `LightDomElement` (renders into the host element, no shadow root — so no `:host`, no `<slot>`, no encapsulation).
 - **Don't use `mutable` for UI state in template functions.** Mutating a local variable does not trigger a Lit re-render — the template has already returned and Lit will not call the function again. UI state must live in the Elmish model (dispatch a message) or in a component's reactive property (call `requestUpdate()`). The only safe use of `mutable` inside a template function is for values that don't affect rendering (e.g. accumulating a result before the template is built).
