@@ -14,6 +14,7 @@ Firelight gives you idiomatic F# bindings to Lit's lightweight Web Components pl
 | `Firelight.Context` | Context protocol for sharing state across component trees without prop drilling |
 | `Firelight.Elmish` | Elmish (MVU) integration via reactive controllers |
 | `Firelight.Router` | Client-side routing via the [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) |
+| `Firelight.Task` | Bindings to Lit's `@lit/task` reactive controller for async work |
 
 ## Quick Start
 
@@ -133,6 +134,48 @@ type MyApp() as this =
 ```
 
 The `RouterController` handles `popstate` events, intercepts internal link clicks (including hash links with smooth scrolling), and manages `history.pushState` navigation automatically. A `urlpattern-polyfill` npm dependency is included for browsers without native support.
+
+## Async Tasks
+
+`Firelight.Task` binds Lit's [`@lit/task`](https://lit.dev/docs/data/task/) controller. The F# type is named `LitTask` to keep it distinct from `System.Threading.Tasks.Task`. Pass an argument array to run automatically when its values change, or set `autoRun = U2.Case1 false` and call `run()` yourself.
+
+The example assumes `fetchProduct : string -> JS.Promise<string>`.
+
+```fsharp
+open Firelight
+open Firelight.Task
+open Fable.Core
+
+[<AttachMembers>]
+type ProductView() as this =
+    inherit LitElement()
+
+    let mutable productId = "123"
+
+    let loadProduct (args: string[]) (_: TaskFunctionOptions) =
+        U2.Case2 (fetchProduct args.[0])
+
+    let product =
+        LitTask(
+            this,
+            TaskConfig(
+                TaskFunction(loadProduct),
+                args = (fun () -> [| productId |])
+            )
+        )
+
+    override _.render() =
+        product.render(
+            TaskRenderer(
+                pending = (fun () -> Lit.html $"<p>Loading...</p>"),
+                complete = (fun name -> Lit.html $"<p>{name}</p>"),
+                error = (fun error -> Lit.html $"<p>{error}</p>")
+            )
+        )
+        |> unbox
+```
+
+The task exposes `status`, `value`, `error`, and `taskComplete`. Its task function receives an `AbortSignal` through `TaskFunctionOptions`; pass that signal to cancellable work when a newer run supersedes the current one.
 
 ## Documentation
 
