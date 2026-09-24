@@ -14,6 +14,7 @@ Firelight gives you idiomatic F# bindings to Lit's lightweight Web Components pl
 | `Firelight.Context` | Context protocol for sharing state across component trees without prop drilling |
 | `Firelight.Elmish` | Elmish (MVU) integration via reactive controllers |
 | `Firelight.Router` | Client-side routing via the [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) |
+| `Firelight.Signals` | Bindings to Lit Labs signals for shared reactive state and targeted template updates |
 | `Firelight.Task` | Bindings to Lit's `@lit/task` reactive controller for async work |
 
 ## Quick Start
@@ -176,6 +177,32 @@ type ProductView() as this =
 ```
 
 The task exposes `status`, `value`, `error`, and `taskComplete`. Its task function receives an `AbortSignal` through `TaskFunctionOptions`; pass that signal to cancellable work when a newer run supersedes the current one.
+
+## Signals
+
+`Firelight.Signals` binds [`@lit-labs/signals`](https://lit.dev/docs/data/signals/). Use `LitSignals.defineElement` to register a component with `SignalWatcher`. Reading a signal with `get()` during a render then schedules an update when its value changes. `watch` updates only its template part; the signal-aware `html` and `svg` tags apply `watch` to interpolated signals automatically.
+
+```fsharp
+open Firelight
+open Firelight.Signals
+open type LitSignals
+
+let count = signal 0
+let doubled = computed (fun () -> count.get() * 2)
+
+type SignalCounter() =
+    inherit LitElement()
+
+    override _.render() =
+        html $"""
+            <p>Double: {doubled}</p>
+            <button @click={fun _ -> count.set(count.get() + 1)}>Increment</button>
+        """
+
+defineElement<SignalCounter> "signal-counter"
+```
+
+`open type LitSignals` brings its signal-aware `html` and `svg` tags into scope. If you also use `open type Firelight.Lit`, open `LitSignals` afterward: its `html` and `svg` shadow Lit's tags. Call `Lit.html` explicitly when you want the regular tag, and use `watch count` inside it for a targeted update. `updateEffect` attaches an effect to an element registered with `defineElement` and returns a dispose function. This Lit Labs package and its signal polyfill are experimental; pin compatible versions when deploying it.
 
 ## Documentation
 
