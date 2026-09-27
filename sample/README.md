@@ -103,6 +103,16 @@ A multi-page app demonstrating client-side routing with `Firelight.Router`.
 - Extracting named groups from `URLPatternResult` (e.g. `result.pathname.groups.["id"]`)
 - Separating the route model (`MultiPageModel.fs`) from the component (`App.fs`)
 
+## ObserversAndVirtualizer
+
+**`sample/ObserversAndVirtualizer/`**
+
+Uses `ResizeController` to render an observed width and shows both the
+`virtualize` directive and `<lit-virtualizer>` element rendering a 1,000-item
+list. Its package.json pins the JavaScript packages used by the bindings.
+
+See the [sample README](ObserversAndVirtualizer/README.md) for usage notes.
+
 ## Running the Samples
 
 Each sample uses Vite as the dev server. From a sample directory (e.g. `sample/GettingStarted`):

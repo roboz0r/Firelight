@@ -13,9 +13,11 @@ Firelight gives you idiomatic F# bindings to Lit's lightweight Web Components pl
 | `Firelight` | Core bindings: `LitElement`, `html`/`css` templates, directives, reactive properties |
 | `Firelight.Context` | Context protocol for sharing state across component trees without prop drilling |
 | `Firelight.Elmish` | Elmish (MVU) integration via reactive controllers |
+| `Firelight.Observers` | Reactive controllers for browser mutation, intersection, resize, and performance observers |
 | `Firelight.Router` | Client-side routing via the [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) |
 | `Firelight.Signals` | Bindings to Lit Labs signals for shared reactive state and targeted template updates |
 | `Firelight.Task` | Bindings to Lit's `@lit/task` reactive controller for async work |
+| `Firelight.Virtualizer` | Bindings to Lit Labs viewport virtualization for large lists |
 
 ## Quick Start
 
@@ -211,6 +213,7 @@ defineElement<SignalCounter> "signal-counter"
 - [Styling Components](docs/styling.md) - getting global CSS (Tailwind, design systems, icon fonts) into shadow roots via constructed stylesheets
 - [Elmish DevTools](docs/elmish-devtools.md) - persisting Elmish state to `localStorage` for better HMR development experience
 - [Sample Projects](sample/README.md) - annotated examples from a basic tutorial to a full drag-and-drop Kanban board and multi-page routing
+- [Observers and Virtualizer sample](sample/ObserversAndVirtualizer/) - resize observation and two ways to virtualize a large list
 
 ## Getting Started
 

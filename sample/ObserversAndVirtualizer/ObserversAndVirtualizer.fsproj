@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <IsSampleProject>true</IsSampleProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="App.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Firelight\Firelight.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Observers\Firelight.Observers.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Virtualizer\Firelight.Virtualizer.fsproj" />
+  </ItemGroup>
+</Project>
