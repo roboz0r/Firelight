@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 425 200" id="full">
+  <defs>
+    <!-- Firelight Name Symbol -->
+    <symbol id="name-symbol" viewBox="240 78 185 122">
+      <text x="240" y="150" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="64" letter-spacing="-0.04em" fill="var(--lit-logo-text-color, #232323)">Firelight</text>
+    </symbol>
+
+    <!-- Firelight Geometric Campfire Symbol -->
+    <symbol id="flame-symbol" viewBox="0 0 160 200">
+      
+      <!-- LOG 1 (Back Foundation): F# Dark Blue 3D Geometric Block -->
+      <g id="log-back">
+        <!-- Top Face -->
+        <path fill="var(--firelight-log1-top, #305D97)" d="M120 150 L110 150 L50 90 L60 90 Z" />
+        <!-- Front Face -->
+        <path fill="var(--firelight-log1-front, #1C3A61)" d="M50 90 L110 150 L110 160 L50 100 Z" />
+        <!-- End Cap -->
+        <path fill="var(--firelight-log1-end, #608ECB)" d="M110 150 L120 150 L120 160 L110 160 Z" />
+      </g>
+
+      <!-- THE FIRE: Angular, interlocking polygons on a strict 45-degree grid -->
+      <g id="flame">
+        <!-- Outer Flame (Red) -->
+        <path fill="var(--firelight-flame-red, #D90429)" d="M80 125 L45 90 L45 65 L60 80 L80 40 L100 80 L115 65 L115 90 Z" />
+        <!-- Middle Flame (Orange) -->
+        <path fill="var(--firelight-flame-orange, #F77F00)" d="M80 125 L55 100 L55 80 L65 90 L80 60 L95 90 L105 80 L105 100 Z" />
+        <!-- Inner Flame (Yellow) -->
+        <path fill="var(--firelight-flame-yellow, #FCBF49)" d="M80 125 L65 110 L65 95 L70 100 L80 80 L90 100 L95 95 L95 110 Z" />
+      </g>
+
+      <!-- LOG 2 (Front Wrapper): F# Light Blue 3D Geometric Block -->
+      <!-- This block mathematically overlays the fire base to create forced 3D depth -->
+      <g id="log-front">
+        <!-- Top Face -->
+        <path fill="var(--firelight-log2-top, #30A2DC)" d="M40 150 L50 150 L110 90 L100 90 Z" />
+        <!-- Front Face -->
+        <path fill="var(--firelight-log2-front, #1D75A3)" d="M40 150 L100 90 L100 100 L40 160 Z" />
+        <!-- End Cap -->
+        <path fill="var(--firelight-log2-end, #7EC8EE)" d="M40 150 L50 150 L50 160 L40 160 Z" />
+      </g>
+      
+    </symbol>
+  </defs>
+
+  <!-- Advanced view targeting preserved from Lit core -->
+  <view id="flame" viewBox="-132.5 0 160 200"/>
+  <view id="name" viewBox="332.5 127.5 185 122" />
+
+  <!-- Render Instances -->
+  <use href="#name-symbol" x="332.5" y="127.5" transform="scale(0.61)"></use>
+  <use href="#flame-symbol" x="-132.5"></use>
+</svg>

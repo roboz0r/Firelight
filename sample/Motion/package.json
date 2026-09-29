@@ -1,0 +1,17 @@
+{
+  "name": "firelight-motion-sample",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preinstall": "dotnet tool restore",
+    "dev": "dotnet fable watch ./ -o ./build/ -s --run vite",
+    "build": "dotnet fable ./ -o ./build/ --run vite build"
+  },
+  "dependencies": {
+    "@lit-labs/motion": "1.1.0",
+    "lit": "3.3.1"
+  },
+  "devDependencies": {
+    "vite": "8.0.3"
+  }
+}

@@ -16,6 +16,7 @@ Firelight gives you idiomatic F# bindings to Lit's lightweight Web Components pl
 | `Firelight.Observers` | Reactive controllers for browser mutation, intersection, resize, and performance observers |
 | `Firelight.Router` | Client-side routing via the [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) |
 | `Firelight.Signals` | Bindings to Lit Labs signals for shared reactive state and targeted template updates |
+| `Firelight.Motion` | Bindings to Lit Labs animations and spring controllers |
 | `Firelight.Task` | Bindings to Lit's `@lit/task` reactive controller for async work |
 | `Firelight.Virtualizer` | Bindings to Lit Labs viewport virtualization for large lists |
 
@@ -205,6 +206,31 @@ defineElement<SignalCounter> "signal-counter"
 ```
 
 `open type LitSignals` brings its signal-aware `html` and `svg` tags into scope. If you also use `open type Firelight.Lit`, open `LitSignals` afterward: its `html` and `svg` shadow Lit's tags. Call `Lit.html` explicitly when you want the regular tag, and use `watch count` inside it for a targeted update. `updateEffect` attaches an effect to an element registered with `defineElement` and returns a dispose function. This Lit Labs package and its signal polyfill are experimental; pin compatible versions when deploying it.
+
+## Motion
+
+`Firelight.Motion` binds [`@lit-labs/motion`](https://github.com/lit/lit/tree/main/packages/labs/motion). Use `Motion.animate()` in an element expression to animate layout changes between renders. `MotionOptions` supports timing, entry and exit keyframes, guards, IDs for transitions between elements, and callbacks. The package also exposes `AnimateController`, `SpringController`, and `SpringController2D`.
+
+```fsharp
+open Firelight
+open Firelight.Motion
+open Fable.Core
+
+type MovingBox() =
+    inherit LitElement()
+
+    let mutable shifted = false
+
+    override _.render() =
+        Lit.html $"""
+            <button @click={fun _ -> shifted <- not shifted; base.requestUpdate()}>Move</button>
+            <div class={if shifted then "shifted" else ""}
+                 {Motion.animate(MotionOptions(keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 300.0), ``in`` = Motion.fade))}>
+            </div>
+        """
+```
+
+`MotionKeyframe.create` accepts arbitrary CSS properties for custom keyframes. The `animate` directive needs a Lit element expression, and its host must be a `LitElement`.
 
 ## Documentation
 

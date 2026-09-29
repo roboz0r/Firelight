@@ -113,6 +113,14 @@ list. Its package.json pins the JavaScript packages used by the bindings.
 
 See the [sample README](ObserversAndVirtualizer/README.md) for usage notes.
 
+## Motion
+
+**`sample/Motion/`**
+
+An interactive page for keyed layout transitions, entry and exit presets,
+`AnimateController` playback, and a spring driven element. See the
+[sample README](Motion/README.md) for the controls and run instructions.
+
 ## Running the Samples
 
 Each sample uses Vite as the dev server. From a sample directory (e.g. `sample/GettingStarted`):
