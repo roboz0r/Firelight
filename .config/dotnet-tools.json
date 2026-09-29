@@ -10,7 +10,7 @@
       "rollForward": false
     },
     "fable": {
-      "version": "4.29.0",
+      "version": "5.18.0",
       "commands": [
         "fable"
       ],

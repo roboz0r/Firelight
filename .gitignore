@@ -5,5 +5,5 @@ dist/
 node_modules/
 fable_modules/
 .claude/settings.local.json
-.serena/
 .vs/
+*.fs.js

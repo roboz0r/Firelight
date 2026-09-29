@@ -6,7 +6,7 @@
     <PackageVersion Include="Fable.Browser.Css" Version="2.5.0" />
     <PackageVersion Include="Fable.Browser.Dom" Version="2.20.0" />
     <PackageVersion Include="Fable.Browser.Event" Version="1.7.0" />
-    <PackageVersion Include="Fable.Core" Version="4.5.0" />
+    <PackageVersion Include="Fable.Core" Version="5.0.0" />
     <PackageVersion Include="Fable.Elmish" Version="5.0.2" />
     <PackageVersion Include="Fable.Package.SDK" Version="1.3.2" />
     <PackageVersion Include="FSharp.Core" Version="6.0.0" />
@@ -15,6 +15,8 @@
     <PackageVersion Include="Microsoft.Playwright" Version="1.58.0" />
     <PackageVersion Include="Expecto" Version="10.2.3" />
     <PackageVersion Include="Fable.Pyxpecto" Version="2.0.0" />
+    <!-- Pyxpecto 2.0.0 pulls Fable.Python 5.0.0-alpha.20.1, which pins Fable.Core 5.0.0-beta.4 exactly. -->
+    <PackageVersion Include="Fable.Python" Version="5.5.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsSampleProject)' == 'true'">
     <PackageVersion Include="FSharp.Data.LiteralProviders" Version="1.0.3" />

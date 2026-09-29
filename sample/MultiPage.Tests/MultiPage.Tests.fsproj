@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fable.Pyxpecto" />
+    <PackageReference Include="Fable.Python" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MultiPage\MultiPage.fsproj" />

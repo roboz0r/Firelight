@@ -11,13 +11,7 @@ open MultiPage
 type MultiPageApp() as this =
     inherit LitElement()
 
-    let router =
-        [
-            "/", (fun _ -> Home)
-            "/:page?", MultiPageModel.matchRoute
-            "/users/:id", MultiPageModel.matchUser
-        ]
-        |> createRouter NotFound
+    let router = createRouter NotFound MultiPageModel.routes
 
     let routing = RouterController(this, router)
 

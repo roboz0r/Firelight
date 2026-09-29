@@ -5,8 +5,7 @@ open Browser.Types.URLPattern
 open Firelight.Router
 open MultiPage
 
-let private router =
-    createRouter NotFound [ "/:page?", MultiPageModel.matchRoute; "/users/:id", MultiPageModel.matchUser ]
+let private router = createRouter NotFound MultiPageModel.routes
 
 let matchTests =
     testList "Router.Match" [

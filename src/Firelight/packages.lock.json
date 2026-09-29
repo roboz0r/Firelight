@@ -40,9 +40,12 @@
       },
       "Fable.Core": {
         "type": "Direct",
-        "requested": "[4.5.0, )",
-        "resolved": "4.5.0",
-        "contentHash": "ZcX8XN5sQZGCbrS8VYnsa/ynhrCBfpDyqDkTl33GTXOpgfKibxoq0+W0hCSbRzuukVNoLtqGL/B6+8yTNDXbNA=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "pJOXJjfhjvNa1cgtF+klgR3DxQI7x9D/fFzZbjUBZLBJyYIioPsTFsKUnIOqNdCq1Oby9lINUSwnL4TqspMQOA==",
+        "dependencies": {
+          "FSharp.Core": "4.7.2"
+        }
       },
       "Fable.Package.SDK": {
         "type": "Direct",
