@@ -30,9 +30,15 @@ type MutationRecord =
 [<AllowNullLiteral; Global>]
 type MutationOptions
     [<ParamObject; Emit("$0")>]
-    (?attributes: bool, ?attributeOldValue: bool, ?attributeFilter: string[],
-     ?characterData: bool, ?characterDataOldValue: bool, ?childList: bool,
-     ?subtree: bool) =
+    (
+        ?attributes: bool,
+        ?attributeOldValue: bool,
+        ?attributeFilter: string[],
+        ?characterData: bool,
+        ?characterDataOldValue: bool,
+        ?childList: bool,
+        ?subtree: bool
+    ) =
     member val attributes: bool option = nativeOnly with get, set
     member val attributeOldValue: bool option = nativeOnly with get, set
     member val attributeFilter: string[] option = nativeOnly with get, set
@@ -73,16 +79,13 @@ type ResizeEntry =
     abstract devicePixelContentBoxSize: ResizeBoxSize[]
 
 [<AllowNullLiteral; Global>]
-type ResizeOptions
-    [<ParamObject; Emit("$0")>]
-    (?box: string) =
+type ResizeOptions [<ParamObject; Emit("$0")>] (?box: string) =
     member val box: string option = nativeOnly with get, set
 
 [<AllowNullLiteral; Global>]
 type PerformanceOptions
     [<ParamObject; Emit("$0")>]
-    (?entryTypes: string[], ?``type``: string, ?buffered: bool,
-     ?durationThreshold: float) =
+    (?entryTypes: string[], ?``type``: string, ?buffered: bool, ?durationThreshold: float) =
     member val entryTypes: string[] option = nativeOnly with get, set
     member val ``type``: string option = nativeOnly with get, set
     member val buffered: bool option = nativeOnly with get, set
@@ -105,6 +108,7 @@ type PerformanceObserverEntryList =
 type MutationValueCallback<'T> = delegate of records: MutationRecord[] * observer: obj -> 'T
 type IntersectionValueCallback<'T> = delegate of entries: IntersectionEntry[] * observer: obj -> 'T
 type ResizeValueCallback<'T> = delegate of entries: ResizeEntry[] * observer: obj -> 'T
+
 type PerformanceValueCallback<'T> =
     delegate of entries: PerformanceEntry[] * observer: obj * pendingEntries: PerformanceObserverEntryList option -> 'T
 
@@ -120,8 +124,7 @@ type MutationControllerConfig<'T>
 [<AllowNullLiteral; Global>]
 type IntersectionControllerConfig<'T>
     [<ParamObject; Emit("$0")>]
-    (?target: Element, ?config: IntersectionOptions,
-     ?callback: IntersectionValueCallback<'T>, ?skipInitial: bool) =
+    (?target: Element, ?config: IntersectionOptions, ?callback: IntersectionValueCallback<'T>, ?skipInitial: bool) =
     member val target: Element option = nativeOnly with get, set
     member val config: IntersectionOptions option = nativeOnly with get, set
     member val callback: IntersectionValueCallback<'T> option = nativeOnly with get, set
@@ -130,8 +133,7 @@ type IntersectionControllerConfig<'T>
 [<AllowNullLiteral; Global>]
 type ResizeControllerConfig<'T>
     [<ParamObject; Emit("$0")>]
-    (?target: Element, ?config: ResizeOptions,
-     ?callback: ResizeValueCallback<'T>, ?skipInitial: bool) =
+    (?target: Element, ?config: ResizeOptions, ?callback: ResizeValueCallback<'T>, ?skipInitial: bool) =
     member val target: Element option = nativeOnly with get, set
     member val config: ResizeOptions option = nativeOnly with get, set
     member val callback: ResizeValueCallback<'T> option = nativeOnly with get, set
@@ -150,50 +152,54 @@ type PerformanceControllerConfig<'T>
 type MutationController<'T>(host: LitElement, config: MutationControllerConfig<'T>) =
     member _.value: 'T option = nativeOnly
     member val callback: MutationValueCallback<'T> option = nativeOnly with get, set
-    member _.observe(target: Element): unit = nativeOnly
+    member _.observe(target: Element) : unit = nativeOnly
+
     interface ReactiveController with
-        member _.hostConnected(): unit = nativeOnly
-        member _.hostDisconnected(): unit = nativeOnly
-        member _.hostUpdate(): unit = nativeOnly
-        member _.hostUpdated(): unit = nativeOnly
+        member _.hostConnected() : unit = nativeOnly
+        member _.hostDisconnected() : unit = nativeOnly
+        member _.hostUpdate() : unit = nativeOnly
+        member _.hostUpdated() : unit = nativeOnly
 
 /// Watches intersection changes and requests a host update.
 [<AllowNullLiteral; Import("IntersectionController", "@lit-labs/observers/intersection-controller.js")>]
 type IntersectionController<'T>(host: LitElement, config: IntersectionControllerConfig<'T>) =
     member _.value: 'T option = nativeOnly
     member val callback: IntersectionValueCallback<'T> option = nativeOnly with get, set
-    member _.observe(target: Element): unit = nativeOnly
-    member _.unobserve(target: Element): unit = nativeOnly
+    member _.observe(target: Element) : unit = nativeOnly
+    member _.unobserve(target: Element) : unit = nativeOnly
+
     interface ReactiveController with
-        member _.hostConnected(): unit = nativeOnly
-        member _.hostDisconnected(): unit = nativeOnly
-        member _.hostUpdate(): unit = nativeOnly
-        member _.hostUpdated(): unit = nativeOnly
+        member _.hostConnected() : unit = nativeOnly
+        member _.hostDisconnected() : unit = nativeOnly
+        member _.hostUpdate() : unit = nativeOnly
+        member _.hostUpdated() : unit = nativeOnly
 
 /// Watches size changes and requests a host update.
 [<AllowNullLiteral; Import("ResizeController", "@lit-labs/observers/resize-controller.js")>]
 type ResizeController<'T>(host: LitElement, config: ResizeControllerConfig<'T>) =
     member _.value: 'T option = nativeOnly
     member val callback: ResizeValueCallback<'T> option = nativeOnly with get, set
-    member _.observe(target: Element): unit = nativeOnly
-    member _.unobserve(target: Element): unit = nativeOnly
+    member _.observe(target: Element) : unit = nativeOnly
+    member _.unobserve(target: Element) : unit = nativeOnly
     /// Observe an element from a Lit element-part expression; cleanup is automatic.
-    member _.target(?observe: bool): DirectiveResult = nativeOnly
+    member _.target(?observe: bool) : DirectiveResult = nativeOnly
+
     interface ReactiveController with
-        member _.hostConnected(): unit = nativeOnly
-        member _.hostDisconnected(): unit = nativeOnly
-        member _.hostUpdate(): unit = nativeOnly
-        member _.hostUpdated(): unit = nativeOnly
+        member _.hostConnected() : unit = nativeOnly
+        member _.hostDisconnected() : unit = nativeOnly
+        member _.hostUpdate() : unit = nativeOnly
+        member _.hostUpdated() : unit = nativeOnly
 
 /// Watches performance entries and requests a host update.
 [<AllowNullLiteral; Import("PerformanceController", "@lit-labs/observers/performance-controller.js")>]
 type PerformanceController<'T>(host: ReactiveControllerHost, config: PerformanceControllerConfig<'T>) =
     member _.value: 'T option = nativeOnly
     member val callback: PerformanceValueCallback<'T> option = nativeOnly with get, set
-    member _.flush(): unit = nativeOnly
-    member _.observe(): unit = nativeOnly
+    member _.flush() : unit = nativeOnly
+    member _.observe() : unit = nativeOnly
+
     interface ReactiveController with
-        member _.hostConnected(): unit = nativeOnly
-        member _.hostDisconnected(): unit = nativeOnly
-        member _.hostUpdate(): unit = nativeOnly
-        member _.hostUpdated(): unit = nativeOnly
+        member _.hostConnected() : unit = nativeOnly
+        member _.hostDisconnected() : unit = nativeOnly
+        member _.hostUpdate() : unit = nativeOnly
+        member _.hostUpdated() : unit = nativeOnly

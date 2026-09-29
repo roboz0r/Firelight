@@ -6,7 +6,12 @@ open Firelight
 open Firelight.Motion
 open type Firelight.Lit
 
-type Card = { Id: int; Title: string; Detail: string }
+type Card =
+    {
+        Id: int
+        Title: string
+        Detail: string
+    }
 
 // Spring stops are percentages of the dot's travel. They sit inside the track
 // so the spring's overshoot is visible instead of being clamped at the edges.
@@ -17,7 +22,8 @@ let private SpringStart = 15.0
 let private SpringEnd = 85.0
 
 let private showcaseStyles =
-    css $$"""
+    css
+        $$"""
             :host { display: block; }
             .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
             section { background: white; border: 1px solid #dbe1ec; border-radius: 18px; padding: 22px; box-shadow: 0 10px 28px #26395b0a; }
@@ -48,11 +54,24 @@ let private showcaseStyles =
 type LayoutDemo() as this =
     inherit LitElement()
 
-    let mutable cards = [
-        { Id = 1; Title = "First"; Detail = "Keeps its DOM identity" }
-        { Id = 2; Title = "Second"; Detail = "Slides to a new position" }
-        { Id = 3; Title = "Third"; Detail = "Uses keyed repeat" }
-    ]
+    let mutable cards =
+        [
+            {
+                Id = 1
+                Title = "First"
+                Detail = "Keeps its DOM identity"
+            }
+            {
+                Id = 2
+                Title = "Second"
+                Detail = "Slides to a new position"
+            }
+            {
+                Id = 3
+                Title = "Third"
+                Detail = "Uses keyed repeat"
+            }
+        ]
 
     let mutable paused = false
     let mutable animationPending = false
@@ -61,13 +80,16 @@ type LayoutDemo() as this =
         AnimateController(
             this,
             AnimateControllerOptions(
-                defaultOptions = MotionOptions(
-                    keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 500.0),
-                    skipInitial = true
-                ),
-                onComplete = (fun () ->
-                    animationPending <- false
-                    this.requestUpdate())
+                defaultOptions =
+                    MotionOptions(
+                        keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 500.0),
+                        skipInitial = true
+                    ),
+                onComplete =
+                    (fun () ->
+                        animationPending <- false
+                        this.requestUpdate ()
+                    )
             )
         )
 
@@ -79,7 +101,7 @@ type LayoutDemo() as this =
             | first :: rest ->
                 animationPending <- true
                 cards <- rest @ [ first ]
-                this.requestUpdate()
+                this.requestUpdate ()
             | [] -> ()
 
     member private _.TogglePlayback() =
@@ -87,8 +109,8 @@ type LayoutDemo() as this =
         // pause()/play() only affect active animations; startPaused covers
         // animations created by a later click on Rotate cards.
         controller.startPaused <- paused
-        if paused then controller.pause() else controller.play()
-        this.requestUpdate()
+        if paused then controller.pause () else controller.play ()
+        this.requestUpdate ()
 
     override _.render() =
         let cardList =
@@ -96,22 +118,32 @@ type LayoutDemo() as this =
                 cards,
                 KeyFn(fun card _ -> card.Id),
                 ItemTemplate(fun card _ ->
-                    html $"""
-                        <li {Motion.animate()}>
+                    html
+                        $"""
+                        <li {Motion.animate ()}>
                             <strong>{card.Title}</strong>
                             <span>{card.Detail}</span>
                         </li>
-                    """)
+                    """
+                )
             )
 
-        html $"""
+        html
+            $"""
             <h2>Layout animation</h2>
             <p>Reorder the same keyed elements and watch Lit Motion animate their new positions.</p>
             <div class="buttons">
                 <button ?disabled={animationPending} @click={fun _ -> this.Reorder()}>Rotate cards</button>
                 <button class="secondary" aria-pressed={string paused} @click={fun _ -> this.TogglePlayback()}>{if paused then "Play animations" else "Pause animations"}</button>
             </div>
-            <p class="hint">{if paused && animationPending then "Paused. Press Play before starting another transition." elif paused then "Paused. Rotate the cards, then press Play to see them move." elif animationPending then "Transition in progress." else "Animations are playing."}</p>
+            <p class="hint">{if paused && animationPending then
+                                 "Paused. Press Play before starting another transition."
+                             elif paused then
+                                 "Paused. Rotate the cards, then press Play to see them move."
+                             elif animationPending then
+                                 "Transition in progress."
+                             else
+                                 "Animations are playing."}</p>
             <ol>{cardList}</ol>
         """
 
@@ -131,9 +163,11 @@ type MotionShowcase() as this =
             skipInitial = true,
             ``in`` = Motion.fadeIn,
             ``out`` = Motion.fadeOut,
-            onComplete = (fun _ ->
-                noticePending <- false
-                this.requestUpdate())
+            onComplete =
+                (fun _ ->
+                    noticePending <- false
+                    this.requestUpdate ()
+                )
         )
 
     let spring =
@@ -150,13 +184,18 @@ type MotionShowcase() as this =
         if not noticePending then
             noticePending <- true
             noticeVisible <- not noticeVisible
-            this.requestUpdate()
+            this.requestUpdate ()
 
     member private _.MoveSpring() =
         // Read the controller's target so hot reload cannot leave a separate
         // direction flag out of sync with the running spring.
-        spring.toValue <- if spring.toValue = SpringEnd then SpringStart else SpringEnd
-        this.requestUpdate()
+        spring.toValue <-
+            if spring.toValue = SpringEnd then
+                SpringStart
+            else
+                SpringEnd
+
+        this.requestUpdate ()
 
     override _.render() =
         // Guard only; the stops leave room for normal overshoot.
@@ -165,15 +204,17 @@ type MotionShowcase() as this =
 
         let notice: ChildRenderable =
             if noticeVisible then
-                html $"""
-                    <div class="notice" {Motion.animate(noticeOptions)}>
+                html
+                    $"""
+                    <div class="notice" {Motion.animate (noticeOptions)}>
                         The notice animates when it appears and disappears.
                     </div>
                 """
             else
                 nothing
 
-        html $"""
+        html
+            $"""
             <div class="grid">
                 <section class="wide"><motion-layout-demo></motion-layout-demo></section>
                 <section>
@@ -186,7 +227,11 @@ type MotionShowcase() as this =
                     <h2>Spring controller</h2>
                     <p>The spring updates its host while the value settles at a new target.</p>
                     <div class="buttons"><button @click={fun _ -> this.MoveSpring()}>Move dot</button></div>
-                    <div class="track"><div class="lane"><div class="dot" style={"left: " + string position + "%; transform: translate(-" + string position + "%, -50%)"}>●</div></div></div>
+                    <div class="track"><div class="lane"><div class="dot" style={"left: "
+                                                                                 + string position
+                                                                                 + "%; transform: translate(-"
+                                                                                 + string position
+                                                                                 + "%, -50%)"}>●</div></div></div>
                     <p class="hint">Current position: {positionText}</p>
                 </section>
             </div>
@@ -198,7 +243,8 @@ let root = document.getElementById "app"
 
 if root <> null then
     render (
-        html $"""
+        html
+            $"""
             <h1>Firelight Motion</h1>
             <p class="intro">A few ways to bring movement into a Lit component from F#.</p>
             <motion-showcase></motion-showcase>

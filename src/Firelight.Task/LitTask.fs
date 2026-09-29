@@ -25,8 +25,7 @@ type TaskFunctionOptions =
 type TaskResult<'Result> = U2<'Result, JS.Promise<'Result>>
 
 /// A task function receives the current arguments and a signal for cancelling stale work.
-type TaskFunction<'Args, 'Result> =
-    delegate of args: 'Args * options: TaskFunctionOptions -> TaskResult<'Result>
+type TaskFunction<'Args, 'Result> = delegate of args: 'Args * options: TaskFunctionOptions -> TaskResult<'Result>
 
 /// Compares the previous and current task arguments.
 type TaskArgsEqual<'Args> = delegate of oldArgs: 'Args * newArgs: 'Args -> bool
@@ -36,10 +35,8 @@ type TaskArgsEqual<'Args> = delegate of oldArgs: 'Args * newArgs: 'Args -> bool
 [<Global>]
 type StatusRenderer<'Result, 'Rendered>
     [<ParamObject; Emit("$0")>]
-    (?initial: unit -> 'Rendered,
-     ?pending: unit -> 'Rendered,
-     ?complete: 'Result -> 'Rendered,
-     ?error: obj -> 'Rendered) =
+    (?initial: unit -> 'Rendered, ?pending: unit -> 'Rendered, ?complete: 'Result -> 'Rendered, ?error: obj -> 'Rendered)
+    =
     member val initial: (unit -> 'Rendered) option = nativeOnly with get, set
     member val pending: (unit -> 'Rendered) option = nativeOnly with get, set
     member val complete: ('Result -> 'Rendered) option = nativeOnly with get, set
@@ -50,13 +47,15 @@ type StatusRenderer<'Result, 'Rendered>
 [<Global>]
 type TaskConfig<'Args, 'Result>
     [<ParamObject; Emit("$0")>]
-    (task: TaskFunction<'Args, 'Result>,
-     ?args: unit -> 'Args,
-     ?autoRun: U2<bool, string>,
-     ?argsEqual: TaskArgsEqual<'Args>,
-     ?initialValue: 'Result,
-     ?onComplete: 'Result -> unit,
-     ?onError: obj -> unit) =
+    (
+        task: TaskFunction<'Args, 'Result>,
+        ?args: unit -> 'Args,
+        ?autoRun: U2<bool, string>,
+        ?argsEqual: TaskArgsEqual<'Args>,
+        ?initialValue: 'Result,
+        ?onComplete: 'Result -> unit,
+        ?onError: obj -> unit
+    ) =
     member val task: TaskFunction<'Args, 'Result> = nativeOnly with get, set
     member val args: (unit -> 'Args) option = nativeOnly with get, set
     /// Determines whether the task runs automatically when its arguments change after a host update.
@@ -102,32 +101,32 @@ type LitTask<'Args, 'Result>(host: ReactiveControllerHost, config: TaskConfig<'A
     member _.taskComplete: JS.Promise<'Result> = nativeOnly
     /// Runs the task manually, for example in response to an event. If args is omitted,
     /// the configured arguments function supplies the arguments for this run.
-    member _.run(?args: 'Args): JS.Promise<unit> = nativeOnly
+    member _.run(?args: 'Args) : JS.Promise<unit> = nativeOnly
     /// Aborts a pending run by aborting the signal passed to the task function. This has no
     /// effect unless the task is pending, and does not itself cancel the task function.
     /// The function must forward the signal to an API such as fetch() or handle cancellation
     /// through signal.throwIfAborted() or the signal's abort event. The optional reason is
     /// passed to AbortController.abort().
-    member _.abort(?reason: obj): unit = nativeOnly
-    member _.render(renderer: StatusRenderer<'Result, 'Rendered>): 'Rendered option = nativeOnly
+    member _.abort(?reason: obj) : unit = nativeOnly
+    member _.render(renderer: StatusRenderer<'Result, 'Rendered>) : 'Rendered option = nativeOnly
 
     interface ReactiveController with
-        member _.hostConnected(): unit = nativeOnly
-        member _.hostDisconnected(): unit = nativeOnly
-        member _.hostUpdate(): unit = nativeOnly
-        member _.hostUpdated(): unit = nativeOnly
+        member _.hostConnected() : unit = nativeOnly
+        member _.hostDisconnected() : unit = nativeOnly
+        member _.hostUpdate() : unit = nativeOnly
+        member _.hostUpdated() : unit = nativeOnly
 
 
 [<AutoOpen>]
 module TaskHelpers =
     /// A special value that resets a task to INITIAL status when returned by its task function.
     [<Import("initialState", "@lit/task")>]
-    let initialState<'Result>: TaskResult<'Result> = nativeOnly
+    let initialState<'Result> : TaskResult<'Result> = nativeOnly
 
     /// Compare task argument arrays by reference or primitive value.
     [<Import("shallowArrayEquals", "@lit/task")>]
-    let shallowArrayEquals<'T> (oldArgs: 'T[]) (newArgs: 'T[]): bool = nativeOnly
+    let shallowArrayEquals<'T> (oldArgs: 'T[]) (newArgs: 'T[]) : bool = nativeOnly
 
     /// Compare task argument arrays recursively.
     [<Import("deepArrayEquals", "@lit/task/deep-equals.js")>]
-    let deepArrayEquals<'T> (oldArgs: 'T[]) (newArgs: 'T[]): bool = nativeOnly
+    let deepArrayEquals<'T> (oldArgs: 'T[]) (newArgs: 'T[]) : bool = nativeOnly

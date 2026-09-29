@@ -39,7 +39,7 @@ let calculateInsertIndex (e: Event) =
 
     seq { 0 .. int cards.length - 1 }
     |> Seq.tryFindIndex (fun i ->
-        let rect = (cards.[i] :?> HTMLElement).getBoundingClientRect ()
+        let rect = (cards.[i] :?> HTMLElement).getBoundingClientRect()
         mouseY < rect.top + rect.height / 2.0
     )
     |> Option.defaultValue (int cards.length)
@@ -118,7 +118,7 @@ let dropIndicatorTemplate () : HTMLTemplateResult =
 // ---------------------------------------------------------------------------
 
 let addCardFormTemplate (columnId: ColumnId) (dispatch: KanbanMsg -> unit) : HTMLTemplateResult =
-    let inputRef = createRef<HTMLInputElement> ()
+    let inputRef = createRef<HTMLInputElement>()
 
     html
         $"""
@@ -266,7 +266,7 @@ let addColumnTemplate (editTarget: EditTarget) (dispatch: KanbanMsg -> unit) : H
         | _ -> false
 
     if isAdding then
-        let inputRef = createRef<HTMLInputElement> ()
+        let inputRef = createRef<HTMLInputElement>()
 
         html
             $"""
@@ -304,8 +304,8 @@ let addColumnTemplate (editTarget: EditTarget) (dispatch: KanbanMsg -> unit) : H
 // ---------------------------------------------------------------------------
 
 let editCardModalTemplate (card: Card) (dispatch: KanbanMsg -> unit) : HTMLTemplateResult =
-    let titleRef = createRef<HTMLInputElement> ()
-    let descRef = createRef<HTMLTextAreaElement> ()
+    let titleRef = createRef<HTMLInputElement>()
+    let descRef = createRef<HTMLTextAreaElement>()
 
     let priorityButton (p: Priority) (current: Priority) =
         let isActive = p = current

@@ -23,11 +23,8 @@ module MultiPageModel =
 
     /// Route table shared by the app and its tests. The root needs its own
     /// entry because "/:page?" does not match "/" in URLPattern.
-    let routes: (string * (URLPatternResult -> Page)) list = [
-        "/", (fun _ -> Home)
-        "/:page", matchRoute
-        "/users/:id", matchUser
-    ]
+    let routes: (string * (URLPatternResult -> Page)) list =
+        [ "/", (fun _ -> Home); "/:page", matchRoute; "/users/:id", matchUser ]
 
     let pageTitle =
         function

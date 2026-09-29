@@ -63,7 +63,7 @@ type Browser.Types.Event with
             [<Optional; DefaultParameterValue(true)>] composed: bool
         ) =
         let eventInit =
-            Fable.Core.JsInterop.jsOptions<CustomEventInit<'T>> (fun o ->
+            Fable.Core.JsInterop.jsOptions<CustomEventInit<'T>>(fun o ->
                 o.detail <- Some detail
                 o.bubbles <- bubbles
                 o.composed <- composed

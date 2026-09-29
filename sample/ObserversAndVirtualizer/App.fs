@@ -16,15 +16,20 @@ type ResizeDemo() as this =
         ResizeController<float>(
             this,
             ResizeControllerConfig(
-                callback = ResizeValueCallback(fun entries _ ->
-                    if entries.Length = 0 then 0.0 else entries.[0].contentRect.width)
+                callback =
+                    ResizeValueCallback(fun entries _ ->
+                        if entries.Length = 0 then
+                            0.0
+                        else
+                            entries.[0].contentRect.width
+                    )
             )
         )
 
     override _.render() =
         html $"<p>Resize this panel: {size.value |> Option.defaultValue 0.0}px wide</p>"
 
-let items = [| for index in 1 .. 1000 -> $"Item {index}" |]
+let items = [| for index in 1..1000 -> $"Item {index}" |]
 
 let renderItem =
     RenderItem<string>(fun item _ -> html $"<div class='item'>{item}</div>")
@@ -37,7 +42,7 @@ type VirtualListDemo() =
 
     override _.render() =
         let list =
-            Virtualizer.virtualize(
+            Virtualizer.virtualize (
                 VirtualizeConfig(
                     items,
                     RenderItem(fun item _ -> html $"<li>{item}</li>"),
@@ -50,10 +55,10 @@ type VirtualListDemo() =
             $"""
             <p>The directive virtualizes a regular list:</p>
             <button @click={fun _ ->
-                listRef.value
-                |> Option.bind (fun element -> Virtualizer.get(element))
-                |> Option.bind (fun handle -> handle.element(499))
-                |> Option.iter (fun child -> child.scrollIntoView())}>Scroll to item 500</button>
+                                listRef.value
+                                |> Option.bind (fun element -> Virtualizer.get (element))
+                                |> Option.bind (fun handle -> handle.element (499))
+                                |> Option.iter (fun child -> child.scrollIntoView ())}>Scroll to item 500</button>
             <ul {ref listRef} style="height: 14rem; overflow: auto;">{list}</ul>
             <p>The custom element offers the same behavior:</p>
             <lit-virtualizer scroller style="height: 14rem;" .items={items} .renderItem={renderItem}></lit-virtualizer>
@@ -61,7 +66,7 @@ type VirtualListDemo() =
 
 defineElement<ResizeDemo> "resize-demo"
 defineElement<VirtualListDemo> "virtual-list-demo"
-Virtualizer.defineElement()
+Virtualizer.defineElement ()
 
 let root = document.getElementById "app"
 

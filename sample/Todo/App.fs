@@ -110,8 +110,8 @@ type TodoApp() as this =
     inherit LitElement()
 
     let mutable _state: TodoState = { Items = [] }
-    let inputRef = createRef<HTMLInputElement> ()
-    let btnRef = createRef<HTMLButtonElement> ()
+    let inputRef = createRef<HTMLInputElement>()
+    let btnRef = createRef<HTMLButtonElement>()
 
     let stateProvider =
         ContextProvider(jsThis, ContextProvider.Options(Context.stateCtx, _state))

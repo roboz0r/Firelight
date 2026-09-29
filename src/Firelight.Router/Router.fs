@@ -183,7 +183,7 @@ module EventHandlers =
                             match targetElement with
                             | Some el ->
                                 let opts =
-                                    jsOptions<ScrollIntoViewOptions> (fun opts ->
+                                    jsOptions<ScrollIntoViewOptions>(fun opts ->
                                         opts.block <- ScrollAlignment.Start
                                         opts.behavior <- ScrollBehavior.Smooth
                                     )

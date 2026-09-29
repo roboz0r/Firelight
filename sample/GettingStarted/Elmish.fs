@@ -29,7 +29,7 @@ module Counter =
     let encode (model: CounterModel) : string = Encode.Auto.toString (0, model)
 
     let decode (json: string) : CounterModel option =
-        match Decode.Auto.fromString<CounterModel> (json) with
+        match Decode.Auto.fromString<CounterModel>(json) with
         | Ok model -> Some model
         | Error _ -> None
 
