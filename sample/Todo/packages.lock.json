@@ -72,6 +72,16 @@
           "Firelight": "[0.2.0, )"
         }
       },
+      "firelight.elmish": {
+        "type": "Project",
+        "dependencies": {
+          "FSharp.Core": "[6.0.0, )",
+          "Fable.Browser.Dom": "[2.20.0, )",
+          "Fable.Core": "[5.0.0, )",
+          "Fable.Elmish": "[5.0.2, )",
+          "Firelight": "[0.2.0, )"
+        }
+      },
       "Fable.Browser.Css": {
         "type": "CentralTransitive",
         "requested": "[2.5.0, )",
@@ -115,6 +125,16 @@
         "contentHash": "pJOXJjfhjvNa1cgtF+klgR3DxQI7x9D/fFzZbjUBZLBJyYIioPsTFsKUnIOqNdCq1Oby9lINUSwnL4TqspMQOA==",
         "dependencies": {
           "FSharp.Core": "4.7.2"
+        }
+      },
+      "Fable.Elmish": {
+        "type": "CentralTransitive",
+        "requested": "[5.0.2, )",
+        "resolved": "5.0.2",
+        "contentHash": "2/5a5Isu9O1cQQeUZ4I70ZFKF1kkl14xoQXZ6zP4tWTQotNDJCWN2LlLku+1+4mO/jnOUGQy2jJ1KgzG5MhoLw==",
+        "dependencies": {
+          "FSharp.Core": "4.7.2",
+          "Fable.Core": "4.0.0"
         }
       },
       "FSharp.Core": {

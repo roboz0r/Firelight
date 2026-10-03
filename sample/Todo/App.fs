@@ -7,6 +7,7 @@ open Browser
 open Browser.Types
 open Firelight
 open Firelight.Context
+open Firelight.Elmish
 open type Firelight.Lit
 
 open TodoModel
@@ -61,7 +62,11 @@ type TodoItemComponent() =
     static member properties =
         PropertyDeclarations.create [ "todoId", PropertyDeclaration<int>(attribute = !^"todo-id") ]
 
-    static member styles = [| Styling.theme |]
+    static member styles =
+        cssResultGroup {
+            yield! Stylesheets.allComponentStyles
+            Styling.theme
+        }
 
     override _.render() =
         match _item with
@@ -71,25 +76,13 @@ type TodoItemComponent() =
 
             html
                 $"""
-{Stylesheets.stylesheetLinks ()}
-<div class="flex items-center gap-3 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl px-4 py-3 transition-colors">
-    <input class="w-4 h-4 cursor-pointer accent-amber-500 shrink-0"
+<div class="flex items-center gap-3 bg-surface border border-line hover:border-muted rounded-xl px-4 py-3 transition-colors">
+    <input class="w-4 h-4 cursor-pointer accent-accent shrink-0"
         type="checkbox" id={id} ?checked={item.Done}
         @click={fun _ -> dispatch (ToggleTodo(id, not item.Done))} />
-    <label class={classMap (
-                      ClassInfo.create [
-                          "flex-1 text-sm cursor-pointer select-none transition-colors", true
-                          "text-slate-500 line-through", item.Done
-                          "text-slate-100", not item.Done
-                      ]
-                  )} for={id}>{item.Text}</label>
-    <button class={classMap (
-                       ClassInfo.create [
-                           "text-xs px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white transition-colors font-medium shrink-0",
-                           true
-                           "hidden", not item.Done
-                       ]
-                   )}
+    <label class="flex-1 text-sm cursor-pointer select-none transition-colors {if item.Done then "text-muted line-through" else "text-ink"}"
+        for={id}>{item.Text}</label>
+    <button class="text-xs px-3 py-1 rounded-lg border border-line text-muted hover:text-danger hover:border-danger transition-colors font-medium shrink-0 {if item.Done then "" else "hidden"}"
         @click={fun _ -> dispatch (RemoveTodo id)}>Remove</button>
 </div>"""
 
@@ -109,24 +102,29 @@ type TodoItemComponent() =
 type TodoApp() as this =
     inherit LitElement()
 
-    let mutable _state: TodoState = { Items = [] }
+    // The Elmish loop owns the state; each new model triggers a render of this component.
+    let elmish = ElmishController.simple this init update
     let inputRef = createRef<HTMLInputElement>()
     let btnRef = createRef<HTMLButtonElement>()
 
     let stateProvider =
-        ContextProvider(jsThis, ContextProvider.Options(Context.stateCtx, _state))
+        ContextProvider(jsThis, ContextProvider.Options(Context.stateCtx, elmish.model))
 
-    // Provide a stable function reference; the closure always reads the current _state.
+    // A stable function reference: children never need to re-subscribe to dispatch.
     let _dispatchProvider =
-        ContextProvider(jsThis, ContextProvider.Options(Context.dispatchCtx, fun msg -> this.Dispatch msg))
+        ContextProvider(jsThis, ContextProvider.Options(Context.dispatchCtx, fun msg -> elmish.dispatch msg))
 
-    static member styles = [| Styling.theme |]
+    static member styles =
+        cssResultGroup {
+            yield! Stylesheets.allComponentStyles
+            Styling.theme
+        }
 
-    member this.Dispatch(msg: TodoMsg) =
-        let newState = TodoMsg.update msg _state
-        _state <- newState
-        stateProvider.setValue newState
-        this.requestUpdate ()
+    member _.Dispatch(msg: TodoMsg) = elmish.dispatch msg
+
+    // Pass each new model down to the item components before rendering.
+    // Models are immutable, so the provider only notifies consumers when the state has changed.
+    override _.willUpdate(_) = stateProvider.setValue elmish.model
 
     member this.AddTodo() =
         match inputRef.value with
@@ -148,8 +146,8 @@ type TodoApp() as this =
             | Some input -> String.IsNullOrWhiteSpace input.value
             | None -> true
 
-        let doneCount = _state.Items |> List.filter (fun x -> x.Done) |> List.length
-        let totalCount = _state.Items.Length
+        let doneCount = elmish.model.Items |> List.filter (fun x -> x.Done) |> List.length
+        let totalCount = elmish.model.Items.Length
 
         let countLabel =
             if totalCount = 0 then "No tasks yet"
@@ -158,31 +156,30 @@ type TodoApp() as this =
 
         html
             $"""
-{Stylesheets.stylesheetLinks ()}
-<div class="min-h-screen bg-slate-950 text-white">
+<div class="min-h-screen bg-page text-ink">
     <div class="max-w-2xl mx-auto px-6 py-16">
 
         <header class="mb-10">
-            <h1 class="text-4xl font-bold tracking-tight text-white">Tasks</h1>
-            <p class="text-slate-400 mt-1 text-sm">{countLabel}</p>
+            <h1 class="text-4xl font-bold tracking-tight text-ink">Tasks</h1>
+            <p class="text-muted mt-1 text-sm">{countLabel}</p>
         </header>
 
         <div class="flex gap-3 mb-8">
             <input {ref inputRef}
-                class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-sm"
+                class="flex-1 bg-surface border border-line rounded-xl px-4 py-3 text-ink placeholder-muted focus:outline-hidden focus:ring-2 focus:ring-accent focus:border-transparent transition-all text-sm"
                 type="text" placeholder="What needs doing?"
                 @input={fun _ ->
                             match btnRef.value with
                             | Some btn -> btn.disabled <- String.IsNullOrWhiteSpace(inputRef.value.Value.value)
                             | None -> ()} />
             <button {ref btnRef}
-                class="px-6 py-3 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-slate-950 font-semibold rounded-xl transition-colors text-sm"
+                class="px-6 py-3 bg-accent hover:bg-accent/90 active:bg-accent/80 border border-transparent disabled:bg-surface disabled:border-line disabled:text-muted disabled:cursor-not-allowed text-on-accent font-semibold rounded-xl transition-colors text-sm"
                 ?disabled={addDisabled}
                 @click={fun _ -> this.AddTodo()}>Add</button>
         </div>
 
         <ul class="flex flex-col gap-2 list-none p-0 m-0">
-            {repeat (_state.Items, (fun item _ -> item.Id), fun item i -> this.RenderItem item i)}
+            {repeat (elmish.model.Items, (fun item _ -> item.Id), fun item i -> this.RenderItem item i)}
         </ul>
 
     </div>

@@ -1,37 +1,40 @@
 @import 'tailwindcss';
 
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+/* The Firelight site's palette (site/site.css), so the demo looks at home there. */
+:root, :host {
+  color-scheme: light dark;
+  --fl-bg: #fffdf9;
+  --fl-fg: #1f1d1a;
+  --fl-muted: #6b645c;
+  --fl-border: #e8e1d8;
+  --fl-surface: #f7f2ec;
+  --fl-accent: #d9480f;
+  --fl-accent-fg: #ffffff;
+  --fl-danger: #c92a2a;
+}
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+@media (prefers-color-scheme: dark) {
+  :root, :host {
+    --fl-bg: #17151a;
+    --fl-fg: #ece8e3;
+    --fl-muted: #a39b92;
+    --fl-border: #2f2b30;
+    --fl-surface: #1f1c22;
+    --fl-accent: #ff8a3d;
+    --fl-accent-fg: #17151a;
+    --fl-danger: #ff6b6b;
   }
 }
 
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+/* `inline` makes utilities like bg-page use var(--fl-bg) directly. Custom properties inherit
+   through shadow roots, so components pick up the light or dark values from the document. */
+@theme inline {
+  --color-page: var(--fl-bg);
+  --color-ink: var(--fl-fg);
+  --color-muted: var(--fl-muted);
+  --color-line: var(--fl-border);
+  --color-surface: var(--fl-surface);
+  --color-accent: var(--fl-accent);
+  --color-on-accent: var(--fl-accent-fg);
+  --color-danger: var(--fl-danger);
 }

@@ -1,27 +1,17 @@
 module Todo.Stylesheets
 
+open Fable.Core
 open Browser
-open Browser.Types
-open Firelight
-open type Firelight.Lit
 
-/// Hrefs of same-origin stylesheets found in document.head at module load time.
-/// Capturing them once handles both dev (static path) and production (Vite-hashed filename).
-let private hrefs =
-    let origin = window.location.origin
-    let links = document.head.querySelectorAll "link[rel='stylesheet']"
+// The app's Tailwind CSS, imported as a string at build time and adopted by each component's
+// shadow root, so the styles are there on first render. (The <link> in index.html styles the
+// document itself, but doesn't reach inside shadow roots.) See docs/styling.md.
+[<ImportDefault("./App.css?inline")>]
+let private appCss: string = jsNative
 
-    [|
-        for i in 0 .. links.length - 1 do
-            match links.item i with
-            | :? HTMLLinkElement as link when link.href.StartsWith(origin) -> link.href.Substring(origin.Length)
-            | _ -> ()
-    |]
+let private makeSheet (cssText: string) =
+    let sheet = CSSStyleSheet.Create()
+    sheet.replaceSync cssText
+    sheet
 
-/// Renders <link> elements for each discovered stylesheet into the component's shadow DOM.
-/// Call at the top of render() in any component that uses Tailwind classes.
-let stylesheetLinks () : HTMLTemplateResult =
-    let links =
-        hrefs |> Array.map (fun href -> html $"<link rel=\"stylesheet\" href={href}>")
-
-    html $"{links}"
+let allComponentStyles = [| makeSheet appCss |]

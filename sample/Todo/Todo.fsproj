@@ -21,5 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Firelight\Firelight.fsproj" />
     <ProjectReference Include="..\..\src\Firelight.Context\Firelight.Context.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Elmish\Firelight.Elmish.fsproj" />
   </ItemGroup>
 </Project>
