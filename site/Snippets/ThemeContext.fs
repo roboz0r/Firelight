@@ -55,8 +55,8 @@ type ThemedBadge() =
         css
             $$"""
         span { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 1rem; color: white; }
-        .Ember { background: #d9480f; }
-        .Ocean { background: #1c7ed6; }
+        .Ember { background: #c2410c; }
+        .Ocean { background: #1971c2; }
         """
 
     override _.render() =

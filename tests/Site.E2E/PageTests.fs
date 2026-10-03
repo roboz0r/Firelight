@@ -142,21 +142,10 @@ let knownViolations =
     [
         {
             Rule = "color-contrast"
-            // Only these elements: links (and code inside them), the buttons, Shiki's code lines and
-            // two demos' own colours. Contrast failures anywhere else fail the run.
-            Covers =
-                fun target ->
-                    Text.RegularExpressions.Regex.IsMatch(
-                        target,
-                        @"(^|[\s>])a(\[[^\]]*\]|:[\w-]+(\([^)]*\))?)*( > code)?$"
-                    )
-                    || target.EndsWith ".primary"
-                    || target.EndsWith ".button"
-                    || target.Contains ".line"
-                    || target.Contains "my-themed-badge"
-                    || target.Contains "my-resize-panel"
+            // Only Shiki's code lines. Contrast failures anywhere else fail the run.
+            Covers = fun target -> target.Contains ".line"
             Reason =
-                "links and buttons use the accent colour (#d9480f with white is 4.3:1); some Shiki github-light token colours, the Ember badge in the context demo and the resize panel's boxes are also below WCAG AA's 4.5:1. Needs a design decision (a darker text accent, another theme)."
+                "github-light colours identifiers #e36209, 3.5:1 on its white background, below WCAG AA's 4.5:1 (and github-dark's comments, #6a737d, are 3.1:1, though axe only checks the light theme). Needs another theme or colour replacements."
         }
         {
             Rule = "valid-lang"

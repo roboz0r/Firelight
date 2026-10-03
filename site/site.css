@@ -5,7 +5,11 @@
   --muted: #6b645c;
   --border: #e8e1d8;
   --surface: #f7f2ec;
-  --accent: #d9480f;
+  /* From the logo (images/logo.svg). --brand, its ember, is for marks and decoration (borders,
+     rules); it is too light for text. --accent is the ember darkened for text: links, buttons,
+     anything read. It is 5.1:1 on --bg and 4.6:1 on --surface, and --accent-fg on it is 5.2:1. */
+  --brand: #d9480f;
+  --accent: #c2410c;
   --accent-fg: #ffffff;
   --code-bg: #ffffff;
   --radius: 0.5rem;
@@ -23,6 +27,8 @@
     --muted: #a39b92;
     --border: #2f2b30;
     --surface: #1f1c22;
+    /* The logo's light flame: 7.7:1 on --bg, 7.2:1 on --surface, and 7.7:1 with --accent-fg. */
+    --brand: #ff8a3d;
     --accent: #ff8a3d;
     --accent-fg: #17151a;
     --code-bg: #24292e;
@@ -174,11 +180,11 @@ td:first-child { white-space: nowrap; }
   text-decoration: none;
   font-size: 0.9rem;
 }
-.package-links a:hover { border-color: var(--accent); }
+.package-links a:hover { border-color: var(--brand); }
 section > p { max-width: 48rem; }
 .notice {
   padding: 0.75rem 1rem;
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--brand);
   border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--surface);
 }
@@ -193,7 +199,7 @@ section > p { max-width: 48rem; }
   color: var(--fg);
   font-weight: 600;
 }
-.pager a:hover { border-color: var(--accent); }
+.pager a:hover { border-color: var(--brand); }
 .pager span { font-size: 0.85rem; font-weight: 400; color: var(--muted); }
 .pager .next { margin-left: auto; text-align: right; }
 
