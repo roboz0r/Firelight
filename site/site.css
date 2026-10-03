@@ -63,6 +63,13 @@ code { font-family: var(--mono); font-size: 0.9em; }
 .site-header nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
 .site-header nav a { color: var(--fg); text-decoration: none; }
 .site-header nav a:hover { color: var(--accent); }
+/* Narrow screens: the links go on their own rows under the logo, all of them visible, rather than
+   squeezing into a column beside it. (The links fit beside the logo down to about 720px.) */
+@media (max-width: 46rem) {
+  .site-header { flex-wrap: wrap; row-gap: 0.5rem; }
+  .site-header nav { width: 100%; gap: 0.25rem 1.25rem; }
+  .site-header nav a { padding-block: 0.25rem; }
+}
 .brand { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--fg); text-decoration: none; font-weight: 900; font-size: 1.5rem; letter-spacing: -0.04em; }
 .brand-mark { flex: none; width: 2rem; height: 2rem; }
 

@@ -20,6 +20,7 @@
     <Compile Include="WeightTests.fs" />
     <Compile Include="AgentTests.fs" />
     <Compile Include="SearchTests.fs" />
+    <Compile Include="MobileTests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
