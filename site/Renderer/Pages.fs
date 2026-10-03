@@ -47,6 +47,12 @@ let sections =
             PageList = Some "All packages"
         }
         {
+            Id = "guides"
+            Name = "Guides"
+            Href = "/guides/"
+            PageList = None
+        }
+        {
             Id = "demos"
             Name = "Demos"
             Href = "/#demos"
