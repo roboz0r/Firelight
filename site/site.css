@@ -178,6 +178,20 @@ section > p { max-width: 48rem; }
   border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--surface);
 }
+/* Previous and next pages in the same section */
+.pager { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+.pager a {
+  display: grid;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: 600;
+}
+.pager a:hover { border-color: var(--accent); }
+.pager span { font-size: 0.85rem; font-weight: 400; color: var(--muted); }
+.pager .next { margin-left: auto; text-align: right; }
+
 .package-nav { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
 .package-nav h2 { font-size: 1rem; margin: 0 0 0.75rem; color: var(--muted); }
 .package-nav ul { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin: 0; padding: 0; list-style: none; }

@@ -27,17 +27,7 @@ let private highlighter = lazy (Markdown.Highlight.create ())
 /// Every Markdown page: its source (`content/packages/firelight.md`) and the HTML file it becomes
 /// (`packages/firelight/index.html`), both relative to the site root.
 let pages (root: string) =
-    let pages =
-        Pages.sources root
-        |> Array.map (fun source -> Pages.parse source (readFileSync (resolvePath (root, source), "utf8")))
-
-    // `foo.md` and `foo/index.md` would both become foo/index.html.
-    for output, clashing in pages |> Array.groupBy _.Output do
-        if clashing.Length > 1 then
-            let sources = clashing |> Array.map _.Source |> String.concat " and "
-            failwith $"{sources} would both become {output}."
-
-    pages
+    Pages.load root
     |> Array.map (fun page ->
         {|
             source = page.Source
@@ -50,8 +40,12 @@ let pages (root: string) =
 let renderPage (host: Host) (source: string) : JS.Promise<string> =
     async {
         try
+            let site = Pages.load host.root |> List.ofArray
+
             let page =
-                Pages.parse source (readFileSync (resolvePath (host.root, source), "utf8"))
+                site
+                |> List.tryFind (fun p -> p.Source = source)
+                |> Option.defaultWith (fun () -> failwith "no such page.")
 
             let! highlighter = highlighter.Value |> Async.AwaitPromise
 
@@ -79,6 +73,7 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
                         Headings = body.Headings
                         Demos = body.Demos
                         Lead = page.Meta.Lead |> Option.map (fun lead -> md.renderInline lead)
+                        Site = site
                     }
 
             let! html = LitSsr.renderToString layout |> Async.AwaitPromise
@@ -87,3 +82,52 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
             return failwith $"{source}: {e.Message}"
     }
     |> Async.StartAsPromise
+
+// `<!-- firelight:name -->` in a hand-written page.
+let private placeholder =
+    System.Text.RegularExpressions.Regex "<!-- firelight:([a-z-]+) -->"
+
+/// Fills in the `<!-- firelight:name -->` placeholders in a hand-written HTML page (`header`,
+/// `footer`), so it shares the generated parts of the layout. `source` is used in error messages.
+let renderIncludes (host: Host) (source: string) (html: string) : JS.Promise<string> =
+    async {
+        let fragment name =
+            match name with
+            | "header" -> Layout.header host.``base``
+            | "footer" -> Layout.footer
+            | _ -> failwith $"{source}: unknown placeholder '<!-- firelight:{name} -->'."
+
+        let names =
+            placeholder.Matches html
+            |> Seq.cast<System.Text.RegularExpressions.Match>
+            |> Seq.map (fun m -> m.Groups[1].Value)
+            |> Seq.distinct
+            |> List.ofSeq
+
+        let rendered = System.Collections.Generic.Dictionary<string, string>()
+
+        for name in names do
+            let! text = LitSsr.renderToString (fragment name) |> Async.AwaitPromise
+            rendered[name] <- text
+
+        return placeholder.Replace(html, (fun m -> rendered[m.Groups[1].Value]))
+    }
+    |> Async.StartAsPromise
+
+let private escapeXml (text: string) =
+    text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;")
+
+/// `sitemap.xml`: every Markdown page, plus `otherRoutes` (hand-written pages and demo apps,
+/// relative to the base path, such as `demos/todo/`), as absolute URLs.
+let sitemap (host: Host) (otherRoutes: string[]) =
+    let urls =
+        Array.append otherRoutes (Pages.load host.root |> Array.map _.Route)
+        |> Array.distinct
+        |> Array.sort
+        |> Array.map (fun route -> $"  <url><loc>{escapeXml (Pages.origin + host.``base`` + route)}</loc></url>\n")
+        |> String.concat ""
+
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    + "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"
+    + urls
+    + "</urlset>\n"

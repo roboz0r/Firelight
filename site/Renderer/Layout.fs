@@ -17,6 +17,8 @@ type Model =
         Demos: Demo list
         /// The frontmatter lead, rendered as inline Markdown.
         Lead: string option
+        /// Every page on the site, for navigation.
+        Site: Page list
     }
 
 let private optional (value: TemplateResult option) : obj =
@@ -24,20 +26,28 @@ let private optional (value: TemplateResult option) : obj =
     | Some template -> box template
     | None -> box Lit.nothing
 
-// Kept in step with partials/header.html and partials/footer.html until every page uses this layout.
-let private header (``base``: string) =
+/// The site header, on every page (hand-written pages include it with `<!-- firelight:header -->`).
+/// Its section links come from `Pages.sections`.
+let header (``base``: string) =
+    let sectionLinks =
+        Pages.sections
+        |> List.map (fun s ->
+            LitSsr.html
+                $"""
+      <a href={withBase ``base`` s.Href}>{s.Name}</a>"""
+        )
+
     LitSsr.html
         $"""<header class="site-header">
     <a class="brand" href={``base``}>Firelight</a>
     <nav>
-      <a href="{``base``}#examples">Examples</a>
-      <a href="{``base``}#packages">Packages</a>
-      <a href="{``base``}#demos">Demos</a>
+      <a href="{``base``}#examples">Examples</a>{sectionLinks}
       <a href="https://github.com/roboz0r/Firelight">GitHub</a>
     </nav>
   </header>"""
 
-let private footer =
+/// The site footer, on every page (`<!-- firelight:footer -->` in hand-written pages).
+let footer =
     LitSsr.html
         $"""<footer class="site-footer">
     <p>Firelight is MIT licensed. <a href="https://github.com/roboz0r/Firelight">Source on GitHub</a>.</p>
@@ -108,6 +118,27 @@ let private toc (headings: Heading list) =
       <ul>{items}</ul>
     </nav>"""
 
+// Previous and next pages in the same section.
+let private pager (m: Model) =
+    match neighbours m.Site m.Page with
+    | None, None -> None
+    | previous, next ->
+        let link rel label (page: Page option) =
+            page
+            |> Option.map (fun p ->
+                LitSsr.html
+                    $"""<a class={rel} rel={rel} href="{m.Base}{p.Route}"><span>{label}</span> {p.Meta.Title}</a>"""
+            )
+            |> optional
+
+        Some(
+            LitSsr.html
+                $"""<nav class="pager" aria-label="Previous and next pages">
+      {link "prev" "Previous" previous}
+      {link "next" "Next" next}
+    </nav>"""
+        )
+
 let page (m: Model) =
     let meta = m.Page.Meta
 
@@ -147,6 +178,7 @@ let page (m: Model) =
     {intro m}
     {optional toc}
     {LitSsr.markup m.Content}
+    {optional (pager m)}
     {optional packageNav}
   </main>
   {footer}

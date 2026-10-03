@@ -15,18 +15,11 @@
     <None Include="content/**/*.md" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Each file registers its own custom element; the HTML pages load them as module scripts. -->
+    <!-- Each file registers its own custom element; the HTML pages load them as module scripts.
+         Snippets are independent modules, so the glob's alphabetical order doesn't matter, and a
+         new page's snippet needs no edit here. -->
     <Compile Include="Components/CodeBlock.fs" />
-    <Compile Include="Snippets/Counter.fs" />
-    <Compile Include="Snippets/ElmishCounter.fs" />
-    <Compile Include="Snippets/Rating.fs" />
-    <Compile Include="Snippets/ThemeContext.fs" />
-    <Compile Include="Snippets/UndoCounter.fs" />
-    <Compile Include="Snippets/SharedSignal.fs" />
-    <Compile Include="Snippets/ShuffleList.fs" />
-    <Compile Include="Snippets/ResizePanel.fs" />
-    <Compile Include="Snippets/ProductTask.fs" />
-    <Compile Include="Snippets/BigList.fs" />
+    <Compile Include="Snippets/**/*.fs" />
     <Compile Include="Routing/RouteExplorer.fs" />
   </ItemGroup>
   <ItemGroup>

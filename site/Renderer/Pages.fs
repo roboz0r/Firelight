@@ -14,7 +14,40 @@ let private readdirSync (dir: string, options: obj) : string[] = jsNative
 [<Import("resolve", "node:path")>]
 let private resolvePath (dir: string, file: string) : string = jsNative
 
+[<Import("readFileSync", "node:fs")>]
+let private readFileSync (path: string, encoding: string) : string = jsNative
+
+/// Where the site is published, for absolute URLs (canonical links, Open Graph, the sitemap).
+/// The base path (`/Firelight/`) comes from Vite.
+let origin = "https://roboz0r.github.io"
+
 type Link = { Text: string; Href: string }
+
+/// A part of the site that pages declare in their frontmatter (`section: packages`).
+type Section =
+    {
+        Id: string
+        /// Its name in the header.
+        Name: string
+        /// Where the header links to. Root-relative; the base path is added when rendering.
+        Href: string
+    }
+
+/// The site's sections, in header order. A page's `section` must be one of these, so adding a
+/// section is one line here.
+let sections =
+    [
+        {
+            Id = "packages"
+            Name = "Packages"
+            Href = "/#packages"
+        }
+        {
+            Id = "demos"
+            Name = "Demos"
+            Href = "/#demos"
+        }
+    ]
 
 /// The YAML block at the top of a page, between `---` lines.
 type Frontmatter =
@@ -80,8 +113,12 @@ let private frontmatter (source: string) (yaml: string) =
             text "description"
             |> Option.defaultWith (fun () -> fail "frontmatter needs 'description'.")
         Section =
-            text "section"
-            |> Option.defaultWith (fun () -> fail "frontmatter needs 'section'.")
+            match text "section" with
+            | None -> fail "frontmatter needs 'section'."
+            | Some section when sections |> List.exists (fun s -> s.Id = section) -> section
+            | Some section ->
+                let known = sections |> List.map _.Id |> String.concat ", "
+                fail $"unknown section '{section}' (known sections: {known})."
         Order = required "order"
         Summary = text "summary"
         Lead = text "lead"
@@ -142,3 +179,33 @@ let sources (root: string) =
     |> Array.map (fun file -> "content/" + file.Replace('\\', '/'))
     |> Array.filter _.EndsWith(".md")
     |> Array.sort
+
+/// Reads and parses every page under `content/`.
+let load (root: string) =
+    let pages =
+        sources root
+        |> Array.map (fun source -> parse source (readFileSync (resolvePath (root, source), "utf8")))
+
+    // `foo.md` and `foo/index.md` would both become foo/index.html.
+    for output, clashing in pages |> Array.groupBy _.Output do
+        if clashing.Length > 1 then
+            let sources = clashing |> Array.map _.Source |> String.concat " and "
+            failwith $"{sources} would both become {output}."
+
+    pages
+
+/// The pages in a section, in navigation order: by `order`, then by route so that pages written
+/// in parallel with the same `order` still sort the same way every time.
+let inSection (section: string) (pages: Page seq) =
+    pages
+    |> Seq.filter (fun p -> p.Meta.Section = section)
+    |> Seq.sortBy (fun p -> p.Meta.Order, p.Route)
+    |> List.ofSeq
+
+/// The pages before and after `page` in its section, for previous/next links.
+let neighbours (pages: Page seq) (page: Page) =
+    let siblings = inSection page.Meta.Section pages |> Array.ofList
+
+    match siblings |> Array.tryFindIndex (fun p -> p.Source = page.Source) with
+    | Some i -> Array.tryItem (i - 1) siblings, Array.tryItem (i + 1) siblings
+    | None -> None, None

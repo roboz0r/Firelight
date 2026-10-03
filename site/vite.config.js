@@ -1,6 +1,6 @@
 import { defineConfig, normalizePath } from "vite";
 import { copyFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
-import { extname, resolve } from "node:path";
+import { extname, relative as relativePath, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { pageWeights } from "./page-weights.mjs";
 
@@ -11,16 +11,17 @@ const escapeHtml = (text) =>
 
 const readText = (file) => readFileSync(resolve(root, file), "utf8").replace(/\r\n/g, "\n").trimEnd();
 
-// Build-time includes, so every page is complete static HTML before any JavaScript loads:
-// - <!-- include partials/header.html --> inserts a shared fragment (header, footer, package list).
-// - <pre data-include="Snippets/Counter.fs"></pre> fills in an F# source file, so the code shown
-//   is the same code that runs the live demo beside it.
-function includes() {
+// <pre data-include="Snippets/Counter.fs"></pre> fills in an F# source file at build time, so the
+// code shown on a hand-written page is the same code that runs the live demo beside it, and the
+// page is complete before any JavaScript loads. (Markdown pages use `::: example` instead.)
+// (Until the package pages move to Markdown, <!-- include partials/package-nav.html --> also inserts
+// the hand-written package list.)
+function snippetIncludes() {
   const partial = /<!-- include (\S+) -->/g;
   const snippet = /<pre data-include="([^"]+)"><\/pre>/g;
   let base;
   return {
-    name: "firelight-includes",
+    name: "firelight-snippet-includes",
     configResolved: (config) => {
       base = config.base;
     },
@@ -45,6 +46,8 @@ function includes() {
 // compiled by Fable to build/Renderer/) running here in Node: markdown-it, Shiki and Lit SSR, with
 // each `::: example` demo prerendered to Declarative Shadow DOM. Vite then processes the result like
 // any hand-written page (module scripts, base path, the includes above).
+// Hand-written pages share the generated layout through placeholders such as <!-- firelight:header -->,
+// and the plugin also writes sitemap.xml.
 // - Dev: pages are rendered on request. The renderer and the demo modules are loaded through Vite's
 //   SSR module runner, which re-runs whatever Fable recompiles, so edits need no restart.
 // - Build: each page is a virtual .html input that this plugin renders when Rollup loads it.
@@ -56,7 +59,16 @@ function markdownPages() {
   const inputs = new Map(); // build: absolute output path -> content/...md
 
   const load = (url) => (server ? server.environments.ssr.runner.import(url) : import(fileUrl(url)));
-  const render = async (source) => (await load(rendererUrl)).renderPage({ root, base, loadModule: load }, source);
+  const host = () => ({ root, base, loadModule: load });
+  const render = async (source) => (await load(rendererUrl)).renderPage(host(), source);
+  // The sitemap lists the Markdown pages, plus the hand-written pages and the demo apps in public/demos/.
+  let handWrittenRoutes = [];
+  const demoRoutes = () => {
+    const demos = resolve(root, "public", "demos");
+    if (!existsSync(demos)) return [];
+    return readdirSync(demos).filter((name) => existsSync(resolve(demos, name, "index.html"))).map((name) => `demos/${name}/`);
+  };
+  const sitemap = async () => (await load(rendererUrl)).sitemap(host(), [...handWrittenRoutes, ...demoRoutes()]);
 
   const reload = () => server.ws.send({ type: "full-reload" });
   let timer;
@@ -69,6 +81,9 @@ function markdownPages() {
     name: "firelight-markdown-pages",
     enforce: "pre",
     async config(userConfig, { command }) {
+      handWrittenRoutes = Object.values(userConfig.build?.rollupOptions?.input ?? {}).map((file) =>
+        normalizePath(relativePath(root, file)).replace(/index\.html$/, ""),
+      );
       // Vite's dependency scan only reads HTML files on disk, so it can't see this import in the
       // rendered pages; without this it's found on the first visit and the page reloads.
       if (command !== "build") return { optimizeDeps: { include: ["@lit-labs/ssr-client/lit-element-hydrate-support.js"] } };
@@ -93,6 +108,14 @@ function markdownPages() {
     },
     resolveId: (id) => (inputs.has(id) ? id : undefined),
     load: (id) => (inputs.has(id) ? render(inputs.get(id)) : undefined),
+    transformIndexHtml: {
+      order: "pre",
+      handler: async (html, { path }) =>
+        html.includes("<!-- firelight:") ? (await load(rendererUrl)).renderIncludes(host(), path.slice(1), html) : html,
+    },
+    async generateBundle() {
+      this.emitFile({ type: "asset", fileName: "sitemap.xml", source: await sitemap() });
+    },
     configureServer(devServer) {
       server = devServer;
       server.watcher.add(resolve(root, "content"));
@@ -101,8 +124,13 @@ function markdownPages() {
       });
       server.middlewares.use(async (req, res, next) => {
         const [path, query] = req.url.split("?");
-        if (!path.startsWith(base) || extname(path) && !path.endsWith(".html")) return next();
         try {
+          if (path === base + "sitemap.xml") {
+            const xml = await sitemap();
+            res.setHeader("Content-Type", "application/xml");
+            return res.end(xml);
+          }
+          if (!path.startsWith(base) || extname(path) && !path.endsWith(".html")) return next();
           const relative = path.slice(base.length);
           const { pages } = await load(rendererUrl);
           const page = pages(root).find((p) => [p.output, p.output.replace(/index\.html$/, "")].includes(relative));
@@ -209,7 +237,7 @@ export default defineConfig({
   appType: "mpa",
   plugins: [
     markdownPages(),
-    includes(),
+    snippetIncludes(),
     routingPageAs404(),
     demoSizes(),
     directoryUrls(),
