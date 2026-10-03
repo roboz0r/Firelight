@@ -36,6 +36,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Docs.Snippets/Docs.Snippets.fsproj" />
+    <Project Path="tests/Site.E2E/Site.E2E.fsproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Firelight.Context/Firelight.Context.fsproj" />

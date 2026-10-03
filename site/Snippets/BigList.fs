@@ -26,6 +26,7 @@ type BigList() =
         """
 
     override _.render() =
-        html $"""<ul>{Virtualizer.virtualize (VirtualizeConfig(rows, row, scroller = true))}</ul>"""
+        html
+            $"""<ul tabindex="0" aria-label="Ten thousand rows">{Virtualizer.virtualize (VirtualizeConfig(rows, row, scroller = true))}</ul>"""
 
 defineElement<BigList> "my-big-list"

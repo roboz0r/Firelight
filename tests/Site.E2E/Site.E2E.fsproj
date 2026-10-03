@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Browser checks for the built site: every page in site/dist, served by `vite preview` on port
+    4180, plus interaction tests for the flagship demos. It does not build the site: see Main.fs
+    for the commands, in order.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Server.fs" />
+    <Compile Include="Site.fs" />
+    <Compile Include="Browser.fs" />
+    <Compile Include="PageTests.fs" />
+    <Compile Include="DemoTests.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Deque.AxeCore.Playwright" />
+    <PackageReference Include="Expecto" />
+    <PackageReference Include="Microsoft.Playwright" />
+  </ItemGroup>
+</Project>

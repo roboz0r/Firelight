@@ -13,6 +13,7 @@
     <PackageVersion Include="FSharp.Core" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageVersion Include="Deque.AxeCore.Playwright" Version="4.13.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.58.0" />
     <PackageVersion Include="Expecto" Version="10.2.3" />
     <PackageVersion Include="Fable.Pyxpecto" Version="2.0.0" />

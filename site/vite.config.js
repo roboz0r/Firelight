@@ -203,6 +203,9 @@ function directoryUrls() {
 
 export default defineConfig({
   base: "/Firelight/",
+  // Unknown URLs get a 404, as on GitHub Pages, rather than index.html (Vite's SPA default), so
+  // Site.E2E sees missing files.
+  appType: "mpa",
   plugins: [markdownPages(), includes(), routingPageAs404(), demoSizes(), directoryUrls()],
   build: {
     rollupOptions: {
