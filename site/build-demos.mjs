@@ -12,7 +12,10 @@ const ci = process.env.CI === "true";
 // budgetKB: the most gzipped JavaScript the demo may ship, in kB (1000 bytes, as the pages show
 // sizes). Each is about 10% over the size when it was set, so growth is a decision: going over
 // fails the build. Raise a budget on purpose, in the same change that needs it.
-const demos = [{ name: "todo", sample: "Todo", budgetKB: 26.5 }];
+const demos = [
+  { name: "todo", sample: "Todo", budgetKB: 26.5 },
+  { name: "kanban", sample: "Kanban", budgetKB: 37.5 },
+];
 
 const run = (command, cwd) => {
   console.log(`\n> ${command}  (${cwd})`);

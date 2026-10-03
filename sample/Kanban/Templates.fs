@@ -14,9 +14,9 @@ open DragInterop
 
 let private priorityColor (p: Priority) =
     match p with
-    | High -> "bg-rose-500"
-    | Medium -> "bg-amber-400"
-    | Low -> "bg-sky-400"
+    | High -> "bg-rose-700"
+    | Medium -> "bg-amber-700"
+    | Low -> "bg-sky-700"
 
 let private priorityLabel (p: Priority) =
     match p with
@@ -91,11 +91,11 @@ let cardTemplate
         </div>
         {descHtml}
         <div class="flex justify-end mt-2 gap-1">
-            <button class="text-xs px-2 py-0.5 rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            <button class="text-xs px-2 py-0.5 rounded-sm text-slate-500 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 @click={fun (e: Event) ->
                             e.stopPropagation ()
                             dispatch (StartEdit(EditingCard card))}>Edit</button>
-            <button class="text-xs px-2 py-0.5 rounded-sm text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            <button class="text-xs px-2 py-0.5 rounded-sm text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                 @click={fun (e: Event) ->
                             e.stopPropagation ()
                             dispatch (DeleteCard card.Id)}>Del</button>
@@ -156,9 +156,9 @@ let columnHeaderTemplate (col: Column) (cardCount: int) (dispatch: KanbanMsg -> 
     <div class="flex items-center justify-between mb-3 px-1">
         <div class="flex items-center gap-2">
             <h2 class="font-semibold text-sm text-slate-700">{col.Title}</h2>
-            <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{cardCount}</span>
+            <span class="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-full">{cardCount}</span>
         </div>
-        <button class="text-slate-400 hover:text-rose-500 transition-colors text-sm"
+        <button class="text-slate-500 hover:text-rose-500 transition-colors text-sm"
             @click={fun _ ->
                         if window.confirm $"Delete \"{col.Title}\" and all its cards?" then
                             dispatch (DeleteColumn col.Id)}
@@ -230,7 +230,7 @@ let columnTemplate
         else
             html
                 $"""
-            <button class="mt-2 w-full text-left text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg px-3 py-1.5 transition-colors"
+            <button class="mt-2 w-full text-left text-sm text-slate-500 hover:text-slate-600 hover:bg-slate-100 rounded-lg px-3 py-1.5 transition-colors"
                 @click={fun _ -> dispatch (StartEdit(AddingCard col.Id))}>+ Add card</button>"""
 
     html
@@ -296,7 +296,7 @@ let addColumnTemplate (editTarget: EditTarget) (dispatch: KanbanMsg -> unit) : H
     else
         html
             $"""
-        <button class="flex items-center justify-center min-w-[280px] max-w-[320px] w-[300px] shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 rounded-xl p-3 border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors text-sm font-medium"
+        <button class="flex items-center justify-center min-w-[280px] max-w-[320px] w-[300px] shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-700 rounded-xl p-3 border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors text-sm font-medium"
             @click={fun _ -> dispatch (StartEdit AddingColumn)}>+ Add column</button>"""
 
 // ---------------------------------------------------------------------------

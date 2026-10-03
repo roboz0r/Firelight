@@ -10,7 +10,13 @@ open Microsoft.Playwright
 /// Absolute path to the Kanban sample app directory.
 let private kanbanDir = Path.Combine(__SOURCE_DIRECTORY__, "..", "Kanban")
 
-let private baseUrl = "http://localhost:4173"
+let private externalUrl = Environment.GetEnvironmentVariable "KANBAN_E2E_URL"
+
+let private baseUrl =
+    if String.IsNullOrEmpty externalUrl then
+        "http://localhost:4173"
+    else
+        externalUrl
 
 type TestContext =
     {
@@ -59,11 +65,15 @@ let private waitForServer (url: string) =
                 if resp.IsSuccessStatusCode then
                     ready <- true
             with _ ->
+                ()
+
+            // An error response (a wrong KANBAN_E2E_URL) counts as a failed attempt too.
+            if not ready then
                 attempts <- attempts + 1
                 do! Task.Delay(500)
 
         if not ready then
-            failwithf "Server at %s did not become ready after 15 seconds" url
+            failwithf "%s didn't answer successfully within 15 seconds" url
     }
 
 let private killProcessTree (proc: Process) =
@@ -79,26 +89,31 @@ let private killProcessTree (proc: Process) =
 let mutable private viteProcess: Process option = None
 let mutable private playwright: IPlaywright option = None
 
-/// Build the Kanban app and start the Vite preview server.
+/// Build the Kanban app and start the Vite preview server, or, with KANBAN_E2E_URL set, test the
+/// app already served there (e.g. the site's build at http://localhost:4181/Firelight/demos/kanban/).
 /// Call this once before all tests.
 let setup () =
     task {
-        printfn "Building Kanban app..."
-        let build = startProcess "npm" "run build" kanbanDir
-        build.WaitForExit()
+        if not (String.IsNullOrEmpty externalUrl) then
+            do! waitForServer baseUrl
+            printfn "Testing the Kanban app at %s" baseUrl
+        else
+            printfn "Building Kanban app..."
+            let build = startProcess "npm" "run build" kanbanDir
+            build.WaitForExit()
 
-        if build.ExitCode <> 0 then
-            let err = build.StandardError.ReadToEnd()
-            failwithf "npm run build failed (exit %d):\n%s" build.ExitCode err
+            if build.ExitCode <> 0 then
+                let err = build.StandardError.ReadToEnd()
+                failwithf "npm run build failed (exit %d):\n%s" build.ExitCode err
 
-        build.Dispose()
+            build.Dispose()
 
-        printfn "Starting Vite preview server..."
-        let proc = startProcess "npx" "vite preview --port 4173 --strictPort" kanbanDir
-        viteProcess <- Some proc
+            printfn "Starting Vite preview server..."
+            let proc = startProcess "npx" "vite preview --port 4173 --strictPort" kanbanDir
+            viteProcess <- Some proc
 
-        do! waitForServer baseUrl
-        printfn "Server ready at %s" baseUrl
+            do! waitForServer baseUrl
+            printfn "Server ready at %s" baseUrl
 
         let! pw = Playwright.CreateAsync()
         playwright <- Some pw
