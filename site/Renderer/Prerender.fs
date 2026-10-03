@@ -118,6 +118,7 @@ let rec private renderDocument
                     Intro = body.Intro
                     Site = site
                     Fallbacks = List.map fst fallbacks
+                    Version = Pages.packageVersion host.root
                 }
 
         let! html = LitSsr.renderToString layout |> Async.AwaitPromise

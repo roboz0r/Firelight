@@ -85,3 +85,5 @@ npm install lit
 
 New to Firelight? The [Get started](/start/) tutorial creates an app from a template,
 then gives its component an attribute, an event, styles and a list.
+
+<p class="notice">Firelight hasn't reached 1.0 yet, so its API may still change before then.</p>

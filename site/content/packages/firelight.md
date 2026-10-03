@@ -6,11 +6,10 @@ section: packages
 order: 10
 summary: "Core bindings: `LitElement`, `html`/`css` templates, directives, reactive properties"
 lead: "The core package: F# bindings for Lit. Define web components with reactive properties, scoped styles and `html` templates."
+nuget: Firelight
 links:
   - text: "Lit docs: Components"
     href: https://lit.dev/docs/components/overview/
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight
 ---

@@ -6,11 +6,10 @@ section: packages
 order: 90
 summary: Long lists that only render the visible items
 lead: Render long lists quickly by keeping only the visible items in the DOM.
+nuget: Firelight.Virtualizer
 links:
   - text: "Lit Labs: @lit-labs/virtualizer"
     href: https://github.com/lit/lit/tree/main/packages/labs/virtualizer
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Virtualizer
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Virtualizer
 ---

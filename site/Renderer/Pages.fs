@@ -21,6 +21,19 @@ let private readFileSync (path: string, encoding: string) : string = jsNative
 /// The base path (`/Firelight/`) comes from Vite.
 let origin = "https://roboz0r.github.io"
 
+/// The packages' version, `PackageVersion` in the repository's Directory.Build.props (the site
+/// root's parent): the version the site documents.
+let packageVersion (root: string) =
+    let props = resolvePath (root, "../Directory.Build.props")
+
+    let m =
+        Text.RegularExpressions.Regex.Match(readFileSync (props, "utf8"), "<PackageVersion>([^<]+)</PackageVersion>")
+
+    if m.Success then
+        m.Groups[1].Value.Trim()
+    else
+        failwith $"{props} has no <PackageVersion>."
+
 type Link = { Text: string; Href: string }
 
 /// A part of the site that pages declare in their frontmatter (`section: packages`).
@@ -86,8 +99,11 @@ type Frontmatter =
         Summary: string option
         /// The paragraph under the heading. Inline Markdown.
         Lead: string option
-        /// Links shown under the lead (Lit docs, NuGet, source).
+        /// Links shown under the lead (Lit docs, NuGet, source). With `nuget`, the NuGet link at
+        /// the site's version is added, before a "Source" link if there is one.
         Links: Link list
+        /// A package page's NuGet package id, such as `Firelight.Router`. Package pages need it.
+        NuGet: string option
         /// The small link above the heading. Defaults to the page's section.
         Eyebrow: Link option
         /// Show an h2/h3 table of contents.
@@ -120,7 +136,7 @@ type Page =
 /// The page GitHub Pages serves for unknown addresses. It is outside every section and the sitemap.
 let notFoundSource = "content/404.md"
 
-let private frontmatter (source: string) (yaml: string) =
+let private frontmatter (version: string) (source: string) (yaml: string) =
     let data = parseYaml yaml
     let fail message = failwith $"{source}: {message}"
 
@@ -156,6 +172,26 @@ let private frontmatter (source: string) (yaml: string) =
     // The not-found page, the homepage and unlisted pages are in no section.
     let sectionless = source = notFoundSource || home || unlisted
 
+    let nuget = text "nuget"
+
+    let links =
+        let links =
+            optional "links"
+            |> Option.map (fun (links: obj[]) -> links |> Array.map (link "links") |> List.ofArray)
+            |> Option.defaultValue []
+
+        match nuget with
+        | None -> links
+        | Some id ->
+            let nugetLink =
+                {
+                    Text = $"NuGet {version}"
+                    Href = $"https://www.nuget.org/packages/{id}/{version}"
+                }
+
+            let beforeSource = links |> List.takeWhile (fun l -> l.Text <> "Source")
+            beforeSource @ nugetLink :: links.[beforeSource.Length ..]
+
     {
         Title = text "title" |> Option.defaultWith (fun () -> fail "frontmatter needs 'title'.")
         Tagline = text "tagline"
@@ -179,10 +215,8 @@ let private frontmatter (source: string) (yaml: string) =
                 required "order"
         Summary = text "summary"
         Lead = text "lead"
-        Links =
-            optional "links"
-            |> Option.map (fun (links: obj[]) -> links |> Array.map (link "links") |> List.ofArray)
-            |> Option.defaultValue []
+        Links = links
+        NuGet = nuget
         Eyebrow = optional "eyebrow" |> Option.map (link "eyebrow")
         Toc = optional "toc" |> Option.defaultValue false
         Spa = optional "spa" |> Option.defaultValue false
@@ -205,8 +239,9 @@ let private route (source: string) =
     else
         path + "/"
 
-/// Splits a page into frontmatter and body. `source` is only used in error messages.
-let parse (source: string) (text: string) =
+/// Splits a page into frontmatter and body. `source` is only used in error messages; `version` is
+/// the packages' version, for NuGet links.
+let parse (version: string) (source: string) (text: string) =
     let text = text.Replace("\r\n", "\n")
 
     if not (text.StartsWith "---\n") then
@@ -228,7 +263,7 @@ let parse (source: string) (text: string) =
                 route source
             else
                 route source + "index.html"
-        Meta = frontmatter source yaml
+        Meta = frontmatter version source yaml
         Body = String.replicate frontLines "\n" + text.Substring(close + 5)
     }
 
@@ -241,9 +276,15 @@ let sources (root: string) =
 
 /// Reads and parses every page under `content/`.
 let load (root: string) =
+    let version = packageVersion root
+
     let pages =
         sources root
-        |> Array.map (fun source -> parse source (readFileSync (resolvePath (root, source), "utf8")))
+        |> Array.map (fun source -> parse version source (readFileSync (resolvePath (root, source), "utf8")))
+
+    for page in pages do
+        if page.Meta.Section = "packages" && page.Meta.NuGet.IsNone then
+            failwith $"{page.Source}: package pages need 'nuget', the package's id on NuGet."
 
     // `foo.md` and `foo/index.md` would both become foo/index.html.
     for output, clashing in pages |> Array.groupBy _.Output do

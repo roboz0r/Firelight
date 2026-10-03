@@ -6,11 +6,10 @@ section: packages
 order: 70
 summary: Reactive controllers for resize, intersection, mutation and performance observers
 lead: Reactive controllers for the browser's resize, intersection, mutation and performance observers.
+nuget: Firelight.Observers
 links:
   - text: "Lit Labs: @lit-labs/observers"
     href: https://github.com/lit/lit/tree/main/packages/labs/observers
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Observers
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Observers
 ---

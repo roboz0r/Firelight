@@ -6,13 +6,12 @@ section: packages
 order: 30
 summary: Run an Elmish (Model-View-Update) loop inside a component
 lead: "Run the Model-View-Update loop inside a component: one immutable model, one pure `update` function."
+nuget: Firelight.Elmish
 links:
   - text: Elmish docs
     href: https://elmish.github.io/elmish/
   - text: "Lit docs: Reactive controllers"
     href: https://lit.dev/docs/composition/controllers/
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Elmish
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Elmish
 ---

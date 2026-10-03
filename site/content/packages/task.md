@@ -6,11 +6,10 @@ section: packages
 order: 80
 summary: Async work with pending, complete and error states
 lead: Run async work from a component and render its pending, complete and error states.
+nuget: Firelight.Task
 links:
   - text: "Lit docs: Async tasks"
     href: https://lit.dev/docs/data/task/
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Task
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Task
 ---

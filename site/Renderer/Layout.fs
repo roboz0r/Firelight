@@ -36,6 +36,8 @@ type Model =
         Site: Page list
         /// On 404.html, the single-page apps it stands in for.
         Fallbacks: Fallback list
+        /// The packages' version (Pages.packageVersion).
+        Version: string
     }
 
 let private optional (value: TemplateResult option) : obj =
@@ -127,11 +129,11 @@ let header (``base``: string) =
     </nav>
   </header>"""
 
-/// The site footer, on every page.
-let footer =
+/// The site footer, on every page, with the version the site documents.
+let footer (version: string) =
     LitSsr.html
         $"""<footer class="site-footer">
-    <p>Firelight is MIT licensed. <a href="https://github.com/roboz0r/Firelight">Source on GitHub</a>.</p>
+    <p>Firelight {version} is MIT licensed. <a href="https://github.com/roboz0r/Firelight">Source on GitHub</a>.</p>
   </footer>"""
 
 // The demos' modules. With prerendered demos, Lit SSR's hydration support must be installed before
@@ -457,7 +459,7 @@ let page (m: Model) =
     {optional (pager m)}
     {optional pageList}
   </main>{optional (fallbacks m.Fallbacks)}
-  {footer}
+  {footer m.Version}
 </body>
 </html>
 """

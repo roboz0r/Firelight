@@ -27,6 +27,7 @@ let main argv =
                 AgentTests.all ()
                 SearchTests.all ()
                 MobileTests.all ()
+                VersionTests.all ()
             ]
             |> runTestsWithCLIArgs [] argv
         finally

@@ -6,11 +6,10 @@ section: packages
 order: 50
 summary: Shared reactive state that any component can read
 lead: Reactive state that lives outside your components, shared by any component that reads it.
+nuget: Firelight.Signals
 links:
   - text: "Lit docs: Signals"
     href: https://lit.dev/docs/data/signals/
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Signals
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Signals
 ---

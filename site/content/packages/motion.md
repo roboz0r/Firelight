@@ -6,11 +6,10 @@ section: packages
 order: 60
 summary: Animate elements as they move, appear and disappear
 lead: Animate elements as they move, appear and disappear, declared right in the template.
+nuget: Firelight.Motion
 links:
   - text: "Lit Labs: @lit-labs/motion"
     href: https://github.com/lit/lit/tree/main/packages/labs/motion
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Motion
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Motion
 ---

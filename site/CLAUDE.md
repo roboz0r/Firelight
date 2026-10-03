@@ -22,7 +22,8 @@ summary: "Raise `CustomEvent`s" # one line for lists of pages (inline Markdown; 
 lead: The paragraph under the heading (inline Markdown).
 tagline: raise DOM events      # <title> becomes "Events: raise DOM events" (default "Events · Firelight")
 pageTitle: Whole <title>       # when "title: tagline" reads badly
-links: [{ text: NuGet, href: "https://www.nuget.org/packages/Firelight" }]  # pills under the lead
+links: [{ text: Source, href: "https://github.com/roboz0r/Firelight/tree/main/src/Firelight" }]  # pills under the lead
+nuget: Firelight               # package pages: adds the NuGet pill at the version in Directory.Build.props
 eyebrow: { text: Firelight.Router, href: /packages/router/ }  # link above the h1; defaults to the section
 toc: true                      # h2/h3 table of contents
 spa: true                      # 404.html serves it under its route (page scripts don't run there)

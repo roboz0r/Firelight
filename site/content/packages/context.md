@@ -6,11 +6,10 @@ section: packages
 order: 20
 summary: Share state across a component tree without passing it through every layer
 lead: Share a value with every component inside a subtree, without passing it through each layer in between.
+nuget: Firelight.Context
 links:
   - text: "Lit docs: Context"
     href: https://lit.dev/docs/data/context/
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Context
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Context
 ---

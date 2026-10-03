@@ -6,11 +6,10 @@ section: packages
 order: 40
 summary: Client-side routing on the URL Pattern API, with routes as an F# union
 lead: Client-side routing on the browser's URL Pattern API, with your routes as an F# union.
+nuget: Firelight.Router
 links:
   - text: "MDN: URL Pattern API"
     href: https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API
-  - text: NuGet
-    href: https://www.nuget.org/packages/Firelight.Router
   - text: Source
     href: https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Router
 ---

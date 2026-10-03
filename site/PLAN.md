@@ -264,6 +264,11 @@ Order: guides → `/why/` → From Lit → cookbook. Review the prose. The check
      social preview.
 3. Version (`PackageVersion` from `Directory.Build.props`, currently 0.2.0) and NuGet links on
    package pages; changelog page; a clear "pre-1.0" note.
+   Done, except the changelog: the renderer reads `PackageVersion` at build time
+   (`Pages.packageVersion`). The footer says "Firelight 0.2.0", each package page's `nuget:` id
+   becomes a "NuGet 0.2.0" pill linking that version on nuget.org, and the homepage's Get started
+   section says the API may change before 1.0. Follow-up: a changelog page, once there is a
+   changelog to build it from (there is none in the repository yet).
 4. **Agent-readable output.** `llms.txt` (index generated from frontmatter), `llms-full.txt`, and
    `<page>/index.md` with `::: example` includes expanded into the code itself. Add a short
    "Using Firelight with coding agents" page linking these and the skill.

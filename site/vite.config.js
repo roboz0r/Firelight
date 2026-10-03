@@ -102,9 +102,11 @@ function markdownPages() {
     },
     configureServer(devServer) {
       server = devServer;
-      for (const dir of ["content", "Routing"]) server.watcher.add(resolve(root, dir));
+      // Directory.Build.props: the version in the footer and the NuGet links.
+      const props = resolve(root, "../Directory.Build.props");
+      for (const path of ["content", "Routing", props]) server.watcher.add(resolve(root, path));
       server.watcher.on("all", (event, file) => {
-        if (/[\\/]content[\\/].*\.md$|[\\/]build[\\/]Renderer[\\/].*\.js$/.test(file)) reloadSoon();
+        if (/[\\/]content[\\/].*\.md$|[\\/]build[\\/]Renderer[\\/].*\.js$/.test(file) || resolve(file) === props) reloadSoon();
         // An edited snippet's code shows at once, its demo once Fable has compiled it. (Renderer/
         // sources only matter once Fable has compiled them.)
         else if (event === "change" && /\.fs$/.test(file) && !/[\\/]Renderer[\\/]/.test(file)) reloadSoon();
