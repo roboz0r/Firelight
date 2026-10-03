@@ -55,3 +55,4 @@ jobs:
           dotnet nuget push "./src/Firelight/bin/Release/Firelight.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
           dotnet nuget push "./src/Firelight.Context/bin/Release/Firelight.Context.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
           dotnet nuget push "./src/Firelight.Router/bin/Release/Firelight.Router.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./templates/bin/Release/Firelight.Templates.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate

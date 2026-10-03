@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Template pack only: no code, just the files under firelight-app/ packed as content. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageType>Template</PackageType>
+    <Title>Firelight templates</Title>
+    <Description>dotnet new templates for Firelight, the F# (Fable) bindings for Lit. Install with `dotnet new install Firelight.Templates`, then run `dotnet new firelight -n MyApp`.</Description>
+    <PackageTags>dotnet-new;templates;fable;fable-javascript;lit;web-components</PackageTags>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <!-- Keep .gitignore, .config/ and .template.config/ in the package. -->
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <!-- There is nothing to compile. -->
+    <NoWarn>$(NoWarn);CS2008</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content
+      Include="firelight-app/**/*"
+      Exclude="firelight-app/**/bin/**;firelight-app/**/obj/**;firelight-app/**/build/**;firelight-app/**/dist/**;firelight-app/**/node_modules/**;firelight-app/.template.config/template.json" />
+  </ItemGroup>
+
+  <!--
+    The template's default Firelight version must be the version released alongside it, so pack
+    stamps $(PackageVersion) into a copy of template.json rather than trusting the checked-in default.
+  -->
+  <Target Name="StampTemplateVersion" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+      <TemplateJsonSource>firelight-app/.template.config/template.json</TemplateJsonSource>
+      <TemplateJsonStamped>$(IntermediateOutputPath)template.json</TemplateJsonStamped>
+      <_TemplateJson>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/$(TemplateJsonSource)'))</_TemplateJson>
+      <_TemplateJson>$([System.Text.RegularExpressions.Regex]::Replace('$(_TemplateJson)', '("FirelightVersion"[^}]*?"defaultValue":\s*")[^"]*', '${1}$(PackageVersion)'))</_TemplateJson>
+    </PropertyGroup>
+    <Error Condition="!$(_TemplateJson.Contains('&quot;defaultValue&quot;: &quot;$(PackageVersion)&quot;'))" Text="Could not stamp PackageVersion $(PackageVersion) into $(TemplateJsonSource)." />
+    <WriteLinesToFile File="$(TemplateJsonStamped)" Lines="$([MSBuild]::Escape('$(_TemplateJson)'))" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Content Include="$(TemplateJsonStamped)" PackagePath="content/firelight-app/.template.config/template.json" />
+    </ItemGroup>
+  </Target>
+</Project>

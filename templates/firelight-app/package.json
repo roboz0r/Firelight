@@ -1,0 +1,16 @@
+{
+  "name": "firelightapp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dotnet fable watch . -o build -s --run vite",
+    "build": "dotnet fable . -o build --run vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lit": "^3.3.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}

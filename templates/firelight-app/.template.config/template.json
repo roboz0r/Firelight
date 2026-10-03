@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Robert Lenders",
+  "classifications": ["Web", "Fable", "Lit", "Web Components"],
+  "identity": "Firelight.App.FSharp",
+  "groupIdentity": "Firelight.App",
+  "name": "Firelight app (Fable + Lit + Vite)",
+  "description": "A minimal F# web app with one Lit web component, compiled by Fable and served by Vite.",
+  "shortName": "firelight",
+  "tags": {
+    "language": "F#",
+    "type": "project"
+  },
+  "sourceName": "FirelightApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "FirelightVersion": {
+      "type": "parameter",
+      "datatype": "text",
+      "description": "Version of the Firelight NuGet package to reference. Defaults to the version this template was released with.",
+      "defaultValue": "0.2.0",
+      "replaces": "FIRELIGHT_VERSION"
+    }
+  },
+  "sources": [
+    {
+      "exclude": [
+        "**/[Bb]in/**",
+        "**/[Oo]bj/**",
+        ".template.config/**/*",
+        "**/*.filelist",
+        "**/*.user",
+        "**/*.lock.json",
+        "**/node_modules/**",
+        "**/build/**",
+        "**/dist/**"
+      ]
+    }
+  ]
+}

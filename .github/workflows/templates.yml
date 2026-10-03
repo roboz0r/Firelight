@@ -1,0 +1,46 @@
+name: Template smoke test
+
+# Packs Firelight.Templates and the local src/Firelight, creates an app with `dotnet new firelight`,
+# builds it and checks it in a browser. The steps live in templates/test-template.sh so they can
+# also be run locally.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - templates/**
+      - src/Firelight/**
+      - Directory.Build.props
+      - Directory.Packages.props
+      - global.json
+      - .github/workflows/templates.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - templates/**
+      - src/Firelight/**
+      - Directory.Build.props
+      - Directory.Packages.props
+      - global.json
+      - .github/workflows/templates.yml
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pack, create, build and smoke test the template
+        run: bash templates/test-template.sh
+        env:
+          CI: true
