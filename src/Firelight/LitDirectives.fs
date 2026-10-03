@@ -83,9 +83,13 @@ type Lit with
     /// <summary>
     /// Returns an iterable containing the values in items interleaved with the joiner value.
     /// </summary>
+    /// <remarks>
+    /// For example <c>join (links, html $"&lt;span&gt; | &lt;/span&gt;")</c>.
+    /// The result is a JavaScript generator: it can be enumerated once, so call <c>join</c> on each render.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#join"/>
     [<Import("join", "lit/directives/join.js")>]
-    static member inline join<'T, 'U>(items: seq<'T> option, joiner: 'U) : seq<U2<'T, 'U>> = nativeOnly
+    static member inline join<'T, 'U>(items: seq<'T>, joiner: 'U) : seq<U2<'T, 'U>> = nativeOnly
 
     /// <summary>
     /// Renders <c>trueCase ()</c> when <c>condition</c> is true, otherwise <c>falseCase ()</c>.
@@ -216,7 +220,7 @@ type Lit with
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#cache"/>
     [<Import("cache", "lit/directives/cache.js")>]
-    static member inline cache(value: TemplateResult option) : DirectiveResult = nativeOnly
+    static member inline cache(value: ChildRenderable) : DirectiveResult = nativeOnly
 
     /// <summary>
     /// Associates a renderable value with a unique key. When the key changes, the previous DOM is removed and disposed before rendering the next value, even if the value—such as a template—is the same.
@@ -224,34 +228,46 @@ type Lit with
     /// <remarks>
     /// keyed is useful when you're rendering stateful elements and you need to ensure that all state of the element is cleared when some critical data changes. It essentially opts-out of Lit's default DOM reuse strategy.
     /// keyed is also useful in some animation scenarios if you need to force a new element for "enter" or "exit" animations.
+    ///
+    /// Lit compares keys with JavaScript's <c>===</c>, so use a string or number, such as an id. An F# union or
+    /// record built afresh on each render is a new key every time.
     /// </remarks>
+    /// <param name="key">The key. When it differs from the last render's, the DOM is replaced.</param>
+    /// <param name="value">What to render, usually a template.</param>
     /// <seealso href="https://lit.dev/docs/templates/directives/#keyed"/>
     [<Import("keyed", "lit/directives/keyed.js")>]
-    static member inline keyed(key: obj option, value: obj option) : DirectiveResult = nativeOnly
+    static member inline keyed(key: 'K, value: 'V) : DirectiveResult = nativeOnly
 
     /// <summary>
     /// Only re-evaluates the template when one of its dependencies changes, to optimize rendering performance by preventing unnecessary work.
     /// </summary>
     /// <remarks>
     /// Renders the value returned by valueFn, and only re-evaluates valueFn when one of the dependencies changes identity.
+    /// Lit compares each dependency with the last render's using JavaScript's <c>===</c>. F# lists, records and
+    /// maps are immutable, so a changed one is a new object and re-renders; one mutated in place doesn't.
     /// </remarks>
+    /// <example><c>guard ([| rows; sortColumn |], fun () -> table rows sortColumn)</c></example>
     /// <seealso href="https://lit.dev/docs/templates/directives/#guard"/>
     /// <param name="dependencies">
-    /// An array of dependencies that, when changed, will cause the directive to re-evaluate
+    /// An array of dependencies that, when changed, will cause the directive to re-evaluate. F# boxes each
+    /// element, so they may have different types.
     /// </param>
     /// <param name="valueFn">
     /// A function that returns the value to render when the dependencies change.
     /// </param>
     [<Import("guard", "lit/directives/guard.js")>]
-    static member inline guard(dependencies: array<obj option>, valueFn: unit -> obj option) : DirectiveResult =
-        nativeOnly
+    static member inline guard(dependencies: obj[], valueFn: unit -> 'T) : DirectiveResult = nativeOnly
 
     /// <summary>
     /// Sets an attribute or property if it differs from the live DOM value rather than the last-rendered value.
     /// </summary>
+    /// <remarks>
+    /// For a value the user can change, such as an input's <c>.value={live text}</c>: when the state still holds
+    /// the last rendered value, Lit would otherwise skip the update and leave what the user typed.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#live"/>
     [<Import("live", "lit/directives/live.js")>]
-    static member inline live(value: obj option) : DirectiveResult = nativeOnly
+    static member inline live(value: 'T) : DirectiveResult = nativeOnly
 
     /// <summary>
     /// Renders the content of a `&lt;template&gt;` element.
@@ -306,14 +322,36 @@ type Lit with
     static member inline ref<'T when 'T :> Element>(callback: 'T option -> unit) : DirectiveResult = nativeOnly
 
     /// <summary>
-    /// Renders placeholder content until one or more promises resolve.
+    /// Renders what <c>promise</c> resolves to once it resolves.
     /// </summary>
+    /// <remarks>
+    /// Until then the part keeps what it showed before: nothing on the first render, or the last result
+    /// when a new promise replaces one that resolved. To clear it while waiting, use
+    /// <c>until (promise, nothing)</c>.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
     [<Import("until", "lit/directives/until.js")>]
-    static member inline until
-        ([<ParamArray>] values: U2<Promise<ChildRenderable>, ChildRenderable>[])
-        : DirectiveResult =
-        nativeOnly
+    static member inline until(promise: Promise<'T>) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Renders <c>placeholder</c> until <c>promise</c> resolves, then what it resolves to.
+    /// </summary>
+    /// <example><c>until (loadProfile id, html $"&lt;p&gt;Loading…&lt;/p&gt;")</c></example>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
+    [<Import("until", "lit/directives/until.js")>]
+    static member inline until(promise: Promise<'T>, placeholder: 'U) : DirectiveResult = nativeOnly
+
+    /// <summary>
+    /// Renders the highest-priority of <c>values</c> available so far. The first has the highest priority. A
+    /// plain value is available at once and a promise once it resolves, so put the placeholder last.
+    /// </summary>
+    /// <remarks>
+    /// The arguments are boxed, so they may have different types. For one promise, with or without a
+    /// placeholder, the typed overloads read better.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
+    [<Import("until", "lit/directives/until.js")>]
+    static member inline until([<ParamArray>] values: obj[]) : DirectiveResult = nativeOnly
 
     /// <summary>
     /// Appends values from an `AsyncIterable` into the DOM as they are yielded.
