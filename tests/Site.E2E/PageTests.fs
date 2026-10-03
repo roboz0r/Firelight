@@ -141,13 +141,6 @@ type KnownViolation =
 let knownViolations =
     [
         {
-            Rule = "color-contrast"
-            // Only Shiki's code lines. Contrast failures anywhere else fail the run.
-            Covers = fun target -> target.Contains ".line"
-            Reason =
-                "github-light colours identifiers #e36209, 3.5:1 on its white background, below WCAG AA's 4.5:1 (and github-dark's comments, #6a737d, are 3.1:1, though axe only checks the light theme). Needs another theme or colour replacements."
-        }
-        {
             Rule = "valid-lang"
             Covers = fun target -> target.Contains "fl-code"
             Reason =

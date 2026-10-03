@@ -13,6 +13,14 @@ module Highlight =
     let private themes =
         ThemeMap.create [ "light", "github-light"; "dark", "github-dark" ]
 
+    // The two GitHub colours below WCAG AA on their theme's background, swapped for AA-safe ones of
+    // the same hue. The same as Renderer/Markdown.fs, which explains them.
+    let private colorReplacements =
+        ColorReplacements.create [
+            "github-light", [ "#e36209", "#bc4c00" ]
+            "github-dark", [ "#6a737d", "#959da5" ]
+        ]
+
     // One highlighter for the whole page, created on first use. Only these grammars and themes
     // are bundled, and the JavaScript regex engine avoids downloading Oniguruma's WebAssembly.
     let private highlighter =
@@ -36,7 +44,7 @@ module Highlight =
     let toHtml (lang: string) (code: string) =
         async {
             let! h = highlighter.Value |> Async.AwaitPromise
-            return h.codeToHtml (code, MultipleThemeOptions(lang, themes))
+            return h.codeToHtml (code, MultipleThemeOptions(lang, themes, colorReplacements = colorReplacements))
         }
 
 /// Syntax-highlighted code.

@@ -25,6 +25,15 @@ module Highlight =
     let private themes =
         ThemeMap.create [ "light", "github-light"; "dark", "github-dark" ]
 
+    /// The two GitHub colours below WCAG AA's 4.5:1 on their theme's background, each swapped for a
+    /// darker or lighter one of the same hue: github-light's orange (identifiers, 3.5:1 on white) and
+    /// github-dark's comment grey (3.1:1 on #24292e). Keep in step with Components/CodeBlock.fs.
+    let private colorReplacements =
+        ColorReplacements.create [
+            "github-light", [ "#e36209", "#bc4c00" ] // 5.0:1
+            "github-dark", [ "#6a737d", "#959da5" ] // 5.3:1
+        ]
+
     /// Languages that fenced code blocks can use, by name or alias (`sh` for shellscript, `fs` for fsharp...).
     let languages =
         [|
@@ -50,10 +59,10 @@ module Highlight =
         let code = code.TrimEnd('\n')
 
         try
-            highlighter.codeToHtml (code, MultipleThemeOptions(lang, themes))
+            highlighter.codeToHtml (code, MultipleThemeOptions(lang, themes, colorReplacements = colorReplacements))
         with e ->
             JS.console.warn ($"Code block language '{lang}' is not loaded; showing it as plain text.", e.Message)
-            highlighter.codeToHtml (code, MultipleThemeOptions("text", themes))
+            highlighter.codeToHtml (code, MultipleThemeOptions("text", themes, colorReplacements = colorReplacements))
 
 /// An h2 or h3, for the table of contents. `Html` is the heading's rendered inline content.
 type Heading =

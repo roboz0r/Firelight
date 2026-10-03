@@ -11,6 +11,15 @@ module ThemeMap =
     let inline create (themes: #seq<string * string>) : ThemeMap =
         !!(createObj !!themes)
 
+/// Colours to swap in the output, per theme: a JavaScript object mapping a theme name to an object
+/// mapping each colour the theme uses (lowercase hex) to the colour to show instead.
+type ColorReplacements = interface end
+
+[<Erase>]
+module ColorReplacements =
+    let inline create (byTheme: #seq<string * (string * string) list>) : ColorReplacements =
+        !!(createObj [ for theme, colors in byTheme -> theme, createObj !!colors ])
+
 /// A JavaScript object mapping a language alias to a bundled language name.
 type LanguageAliasMap = interface end
 
@@ -51,9 +60,10 @@ type MultipleThemeOptions
      ?rootStyle: U2<string, bool>, ?structure: string,
      ?mergeWhitespaces: U2<bool, string>, ?mergeSameStyleTokens: bool,
      ?tokenizeMaxLineLength: int, ?tokenizeTimeLimit: int,
-     ?grammarContextCode: string) =
+     ?grammarContextCode: string, ?colorReplacements: ColorReplacements) =
     member val lang: string = nativeOnly with get, set
     member val themes: ThemeMap = nativeOnly with get, set
+    member val colorReplacements: ColorReplacements option = nativeOnly with get, set
     member val defaultColor: U2<string, bool> option = nativeOnly with get, set
     member val colorsRendering: string option = nativeOnly with get, set
     member val cssVariablePrefix: string option = nativeOnly with get, set
