@@ -44,6 +44,10 @@ jobs:
       - name: Pack Published Projects
         shell: pwsh
         run: |
+          # Stop at the first failing dotnet command. Otherwise only the last push's exit code counts.
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
           [xml]$props = Get-Content Directory.Build.props
           $v = ($props.Project.PropertyGroup | ForEach-Object { $_.PackageVersion } | Where-Object { $_ }).Trim()
           Write-Host "Package version: '$v'"
@@ -55,4 +59,10 @@ jobs:
           dotnet nuget push "./src/Firelight/bin/Release/Firelight.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
           dotnet nuget push "./src/Firelight.Context/bin/Release/Firelight.Context.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
           dotnet nuget push "./src/Firelight.Router/bin/Release/Firelight.Router.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Elmish/bin/Release/Firelight.Elmish.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Signals/bin/Release/Firelight.Signals.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Task/bin/Release/Firelight.Task.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Motion/bin/Release/Firelight.Motion.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Observers/bin/Release/Firelight.Observers.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
+          dotnet nuget push "./src/Firelight.Virtualizer/bin/Release/Firelight.Virtualizer.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate
           dotnet nuget push "./templates/bin/Release/Firelight.Templates.$v.nupkg" --api-key $env:NUGET_TOKEN --source "nuget.org" --skip-duplicate

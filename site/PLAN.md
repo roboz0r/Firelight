@@ -206,6 +206,23 @@ Order: guides → `/why/` → From Lit → cookbook. Review the prose. The check
    component.
 6. Mobile navigation (CSS first).
 
+## Launch: 0.3.0
+
+The new site and the 0.3.0 release go out together, so every install command on the site works
+on day one.
+
+1. The owner signs off on the site (the deploy preview from `npm run build && npm run preview`).
+2. Check that the `NUGET_TOKEN` secret's API key can push **new** packages (scope "Push new
+   packages and package versions", glob covering `Firelight.*`). Firelight.Signals, Task, Motion,
+   Observers, Virtualizer and Templates have never been published.
+3. Bump `PackageVersion` in `Directory.Build.props` to 0.3.0 on the release branch. The
+   template's default Firelight version follows automatically.
+4. Publish **before** the site goes live: tag that commit `v0.3.0` and push only the tag.
+   `publish.yml` pushes all nine library packages and `Firelight.Templates`. Wait until all ten
+   show 0.3.0 on nuget.org (indexing takes a few minutes).
+5. Merge to `main`. `pages.yml` deploys the site. Check the live site, and that every package
+   page's NuGet link resolves.
+
 ## Later
 
 - API reference generated from XML docs (fsdocs, or a small generator) once the public API settles.
