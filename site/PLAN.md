@@ -158,7 +158,7 @@ Prose…
    table and `sitemap.xml` are generated; the hand-written homepage takes them through
    `<!-- firelight:name -->` placeholders. There is no sidebar yet (Phase 5, mobile navigation).
 3. Head metadata on every page: title, description, canonical URL, Open Graph and Twitter tags,
-   favicon. Done: the favicon and Open Graph image paths are placeholders in `Layout.brand`.
+   favicon. Done: the favicon, touch icon and Open Graph image paths are in `Layout.brand`.
 4. Migrate the nine package pages and the routing page to Markdown, with no wording changes.
    Generate the homepage package table and `package-nav` from frontmatter. Done: the visible
    words of every page match the old build. Task's demo is `ssr=false` too: the client's first

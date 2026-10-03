@@ -43,13 +43,15 @@ let private optional (value: TemplateResult option) : obj =
     | Some template -> box template
     | None -> box Lit.nothing
 
-/// The logo files, as root-relative URLs. Placeholders until the logo is chosen (PLAN.md, Phase 5
-/// step 2): point these at the real files and every page follows. `SocialImage` (Open Graph and
-/// Twitter cards) should be a 1200×630 PNG; it doesn't exist yet.
+/// The logo files in public/, as root-relative URLs. images/render.mjs makes them from the logos in
+/// images/. `SocialImage` (Open Graph and Twitter cards) is 1200×630.
 let brand =
     {|
         Favicon = "/favicon.svg"
-        SocialImage = "/social-card.png"
+        FaviconPng = "/favicon-32.png"
+        AppleTouchIcon = "/apple-touch-icon.png"
+        SocialImage = "/og-default.png"
+        SocialImageAlt = "Firelight: Web Components for F#"
     |}
 
 /// What a page tells search engines and link previews.
@@ -80,16 +82,22 @@ let headMeta (``base``: string) (h: Head) =
 
     LitSsr.html
         $"""{canonical}
+  <link rel="icon" href={brand.FaviconPng} type="image/png" sizes="32x32">
   <link rel="icon" href={brand.Favicon} type="image/svg+xml">
+  <link rel="apple-touch-icon" href={brand.AppleTouchIcon}>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Firelight">
   <meta property="og:title" content={h.Title}>
   <meta property="og:description" content={h.Description}>
   <meta property="og:image" content={image}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content={brand.SocialImageAlt}>
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content={h.Title}>
   <meta name="twitter:description" content={h.Description}>
-  <meta name="twitter:image" content={image}>"""
+  <meta name="twitter:image" content={image}>
+  <meta name="twitter:image:alt" content={brand.SocialImageAlt}>"""
 
 /// The site header, on every page (hand-written pages include it with `<!-- firelight:header -->`).
 /// Its section links come from `Pages.sections`.
