@@ -54,6 +54,13 @@ A demo is one file, `Snippets/<Name>.fs`: one module that registers its elements
 `npm run dev` notices new and deleted snippets without a restart (Fable takes 10–20 s to reread the
 project; the page reloads when the module is ready).
 
+## Markdown for agents
+
+Every page is also published as Markdown, at `<page>/index.md`, with `llms.txt` (an index) and
+`llms-full.txt` (every page) at the root, for coding agents (`Renderer/Agents.fs`). Containers
+become plain Markdown there; a new kind of container needs a Markdown form in `Agents.fs` too.
+Page scripts are left out.
+
 ## Prerender-safe components
 
 Each demo is rendered in Node at build time by Lit SSR (constructor, `willUpdate` and `render`

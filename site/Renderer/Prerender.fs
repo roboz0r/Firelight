@@ -148,6 +148,55 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
     }
     |> Async.StartAsPromise
 
+/// The site as Markdown for agents (see Agents): each page's `index.md`, `llms.txt` and
+/// `llms-full.txt`, as files relative to `dist/` with their text.
+let agentFiles (host: Host) : JS.Promise<{| file: string; text: string |}[]> =
+    async {
+        let site = Pages.load host.root |> List.ofArray
+        let! md = markdown host site
+
+        let s: Agents.Settings =
+            {
+                Root = host.root
+                Base = host.``base``
+                Site = site
+                Md = md
+                Here = ""
+            }
+
+        // Errors name the page; llms-full.txt has every page, so it fails if one does.
+        let document (page: Pages.Page) =
+            try
+                Agents.document s page
+            with e ->
+                failwith $"{page.Source}: {e.Message}"
+
+        let pages =
+            Agents.pages s
+            |> List.map (fun page ->
+                {|
+                    file = Agents.markdownFile page
+                    text = document page
+                |}
+            )
+
+        return
+            Array.ofList (
+                pages
+                @ [
+                    {|
+                        file = "llms.txt"
+                        text = Agents.index s
+                    |}
+                    {|
+                        file = "llms-full.txt"
+                        text = Agents.full s
+                    |}
+                ]
+            )
+    }
+    |> Async.StartAsPromise
+
 let private escapeXml (text: string) =
     text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;")
 

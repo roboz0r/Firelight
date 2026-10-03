@@ -13,6 +13,7 @@
     <Compile Include="Pages.fs" />
     <Compile Include="Links.fs" />
     <Compile Include="Layout.fs" />
+    <Compile Include="Agents.fs" />
     <Compile Include="Prerender.fs" />
   </ItemGroup>
   <ItemGroup>

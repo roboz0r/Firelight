@@ -389,6 +389,16 @@ let page (m: Model) =
                         Some m.Page.Route
             }
 
+    // The page as Markdown (Agents), for agents and anything else that reads text. The href has
+    // the base path already, which Vite would add again in dev: vite-ignore keeps it as it is (and
+    // Vite removes the attribute).
+    let markdownVersion =
+        if m.Page.Source = notFoundSource then
+            None
+        else
+            let href = withBase m.Base ("/" + m.Page.Route + "index.md")
+            Some(LitSsr.html $"""<link rel="alternate" type="text/markdown" href={href} vite-ignore>""")
+
     let toc =
         if meta.Toc && not m.Headings.IsEmpty then
             Some(toc m.Headings)
@@ -425,6 +435,7 @@ let page (m: Model) =
   <title>{title}</title>
   <meta name="description" content={meta.Description}>
   {headTags}
+  {optional markdownVersion}
   <link rel="stylesheet" href="/site.css">
   {scripts m.Demos}
 </head>

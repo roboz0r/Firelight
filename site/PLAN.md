@@ -267,6 +267,13 @@ Order: guides → `/why/` → From Lit → cookbook. Review the prose. The check
 4. **Agent-readable output.** `llms.txt` (index generated from frontmatter), `llms-full.txt`, and
    `<page>/index.md` with `::: example` includes expanded into the code itself. Add a short
    "Using Firelight with coding agents" page linking these and the skill.
+   Done, except the page: `Renderer/Agents.fs` writes `<page>/index.md` (the snippet's source and
+   the demo's HTML as fenced blocks, other containers as plain Markdown, absolute links, only the
+   title and description left of the frontmatter), `llms.txt` (summary, then each page's Markdown
+   by section with its `summary` or description) and `llms-full.txt` (every page in navigation
+   order), in the build and in dev. Each page's head links its Markdown version
+   (`rel="alternate"`). Site.E2E checks every sitemap page's `index.md` and the links in both
+   text files. Follow-up: the "Using Firelight with coding agents" page.
 5. **Search** with Pagefind, run over `dist/` after the build. The search box is a small Firelight
    component.
 6. Mobile navigation (CSS first).

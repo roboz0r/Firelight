@@ -9,7 +9,8 @@ const root = import.meta.dirname;
 // Markdown pages: content/<path>.md becomes <path>/index.html. The renderer is F# (Renderer/,
 // compiled by Fable to build/Renderer/) running here in Node: markdown-it, Shiki and Lit SSR, with
 // each `::: example` demo prerendered to Declarative Shadow DOM. Vite then processes the result like
-// any HTML page (module scripts, base path). The plugin also writes sitemap.xml.
+// any HTML page (module scripts, base path). The plugin also writes sitemap.xml, and the site as
+// Markdown for agents (Renderer/Agents.fs).
 // - Dev: pages are rendered on request. The renderer and the demo modules are loaded through Vite's
 //   SSR module runner, which re-runs whatever Fable recompiles, so edits need no restart.
 // - Build: each page is a virtual .html input that this plugin renders when Rollup loads it.
@@ -38,6 +39,7 @@ function markdownPages() {
     return readdirSync(demos).filter((name) => existsSync(resolve(demos, name, "index.html"))).map((name) => `demos/${name}/`);
   };
   const sitemap = async () => (await load(rendererUrl)).sitemap(host(), demoRoutes());
+  const agentFiles = async () => (await load(rendererUrl)).agentFiles(host());
 
   const reload = () => server.ws.send({ type: "full-reload" });
   let timer;
@@ -82,6 +84,9 @@ function markdownPages() {
     load: (id) => (inputs.has(id) ? render(inputs.get(id)) : undefined),
     async generateBundle() {
       this.emitFile({ type: "asset", fileName: "sitemap.xml", source: await sitemap() });
+      // The site as Markdown, for agents: <page>/index.md, llms.txt and llms-full.txt.
+      for (const { file, text } of await agentFiles())
+        this.emitFile({ type: "asset", fileName: file, source: fillDemoSizes(text, { strict: true, plain: true }) });
     },
     // The internal link check, over every page as built: any link to a page, #anchor or file that
     // doesn't exist fails the build, with the file and line it came from.
@@ -130,6 +135,12 @@ function markdownPages() {
             const xml = await sitemap();
             res.setHeader("Content-Type", "application/xml");
             return res.end(xml);
+          }
+          if (path.startsWith(base) && /(\/index\.md|^\/llms(-full)?\.txt)$/.test("/" + path.slice(base.length))) {
+            const found = (await agentFiles()).find((f) => f.file === path.slice(base.length));
+            if (!found) return next();
+            res.setHeader("Content-Type", `${path.endsWith(".md") ? "text/markdown" : "text/plain"}; charset=utf-8`);
+            return res.end(fillDemoSizes(found.text, { strict: false, plain: true }));
           }
           if (!path.startsWith(base) || extname(path) && !path.endsWith(".html")) return next();
           const relative = path.slice(base.length);
@@ -264,25 +275,27 @@ function wantsMissingPage(req, dir) {
 
 // Writes the sizes measured by build-demos.mjs into <span data-demo-size="todo"></span>,
 // so the numbers on the page always match what ships. (The demos themselves are in public/demos/.)
-function demoSizes() {
+// In the Markdown for agents (`plain`), the span becomes just the size.
+function fillDemoSizes(text, { strict, plain = false }) {
   const sizesFile = resolve(root, "build/demo-sizes.json");
   const kB = (bytes) => `${(bytes / 1000).toFixed(1)} kB`;
-  const pattern = /<span data-demo-size="([^"]+)">[^<]*<\/span>/g;
+  const sizes = existsSync(sizesFile) ? JSON.parse(readFileSync(sizesFile, "utf8")) : {};
+  return text.replace(/<span data-demo-size="([^"]+)">[^<]*<\/span>/g, (placeholder, name) => {
+    const size = sizes[name];
+    if (size) return plain ? kB(size.jsGzip) : `<span data-demo-size="${name}">${kB(size.jsGzip)}</span>`;
+    if (strict) throw new Error(`No size measured for demo "${name}". Run "npm run build:demos" first.`);
+    return placeholder;
+  });
+}
+
+function demoSizes() {
   let isBuild;
   return {
     name: "firelight-demo-sizes",
     configResolved: (config) => {
       isBuild = config.command === "build";
     },
-    transformIndexHtml: (html) => {
-      const sizes = existsSync(sizesFile) ? JSON.parse(readFileSync(sizesFile, "utf8")) : {};
-      return html.replace(pattern, (placeholder, name) => {
-        const size = sizes[name];
-        if (size) return `<span data-demo-size="${name}">${kB(size.jsGzip)}</span>`;
-        if (isBuild) throw new Error(`No size measured for demo "${name}". Run "npm run build:demos" first.`);
-        return placeholder;
-      });
-    },
+    transformIndexHtml: (html) => fillDemoSizes(html, { strict: isBuild }),
   };
 }
 

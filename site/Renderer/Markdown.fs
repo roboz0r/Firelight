@@ -116,9 +116,8 @@ type Rendered =
         Demos: Demo list
     }
 
-// `{#id .same-section}` at the end of a heading.
-let private headingAttributes =
-    Text.RegularExpressions.Regex "\\s*\\{([^{}]*)\\}\\s*$"
+/// `{#id .same-section}` at the end of a heading.
+let headingAttributes = Text.RegularExpressions.Regex "\\s*\\{([^{}]*)\\}\\s*$"
 
 let private verbatimPlaceholder =
     Text.RegularExpressions.Regex "<!--firelight-verbatim:(\d+)-->"
@@ -259,6 +258,9 @@ let private containerRule =
                 token.info <- String.Join(" ", name :: args)
                 token.content <- state.getLines (startLine + 1, close, state.blkIndent, false)
                 token.meta <- Some(box startLine)
+                // Its lines, opening and closing marker included. (Set directly: the binding's type
+                // for `map` is wrong.)
+                token?map <- [| startLine; close + 1 |]
                 state.line <- close + 1
                 true
     )
@@ -338,6 +340,15 @@ let private demo (settings: Settings) (page: Collected) (c: Container) =
         failwith $"Line {c.Line + 1}: '::: demo' needs the demo's HTML in its body."
 
     liveDemo settings page c file options + "\n"
+
+/// The `::: name args` block that a `container` token stands for.
+let containerOf (t: Token) =
+    {
+        Name = t.info.Split(' ').[0]
+        Args = t.info.Split(' ') |> List.ofArray |> List.tail
+        Body = t.content
+        Line = unbox t.meta.Value
+    }
 
 // Core rule, after inline parsing: heading ids and the table of contents, `<section>` around each
 // h2 and what follows it (the page styles space sections), and base-path and asset links.
@@ -546,13 +557,7 @@ let create (settings: Settings) =
             Renderer.RenderRule(fun tokens idx _ env _ ->
                 let t = tokens[idx]
 
-                let container =
-                    {
-                        Name = t.info.Split(' ').[0]
-                        Args = t.info.Split(' ') |> List.ofArray |> List.tail
-                        Body = t.content
-                        Line = unbox t.meta.Value
-                    }
+                let container = containerOf t
 
                 match container.Name with
                 | "example" -> example settings (collected env) container
@@ -567,14 +572,21 @@ let create (settings: Settings) =
     md
 
 /// Renders a page body. Line numbers in errors count from the start of `markdown`.
+let private newCollected () =
+    {
+        Headings = ResizeArray()
+        Demos = ResizeArray()
+        Verbatim = ResizeArray()
+        Ids = HashSet()
+    }
+
+/// A page body's tokens, as `render` sees them before rendering. A `container` token's `map` holds
+/// its lines, as for other blocks.
+let parse (md: MarkdownIt) (markdown: string) : Token[] =
+    md.parse (markdown, Some(box (newCollected ())))
+
 let render (md: MarkdownIt) (markdown: string) : Rendered =
-    let page =
-        {
-            Headings = ResizeArray()
-            Demos = ResizeArray()
-            Verbatim = ResizeArray()
-            Ids = HashSet()
-        }
+    let page = newCollected ()
 
     let tokens = md.parse (markdown, Some(box page))
 
