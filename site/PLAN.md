@@ -88,7 +88,7 @@ Prose…
   With no body, it shows the code only.
 - `::: compare` lays out two code blocks side by side using CSS only (no JS tabs).
 - Plain ```` ```fsharp ```` blocks must be self-contained, because they get compiled.
-  ```` ```fsharp fragment ```` opts out (the existing regex already ignores any info string after `fsharp`).
+  ```` ```fsharp fragment ```` opts out (`tests/Docs.Snippets` skips any block with more after `fsharp` in its info string).
 - Internal links are written as `/guides/events/` and the base path is added at build time.
 
 ---
@@ -129,8 +129,9 @@ JavaScript disabled.
 
 Everything after this phase relies on these checks instead of line-by-line review.
 
-1. **`tests/Docs.Snippets`.** Generalise `tests/Readme.Snippets` to glob `README.md` and
-   `site/content/**/*.md`. Errors still point at Markdown line numbers.
+1. **`tests/Docs.Snippets`.** Done: `tests/Readme.Snippets` was generalised to compile plain
+   ```` ```fsharp ```` blocks in `README.md` and `site/content/**/*.md`. Errors still point at
+   Markdown line numbers.
 2. **Internal link check inside the build.** The Markdown plugin already knows every page, so an
    unknown internal `href` or `#anchor` fails the build.
 3. **`tests/Site.E2E`** (Expecto + Playwright, the same setup as `sample/Kanban.E2E`), run against

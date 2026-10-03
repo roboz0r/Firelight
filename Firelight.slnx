@@ -29,7 +29,7 @@
     <Project Path="site/Site.fsproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Readme.Snippets/Readme.Snippets.fsproj" />
+    <Project Path="tests/Docs.Snippets/Docs.Snippets.fsproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Firelight.Context/Firelight.Context.fsproj" />

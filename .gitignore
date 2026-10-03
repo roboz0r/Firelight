@@ -13,3 +13,6 @@ site/public/demos/
 
 # Brainstorming docs
 brainstorming/
+
+# Agent worktrees
+.claude/worktrees/

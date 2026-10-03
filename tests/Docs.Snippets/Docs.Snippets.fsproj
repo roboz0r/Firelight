@@ -1,0 +1,159 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Compiles every plain ```fsharp block in README.md and site/content/**/*.md as its own module,
+    so documentation examples that stop compiling fail the build. Each block must be
+    self-contained. Blocks with anything after `fsharp` in the info string (```fsharp fragment)
+    are skipped. Errors are reported against the Markdown file and line.
+
+      dotnet build tests/Docs.Snippets
+
+    Generated modules are named Docs.<relative path>.Block<NN>, e.g. Docs.README_md.Block03 or
+    Docs.site_content_guides_events_md.Block01, so they are unique across files and stable.
+
+    Incrementality: the extraction target runs on every build (it takes milliseconds) instead of
+    declaring Inputs/Outputs, because the set of output files depends on the Markdown content and
+    Inputs/Outputs cannot notice deleted or renamed .md files. It only rewrites a generated .fs
+    file when its content changes and deletes stale ones, so CoreCompile stays incremental: an
+    unchanged tree builds without recompiling, and any .md edit, addition or removal recompiles.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <SnippetDirectory>$(BaseIntermediateOutputPath)docs\</SnippetDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- site/content may not exist yet; an unmatched glob is simply empty. -->
+    <DocsMarkdown Include="$(RepoRoot)README.md" />
+    <DocsMarkdown Include="$(RepoRoot)site\content\**\*.md" />
+    <None Include="@(DocsMarkdown)" Link="Docs\%(RecursiveDir)%(Filename)%(Extension)" />
+    <UpToDateCheckInput Include="@(DocsMarkdown)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Firelight\Firelight.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Context\Firelight.Context.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Elmish\Firelight.Elmish.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Motion\Firelight.Motion.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Router\Firelight.Router.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Signals\Firelight.Signals.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Task\Firelight.Task.fsproj" />
+  </ItemGroup>
+
+  <UsingTask TaskName="ExtractFSharpBlocks" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Markdown ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <RepoRoot ParameterType="System.String" Required="true" />
+      <OutputDirectory ParameterType="System.String" Required="true" />
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        // A line-based CommonMark-style fence scanner (not a single regex) so that fences nested
+        // inside other fences (e.g. a ```md block showing ```fsharp) are not extracted, and so
+        // the closing fence must match the opening fence's character and length.
+        var root = Path.GetFullPath(RepoRoot).Replace('\\', '/').TrimEnd('/') + "/";
+        var outDir = Path.GetFullPath(OutputDirectory);
+        Directory.CreateDirectory(outDir);
+
+        // Leading spaces are accepted at any depth so fences in (nested) list item bodies count.
+        // Known limitation: a 4-space indented code block that literally shows a ```fsharp fence
+        // would be extracted; show such examples inside a ````md fence instead.
+        var opening = new Regex(@"^(?<indent> *)(?<fence>`{3,}|~{3,})(?<info>.*)$");
+        // A bare fsharp fence behind a blockquote or list marker (`> ```fsharp`, `- ```fsharp`)
+        // is not understood by this scanner; fail loudly rather than silently skip it.
+        var unsupported = new Regex(@"^[ \t]*(?:(?:>|[-*+]|\d{1,9}[.)])[ \t]*)+(`{3,}|~{3,})[ \t]*fsharp[ \t]*$");
+        // Generated file names must be unique on case-insensitive file systems too, so name
+        // collisions are compared case-insensitively and reported as errors.
+        var stems = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var files = new List<ITaskItem>();
+        var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Ordinal (case-sensitive) de-duplication: on Linux, events.md and Events.md are distinct
+        // files and must both be checked (they then collide on the module name, see DOCS002).
+        var markdownPaths = Markdown
+            .Select(m => Path.GetFullPath(m.ItemSpec).Replace('\\', '/'))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(p => p, StringComparer.Ordinal);
+
+        foreach (var md in markdownPaths)
+        {
+            var rel = md.StartsWith(root, StringComparison.OrdinalIgnoreCase) ? md.Substring(root.Length) : md;
+            var stem = Regex.Replace(rel, "[^A-Za-z0-9]", "_");
+            if (!char.IsLetter(stem[0])) stem = "_" + stem;
+            string other;
+            if (stems.TryGetValue(stem, out other))
+            {
+                Log.LogError(null, "DOCS002", null, Path.GetFullPath(md),0, 0, 0, 0,
+                    "'" + rel + "' and '" + other + "' map to the same snippet module name '" + stem + "'. Rename one of them.");
+                continue;
+            }
+            stems[stem] = rel;
+
+            // CRLF, LF and bare CR are all Markdown line endings.
+            var lines = File.ReadAllText(md).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            var block = 0;
+            var i = 0;
+            while (i < lines.Length)
+            {
+                var m = opening.Match(lines[i]);
+                // A backtick fence's info string may not contain backticks (CommonMark 4.5).
+                if (!m.Success || (m.Groups["fence"].Value[0] == '`' && m.Groups["info"].Value.Contains("`")))
+                {
+                    if (unsupported.IsMatch(lines[i]))
+                        Log.LogError(null, "DOCS003", null, Path.GetFullPath(md),i + 1, 1, 0, 0,
+                            "A ```fsharp block inside a blockquote or on a list-marker line is not extracted by tests/Docs.Snippets. Move it to its own line (indented under the list item if needed) or mark it ```fsharp fragment.");
+                    i++;
+                    continue;
+                }
+                var fence = m.Groups["fence"].Value;
+                var indent = m.Groups["indent"].Value.Length;
+                var info = m.Groups["info"].Value.Trim();
+                // The closing fence may be indented at most 3 spaces more than the opening one.
+                var closing = new Regex("^ {0," + (indent + 3) + "}" + Regex.Escape(fence.Substring(0, 1)) + "{" + fence.Length + ",}[ \\t]*$");
+                var start = i + 1;
+                var end = start;
+                while (end < lines.Length && !closing.IsMatch(lines[end])) end++;
+
+                // Only a bare `fsharp` info string is compiled; `fsharp fragment` etc. opt out.
+                if (info == "fsharp")
+                {
+                    if (end == lines.Length)
+                    {
+                        Log.LogError(null, "DOCS001", null, Path.GetFullPath(md),i + 1, 1, 0, 0, "Unclosed ```fsharp block.");
+                        break;
+                    }
+                    block++;
+                    var code = lines.Skip(start).Take(end - start)
+                        .Select(l => { var n = 0; while (n < indent && n < l.Length && l[n] == ' ') n++; return l.Substring(n); });
+                    var name = stem + "_" + block.ToString("00");
+                    var path = Path.Combine(outDir, name + ".fs");
+                    // The line directive makes compiler errors point at the block in the Markdown file.
+                    var content =
+                        "module Docs." + stem + ".Block" + block.ToString("00") + "\n\n" +
+                        "# " + (start + 1) + " \"" + md + "\"\n" +
+                        string.Join("\n", code) + "\n";
+                    // Only rewrite on change so CoreCompile can skip an unchanged tree.
+                    if (!File.Exists(path) || File.ReadAllText(path) != content) File.WriteAllText(path, content);
+                    keep.Add(path);
+                    files.Add(new TaskItem(path));
+                }
+                i = end + 1;
+            }
+        }
+
+        foreach (var old in Directory.GetFiles(outDir, "*.fs"))
+            if (!keep.Contains(Path.GetFullPath(old))) File.Delete(old);
+
+        Files = files.ToArray();
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="IncludeDocsSnippets" BeforeTargets="BeforeBuild">
+    <ExtractFSharpBlocks Markdown="@(DocsMarkdown)" RepoRoot="$(RepoRoot)" OutputDirectory="$(SnippetDirectory)">
+      <Output TaskParameter="Files" ItemName="Compile" />
+    </ExtractFSharpBlocks>
+  </Target>
+</Project>
