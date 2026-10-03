@@ -12,6 +12,7 @@
     <None Include="site.css" />
     <None Include="partials/*.html" />
     <None Include="packages/*/index.html" />
+    <None Include="content/**/*.md" />
   </ItemGroup>
   <ItemGroup>
     <!-- Each file registers its own custom element; the HTML pages load them as module scripts. -->

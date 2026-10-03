@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Build-time page renderer: Markdown in content/ to complete HTML pages. Compiled by Fable to
+    build/Renderer/ and run in Node by the Vite plugin in ../vite.config.js, never in the browser.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="LitSsr.fs" />
+    <Compile Include="Markdown.fs" />
+    <Compile Include="Pages.fs" />
+    <Compile Include="Layout.fs" />
+    <Compile Include="Prerender.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" />
+    <PackageReference Include="Fable.MarkdownIt" />
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Firelight\Firelight.fsproj" />
+    <ProjectReference Include="..\Fable.Shiki\Fable.Shiki.fsproj" />
+  </ItemGroup>
+</Project>

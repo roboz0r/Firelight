@@ -107,6 +107,45 @@ Prose…
      misbehave, generate the HTML into gitignored folders under `site/` before Vite starts.
 
    If either of the first two fails, fall back to the JS pipeline (D1) and prerender only demos.
+
+   **Spike results: all three work, so continue with the F# pipeline.** `packages/firelight` is
+   now `content/packages/firelight.md`, rendered by `Renderer/` (LitSsr, Markdown, Pages, Layout,
+   Prerender) through the `markdownPages` plugin in `vite.config.js`.
+   - *Lit SSR of Fable output:* works. The one blocker was `defineElement` emitting
+     `window.customElements.define(...)` at module level: Lit's Node build provides a global
+     `customElements` but no `window`. Fixed in `Lit.defineElement` and `LitSignals.defineElement`
+     (they now use the global; no API change). Router (`EventHandlers.origin` reads
+     `window.location` at load) and Virtualizer still touch `window`; their demos are `ssr=false` anyway.
+   - *Hydration pitfall:* hydration support must run before `LitElement` is defined, and Vite
+     bundles all of a page's module scripts into one entry whose shared chunk puts `LitElement`
+     next to lit-html. With `<script src>` tags the demo silently rendered a second copy into its
+     shadow root (10 stars, no console message). Pages with prerendered demos therefore load one
+     inline module: hydration support, then `import()` of each demo. Page scripts on those pages
+     must not import Lit statically. `Site.E2E` should assert that demos don't duplicate content.
+   - *Dev loop:* the renderer and demo modules load through Vite's SSR module runner
+     (`server.environments.ssr.runner`), not a cache-busted `import()`: a `?t=` query only
+     re-runs the entry module, not the renderer modules it imports. Vite invalidates whatever Fable rewrites,
+     and the plugin sends one debounced full reload (about 1–2 s from saving an `.fs` file;
+     instant for `.md`). Snippet edits update the prerendered shadow DOM too. Re-running a snippet
+     logs Lit's harmless "already defined" warning in dev. `npm run dev` chains two `fable watch`es.
+   - *Page output:* virtual `.html` inputs (`resolveId`/`load`) work with Vite 8: normal asset
+     handling, base path and the includes plugin all apply. No generated folders are needed.
+   - Decisions taken: markdown-it renders to an HTML string (no token walking), which becomes part of a
+     server-only Lit template (`@lit-labs/ssr`'s `html` plus `withStatic`/`unsafeStatic`), so Lit
+     SSR prerenders any custom element in the Markdown and the page itself has no hydration
+     markers. Frontmatter is YAML (`yaml` package) and adds `tagline`, `lead`, `links` and `toc`.
+     Page scripts are plain `<script type="module">` blocks in the Markdown (`html: true`).
+     Typographer, linkify and `breaks` are off so migrated text stays exact. Header and footer are
+     duplicated in `Layout.fs` until the partials go; the package nav is still the partial.
+   - `ssr=false` can't just mean "don't import the module": once any page registers an element,
+     Lit SSR renders it everywhere, including inside `unsafeHTML`, because Lit SSR parses that
+     content as a template too. Opted-out demo bodies are left as placeholder comments and spliced
+     into the HTML after rendering.
+   - Still to do in steps 2–6: `Pages.fs` nav model (prev/next, sidebar, generated package nav and
+     homepage table), head metadata (step 3), the other eight package pages and routing (step 4),
+     then delete `partials/` and the `packagePages` input list. Before extracting `Fable.Shiki`
+     (Later), add custom grammar/theme objects and engine options as inputs. The spike didn't
+     need them, so its API is unchanged.
 2. Put the renderer in `site/Renderer/` (a Fable project run in Node, separate from the browser
    code in `Site.fsproj`): `Markdown.fs` (Fable.MarkdownIt, Shiki, containers, heading ids, TOC),
    `Layout.fs` (head metadata, header, sidebar, TOC, prev/next, footer as Firelight templates),

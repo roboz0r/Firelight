@@ -27,6 +27,7 @@
   </Folder>
   <Folder Name="/site/">
     <Project Path="site/Fable.Shiki/Fable.Shiki.fsproj" />
+    <Project Path="site/Renderer/Renderer.fsproj" />
     <Project Path="site/Site.fsproj" />
   </Folder>
   <Folder Name="/templates/">

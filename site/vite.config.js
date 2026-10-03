@@ -1,6 +1,7 @@
-import { defineConfig } from "vite";
+import { defineConfig, normalizePath } from "vite";
 import { copyFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const root = import.meta.dirname;
 
@@ -32,15 +33,100 @@ function includes() {
     configureServer(server) {
       for (const dir of ["Snippets", "Routing", "partials"]) server.watcher.add(resolve(root, dir));
       server.watcher.on("change", (file) => {
-        if (/\.fs$|[\\/]partials[\\/]/.test(file)) server.ws.send({ type: "full-reload" });
+        // (Renderer/ sources only matter once Fable has compiled them; markdownPages reloads then.)
+        if (/\.fs$|[\\/]partials[\\/]/.test(file) && !/[\\/]Renderer[\\/]/.test(file)) server.ws.send({ type: "full-reload" });
       });
     },
   };
 }
 
-// One page per package: packages/<name>/index.html.
+// Markdown pages: content/<path>.md becomes <path>/index.html. The renderer is F# (Renderer/,
+// compiled by Fable to build/Renderer/) running here in Node: markdown-it, Shiki and Lit SSR, with
+// each `::: example` demo prerendered to Declarative Shadow DOM. Vite then processes the result like
+// any hand-written page (module scripts, base path, the includes above).
+// - Dev: pages are rendered on request. The renderer and the demo modules are loaded through Vite's
+//   SSR module runner, which re-runs whatever Fable recompiles, so edits need no restart.
+// - Build: each page is a virtual .html input that this plugin renders when Rollup loads it.
+function markdownPages() {
+  const rendererUrl = "/build/Renderer/Prerender.js";
+  const fileUrl = (url) => pathToFileURL(resolve(root, url.slice(1))).href;
+  let base;
+  let server;
+  const inputs = new Map(); // build: absolute output path -> content/...md
+
+  const load = (url) => (server ? server.environments.ssr.runner.import(url) : import(fileUrl(url)));
+  const render = async (source) => (await load(rendererUrl)).renderPage({ root, base, loadModule: load }, source);
+
+  const reload = () => server.ws.send({ type: "full-reload" });
+  let timer;
+  const reloadSoon = () => {
+    clearTimeout(timer);
+    timer = setTimeout(reload, 150); // one reload per save, though Fable writes several files and Windows reports twice
+  };
+
+  return {
+    name: "firelight-markdown-pages",
+    enforce: "pre",
+    async config(userConfig, { command }) {
+      // Vite's dependency scan only reads HTML files on disk, so it can't see this import in the
+      // rendered pages; without this it's found on the first visit and the page reloads.
+      if (command !== "build") return { optimizeDeps: { include: ["@lit-labs/ssr-client/lit-element-hydrate-support.js"] } };
+      const { pages } = await import(fileUrl(rendererUrl)).catch((e) => {
+        throw new Error(`Can't load the page renderer; run "npm run build:renderer" first. (${e.message})`);
+      });
+      const input = {};
+      const handWritten = userConfig.build?.rollupOptions?.input ?? {};
+      for (const page of pages(root)) {
+        const output = normalizePath(resolve(root, page.output));
+        if (existsSync(output)) throw new Error(`${page.source} and ${page.output} both define the same page.`);
+        // Entry names become asset file names: packages/firelight -> assets/packages-firelight-<hash>.js
+        const name = page.output.replace(/\/?index\.html$/, "").replaceAll("/", "-") || "index";
+        if (name in input || name in handWritten) throw new Error(`${page.source} has the same entry name as another page ("${name}").`);
+        inputs.set(output, page.source);
+        input[name] = output;
+      }
+      return { build: { rollupOptions: { input } } };
+    },
+    configResolved: (config) => {
+      base = config.base;
+    },
+    resolveId: (id) => (inputs.has(id) ? id : undefined),
+    load: (id) => (inputs.has(id) ? render(inputs.get(id)) : undefined),
+    configureServer(devServer) {
+      server = devServer;
+      server.watcher.add(resolve(root, "content"));
+      server.watcher.on("all", (_, file) => {
+        if (/[\\/]content[\\/].*\.md$|[\\/]build[\\/]Renderer[\\/].*\.js$/.test(file)) reloadSoon();
+      });
+      server.middlewares.use(async (req, res, next) => {
+        const [path, query] = req.url.split("?");
+        if (!path.startsWith(base) || extname(path) && !path.endsWith(".html")) return next();
+        try {
+          const relative = path.slice(base.length);
+          const { pages } = await load(rendererUrl);
+          const page = pages(root).find((p) => [p.output, p.output.replace(/index\.html$/, "")].includes(relative));
+          if (!page) {
+            const withSlash = pages(root).find((p) => p.output === relative + "/index.html");
+            if (!withSlash) return next();
+            res.writeHead(301, { Location: path + "/" + (query ? "?" + query : "") });
+            return res.end();
+          }
+          const html = await server.transformIndexHtml("/" + page.output, await render(page.source), req.originalUrl);
+          res.setHeader("Content-Type", "text/html");
+          res.end(html);
+        } catch (e) {
+          next(e);
+        }
+      });
+    },
+  };
+}
+
+// One page per package: packages/<name>/index.html. (Packages written in Markdown are added by markdownPages.)
 const packagePages = Object.fromEntries(
-  readdirSync(resolve(root, "packages")).map((name) => [`package-${name}`, resolve(root, "packages", name, "index.html")]),
+  readdirSync(resolve(root, "packages"))
+    .filter((name) => existsSync(resolve(root, "packages", name, "index.html")))
+    .map((name) => [`package-${name}`, resolve(root, "packages", name, "index.html")]),
 );
 
 // GitHub Pages serves 404.html for any unknown path. Making it the routing page lets deep links
@@ -117,7 +203,7 @@ function directoryUrls() {
 
 export default defineConfig({
   base: "/Firelight/",
-  plugins: [includes(), routingPageAs404(), demoSizes(), directoryUrls()],
+  plugins: [markdownPages(), includes(), routingPageAs404(), demoSizes(), directoryUrls()],
   build: {
     rollupOptions: {
       input: {

@@ -111,6 +111,29 @@ fl-code > pre {
 }
 fl-code > pre code { font: inherit; }
 
+/* Code highlighted at build time (Markdown pages): the same look as <fl-code>. Shiki writes the light
+   colours inline and the dark ones as --shiki-dark variables. */
+pre.shiki {
+  margin-block: 1rem;
+  padding: var(--fl-code-padding);
+  border-radius: var(--fl-code-radius);
+  overflow-x: auto;
+  font: var(--fl-code-font);
+}
+pre.shiki code { font: inherit; }
+.example pre.shiki { margin: 0; }
+@media (prefers-color-scheme: dark) {
+  .shiki, .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+  }
+}
+
+/* Table of contents, for pages with `toc: true` */
+.toc p { margin: 0 0 0.25rem; font-weight: 600; }
+.toc ul { margin: 0; padding: 0; list-style: none; }
+.toc .toc-h3 { padding-left: 1rem; }
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
