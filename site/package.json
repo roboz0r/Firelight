@@ -1,0 +1,31 @@
+{
+  "name": "firelight-site",
+  "private": true,
+  "description": "Firelight promo site, deployed to https://roboz0r.github.io/Firelight/",
+  "type": "module",
+  "scripts": {
+    "preinstall": "dotnet tool restore",
+    "clean": "rimraf build dist public/demos",
+    "dev": "dotnet fable watch ./ -o ./build/ -s --run vite",
+    "build:site": "dotnet fable ./ -o ./build/ --run vite build",
+    "build:demos": "node ./build-demos.mjs",
+    "build": "npm run clean && npm run build:demos && npm run build:site",
+    "preview": "vite preview"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@lit-labs/motion": "1.1.0",
+    "@lit-labs/observers": "2.1.0",
+    "@lit-labs/signals": "0.3.0",
+    "@lit-labs/virtualizer": "2.1.1",
+    "@lit/context": "1.1.6",
+    "@lit/task": "1.0.3",
+    "lit": "3.3.1",
+    "shiki": "4.4.3",
+    "urlpattern-polyfill": "10.1.0"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "vite": "8.3.1"
+  }
+}

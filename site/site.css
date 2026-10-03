@@ -1,0 +1,180 @@
+:root {
+  color-scheme: light dark;
+  --bg: #fffdf9;
+  --fg: #1f1d1a;
+  --muted: #6b645c;
+  --border: #e8e1d8;
+  --surface: #f7f2ec;
+  --accent: #d9480f;
+  --accent-fg: #ffffff;
+  --code-bg: #ffffff;
+  --radius: 0.5rem;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  --fl-code-font: 0.875rem/1.6 var(--mono);
+  --fl-code-padding: 1rem 1.25rem;
+  --fl-code-radius: var(--radius);
+  --lit-logo-text-color: var(--fg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17151a;
+    --fg: #ece8e3;
+    --muted: #a39b92;
+    --border: #2f2b30;
+    --surface: #1f1c22;
+    --accent: #ff8a3d;
+    --accent-fg: #17151a;
+    --code-bg: #24292e;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 1rem/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a { color: var(--accent); }
+code { font-family: var(--mono); font-size: 0.9em; }
+
+.site-header, main, .site-footer {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1rem;
+}
+.site-header nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+.site-header nav a { color: var(--fg); text-decoration: none; }
+.site-header nav a:hover { color: var(--accent); }
+.brand { color: var(--fg); text-decoration: none; font-weight: 900; font-size: 1.5rem; letter-spacing: -0.04em; }
+
+section { padding-block: 2.5rem; }
+h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 1.1; margin: 0 0 1rem; }
+h2 { font-size: 1.75rem; margin: 2rem 0 0.75rem; }
+h2:first-child { margin-top: 0; }
+.lead { font-size: 1.2rem; color: var(--muted); max-width: 44rem; }
+
+.hero { padding-block: 4rem 2rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+.button {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+}
+.button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+
+/* A live component, with the full source that defines it below. (The demo comes after the code
+   in the HTML, so the code reads first without CSS; `order` puts the demo on top.) */
+.example {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+.example .demo { order: -1; }
+.demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.demo.routed { display: block; }
+
+/* Unhighlighted fallback, shown until <fl-code> upgrades. Matches its padding and font to avoid a layout shift. */
+fl-code { display: block; margin-block: 1rem; }
+.example fl-code { margin: 0; }
+fl-code > pre {
+  margin: 0;
+  padding: var(--fl-code-padding);
+  border: 1px solid var(--border);
+  border-radius: var(--fl-code-radius);
+  background: var(--code-bg);
+  overflow-x: auto;
+  font: var(--fl-code-font);
+}
+fl-code > pre code { font: inherit; }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+.cards article {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.cards h3 { margin-top: 0; }
+.cards p { margin-bottom: 0; color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+td:first-child { white-space: nowrap; }
+
+.package-list { list-style: none; margin: 0; padding: 0; }
+.package-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); color: var(--muted); }
+.package-list a { font-weight: 600; margin-right: 0.5rem; }
+
+.site-footer { padding-block: 2rem; color: var(--muted); border-top: 1px solid var(--border); }
+
+/* Package pages */
+.eyebrow { margin: 0 0 0.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.eyebrow a { text-decoration: none; }
+.package-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
+.package-links a {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.package-links a:hover { border-color: var(--accent); }
+section > p { max-width: 48rem; }
+.notice {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--surface);
+}
+.package-nav { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.package-nav h2 { font-size: 1rem; margin: 0 0 0.75rem; color: var(--muted); }
+.package-nav ul { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin: 0; padding: 0; list-style: none; }
+
+/* Demo layouts */
+.demo.stacked { flex-direction: column; gap: 0.5rem; }
+.nested { padding: 0.75rem; border: 1px dashed var(--border); border-radius: var(--radius); display: grid; gap: 0.75rem; justify-items: start; }
+
+/* Client-side routing demo (light DOM, so it uses these styles directly) */
+.route-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1.5rem; padding: 0; list-style: none; }
+.route-links a {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.route-result { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1.5rem; margin: 0; }
+.route-result dt { color: var(--muted); }
+.route-result dd { margin: 0; }

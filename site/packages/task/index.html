@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firelight.Task: async work in Lit components</title>
+  <meta name="description" content="Run async work from a Lit component and render its pending, complete and error states. F# bindings for @lit/task.">
+  <link rel="stylesheet" href="/site.css">
+  <script type="module" src="/build/Components/CodeBlock.js"></script>
+  <script type="module" src="/build/Snippets/ProductTask.js"></script>
+</head>
+<body>
+  <!-- include partials/header.html -->
+  <main>
+    <section class="package-intro">
+      <p class="eyebrow"><a href="%BASE_URL%#packages">Packages</a></p>
+      <h1>Firelight.Task</h1>
+      <p class="lead">Run async work from a component and render its pending, complete and error states.</p>
+      <ul class="package-links">
+        <li><a href="https://lit.dev/docs/data/task/">Lit docs: Async tasks</a></li>
+        <li><a href="https://www.nuget.org/packages/Firelight.Task">NuGet</a></li>
+        <li><a href="https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Task">Source</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Why use it</h2>
+      <p>
+        Loading data in a component takes more than making the request. You need a loading state, the
+        result or the error, a new request when an input changes, and a way to ignore an older request
+        that finishes after a newer one.
+      </p>
+      <p>
+        <code>LitTask</code> handles all of that. Give it a function that returns a promise and an
+        <code>args</code> function: the task runs whenever the arguments change, renders the component
+        again as its status changes, and <code>render</code> picks the template for the current status. The
+        task function also receives an <code>AbortSignal</code> you can pass to <code>fetch</code>, so
+        requests that are no longer needed get cancelled. The F# type is called <code>LitTask</code> so it
+        doesn't clash with .NET's <code>Task</code>.
+      </p>
+    </section>
+
+    <section>
+      <h2>Example</h2>
+      <p>Each button changes the task's argument, which starts a new request. Product 3 fails, to show the error state.</p>
+      <p class="notice">
+        <code>args</code> must return a plain JavaScript array. Fable compiles numeric arrays such as
+        <code>int[]</code> to typed arrays (<code>Int32Array</code>), which <code>@lit/task</code> rejects,
+        so this example uses string ids. Arrays of strings, records or <code>obj</code> are fine.
+      </p>
+      <div class="example">
+        <fl-code lang="fsharp"><pre data-include="Snippets/ProductTask.fs"></pre></fl-code>
+        <div class="demo"><my-product-view></my-product-view></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Install</h2>
+      <fl-code lang="shellscript"><pre><code>dotnet add package Firelight.Task
+npm install @lit/task</code></pre></fl-code>
+    </section>
+
+    <!-- include partials/package-nav.html -->
+  </main>
+  <!-- include partials/footer.html -->
+</body>
+</html>

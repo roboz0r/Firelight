@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Vendored from https://github.com/roboz0r/fable-shiki while the bindings are experimental.
+    Shiki.fs is identical to upstream. ShikiCore.fs (the shiki/core fine-grained bundle) is new here
+    and should move upstream when the package is split back out.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Shiki.fs" />
+    <Compile Include="ShikiCore.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Core" />
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+</Project>

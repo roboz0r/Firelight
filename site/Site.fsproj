@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="package.json" />
+    <None Include="vite.config.js" />
+    <None Include="build-demos.mjs" />
+    <None Include="index.html" />
+    <None Include="client-side-routing/index.html" />
+    <None Include="site.css" />
+    <None Include="partials/*.html" />
+    <None Include="packages/*/index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Each file registers its own custom element; the HTML pages load them as module scripts. -->
+    <Compile Include="Components/CodeBlock.fs" />
+    <Compile Include="Snippets/Counter.fs" />
+    <Compile Include="Snippets/ElmishCounter.fs" />
+    <Compile Include="Snippets/Rating.fs" />
+    <Compile Include="Snippets/ThemeContext.fs" />
+    <Compile Include="Snippets/UndoCounter.fs" />
+    <Compile Include="Snippets/SharedSignal.fs" />
+    <Compile Include="Snippets/ShuffleList.fs" />
+    <Compile Include="Snippets/ResizePanel.fs" />
+    <Compile Include="Snippets/ProductTask.fs" />
+    <Compile Include="Snippets/BigList.fs" />
+    <Compile Include="Routing/RouteExplorer.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\Firelight\Firelight.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Context\Firelight.Context.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Elmish\Firelight.Elmish.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Motion\Firelight.Motion.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Observers\Firelight.Observers.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Router\Firelight.Router.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Signals\Firelight.Signals.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Task\Firelight.Task.fsproj" />
+    <ProjectReference Include="..\src\Firelight.Virtualizer\Firelight.Virtualizer.fsproj" />
+    <ProjectReference Include="Fable.Shiki\Fable.Shiki.fsproj" />
+  </ItemGroup>
+</Project>

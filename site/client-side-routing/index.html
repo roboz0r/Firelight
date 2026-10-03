@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Client-side routing with Firelight.Router</title>
+  <meta name="description" content="A live demo of Firelight.Router: URL patterns matched to an F# route type, without reloading the page.">
+  <link rel="stylesheet" href="/site.css">
+  <script type="module" src="/build/Components/CodeBlock.js"></script>
+  <script type="module" src="/build/Routing/RouteExplorer.js"></script>
+</head>
+<body>
+  <!-- include partials/header.html -->
+  <main>
+    <section>
+      <p class="eyebrow"><a href="%BASE_URL%packages/router/">Firelight.Router</a></p>
+      <h1>Client-side routing</h1>
+      <p class="lead">
+        Follow the links below. The address changes and the back button works, but the page never
+        reloads: the router matches each address against URL patterns and turns it into an F#
+        <code>Route</code> value, which the component renders.
+      </p>
+      <div class="demo routed">
+        <fl-route-explorer></fl-route-explorer>
+      </div>
+      <p>Try reloading the page on one of the routes, or editing the number in the address bar.</p>
+    </section>
+
+    <section>
+      <h2>How it works</h2>
+      <fl-code lang="fsharp"><pre data-include="Routing/RouteExplorer.fs"></pre></fl-code>
+    </section>
+
+    <section>
+      <h2>Why only this page?</h2>
+      <p>
+        The rest of this site is ordinary HTML pages with components placed in them. That suits a content
+        site: every page loads directly, and search engines and link previews see the text without running
+        any JavaScript.
+      </p>
+      <p>
+        Client-side routing suits applications, where the page stays open and state lives in memory.
+        It needs the server to return the app for every address it handles, not just the first one.
+        GitHub Pages can't be configured to do that, so this site copies this page to
+        <code>404.html</code>. Opening or reloading one of the routes above gets GitHub's 404 response,
+        which is this page, and the router then renders the right route.
+      </p>
+    </section>
+  </main>
+  <!-- include partials/footer.html -->
+</body>
+</html>

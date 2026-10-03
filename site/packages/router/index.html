@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firelight.Router: client-side routing with F# route types</title>
+  <meta name="description" content="Client-side routing for Lit components on the browser's URL Pattern API, with routes as an F# union.">
+  <link rel="stylesheet" href="/site.css">
+  <script type="module" src="/build/Components/CodeBlock.js"></script>
+</head>
+<body>
+  <!-- include partials/header.html -->
+  <main>
+    <section class="package-intro">
+      <p class="eyebrow"><a href="%BASE_URL%#packages">Packages</a></p>
+      <h1>Firelight.Router</h1>
+      <p class="lead">Client-side routing on the browser's URL Pattern API, with your routes as an F# union.</p>
+      <ul class="package-links">
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API">MDN: URL Pattern API</a></li>
+        <li><a href="https://www.nuget.org/packages/Firelight.Router">NuGet</a></li>
+        <li><a href="https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Router">Source</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Why use it</h2>
+      <p>
+        In a single-page app the address should still say where the user is, so links can be shared,
+        a reload lands in the same place and the back button works. Firelight.Router matches the address
+        against URL patterns and turns the match into a value of your own route type, so rendering a page
+        is a <code>match</code>, and the compiler tells you when a route isn't handled.
+      </p>
+      <p>
+        <code>RouterController</code> keeps a component in step with the address. It handles clicks on
+        links that match one of its routes, the browser's back and forward buttons, and smooth scrolling
+        to <code>#hash</code> links. Links it has no route for navigate normally. It's built on the
+        standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API">URL Pattern API</a>,
+        with a polyfill for browsers that don't have it yet, rather than on <code>@lit-labs/router</code>.
+      </p>
+    </section>
+
+    <section>
+      <h2>Example</h2>
+      <p>
+        Patterns can constrain their parameters: <code>:id(\d+)</code> only matches digits, so
+        <code>/users/abc</code> falls through to the catch-all <code>*</code> route and renders
+        <code>NotFound</code> without leaving the page.
+      </p>
+      <fl-code lang="fsharp"><pre data-include="Routing/RouteExplorer.fs"></pre></fl-code>
+      <p class="actions"><a class="button primary" href="%BASE_URL%client-side-routing/">Try it on the client-side routing page</a></p>
+    </section>
+
+    <section>
+      <h2>Install</h2>
+      <fl-code lang="shellscript"><pre><code>dotnet add package Firelight.Router
+npm install urlpattern-polyfill</code></pre></fl-code>
+    </section>
+
+    <!-- include partials/package-nav.html -->
+  </main>
+  <!-- include partials/footer.html -->
+</body>
+</html>

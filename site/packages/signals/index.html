@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firelight.Signals: shared reactive state for Lit components</title>
+  <meta name="description" content="Share reactive state between any components on the page, with updates targeted to the template parts that use it. F# bindings for @lit-labs/signals.">
+  <link rel="stylesheet" href="/site.css">
+  <script type="module" src="/build/Components/CodeBlock.js"></script>
+  <script type="module" src="/build/Snippets/SharedSignal.js"></script>
+</head>
+<body>
+  <!-- include partials/header.html -->
+  <main>
+    <section class="package-intro">
+      <p class="eyebrow"><a href="%BASE_URL%#packages">Packages</a></p>
+      <h1>Firelight.Signals</h1>
+      <p class="lead">Reactive state that lives outside your components, shared by any component that reads it.</p>
+      <ul class="package-links">
+        <li><a href="https://lit.dev/docs/data/signals/">Lit docs: Signals</a></li>
+        <li><a href="https://www.nuget.org/packages/Firelight.Signals">NuGet</a></li>
+        <li><a href="https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Signals">Source</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Why use it</h2>
+      <p>
+        Context shares state down a tree of components. Signals share it with any component, anywhere on
+        the page. A signal is a value that keeps track of who reads it. Components registered with
+        <code>LitSignals.defineElement</code> re-render when a signal they read changes, and
+        <code>computed</code> derives values that stay up to date by themselves.
+      </p>
+      <p>
+        Updates can also be smaller than a whole render. Interpolate a signal into a template with
+        <code>LitSignals.html</code> and only that part of the template updates. Lit's signals are based on
+        the TC39 Signals proposal and are still experimental.
+      </p>
+    </section>
+
+    <section>
+      <h2>Example</h2>
+      <p>
+        The button and the total are separate elements on this page, with no shared parent, property or
+        event between them.
+      </p>
+      <div class="example">
+        <fl-code lang="fsharp"><pre data-include="Snippets/SharedSignal.fs"></pre></fl-code>
+        <div class="demo stacked">
+          <my-click-button></my-click-button>
+          <my-click-total></my-click-total>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Install</h2>
+      <fl-code lang="shellscript"><pre><code>dotnet add package Firelight.Signals
+npm install @lit-labs/signals</code></pre></fl-code>
+    </section>
+
+    <!-- include partials/package-nav.html -->
+  </main>
+  <!-- include partials/footer.html -->
+</body>
+</html>

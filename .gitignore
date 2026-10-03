@@ -7,3 +7,9 @@ fable_modules/
 .claude/settings.local.json
 .vs/
 *.fs.js
+
+# Sample apps built by site/build-demos.mjs
+site/public/demos/
+
+# Brainstorming docs
+brainstorming/

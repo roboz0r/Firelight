@@ -11,6 +11,7 @@
   <Folder Name="/GitHub/">
     <File Path=".github/workflows/build.yml" />
     <File Path=".github/workflows/publish.yml" />
+    <File Path=".github/workflows/pages.yml" />
   </Folder>
   <Folder Name="/sample/">
     <Project Path="sample/GettingStarted/GettingStarted.fsproj" />
@@ -22,6 +23,13 @@
     <Project Path="sample/Motion/Motion.fsproj" />
     <Project Path="sample/ObserversAndVirtualizer/ObserversAndVirtualizer.fsproj" />
     <Project Path="sample/Todo/Todo.fsproj" />
+  </Folder>
+  <Folder Name="/site/">
+    <Project Path="site/Fable.Shiki/Fable.Shiki.fsproj" />
+    <Project Path="site/Site.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Readme.Snippets/Readme.Snippets.fsproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Firelight.Context/Firelight.Context.fsproj" />

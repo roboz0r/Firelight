@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firelight: Web Components for F#</title>
+  <meta name="description" content="Build standards-based web components in F# with Lit and Fable. Type-safe templates, Elmish, context and routing, compiled to lean JavaScript.">
+  <meta property="og:title" content="Firelight: Web Components for F#">
+  <meta property="og:description" content="Build standards-based web components in F# with Lit and Fable.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/site.css">
+  <script type="module" src="/build/Components/CodeBlock.js"></script>
+  <script type="module" src="/build/Snippets/Counter.js"></script>
+  <script type="module" src="/build/Snippets/ElmishCounter.js"></script>
+</head>
+<body>
+  <!-- include partials/header.html -->
+
+  <main>
+    <section class="hero">
+      <h1>Web Components for F#</h1>
+      <p class="lead">
+        Firelight is a set of F# bindings for <a href="https://lit.dev/">Lit</a>, compiled with
+        <a href="https://fable.io/">Fable</a>. Write type-safe components with reactive properties,
+        templates and the Elmish loop, and ship standard custom elements that work in any page.
+      </p>
+      <p class="actions">
+        <a class="button primary" href="#get-started">Get started</a>
+        <a class="button" href="https://github.com/roboz0r/Firelight">View on GitHub</a>
+      </p>
+    </section>
+
+    <section id="examples">
+      <h2>A component in a few lines</h2>
+      <p>
+        The code below is the source file for the live component beside it. This site is built with Firelight.
+      </p>
+      <div class="example">
+        <fl-code lang="fsharp"><pre data-include="Snippets/Counter.fs"></pre></fl-code>
+        <div class="demo"><my-counter></my-counter></div>
+      </div>
+
+      <h2>The Elmish loop, inside a component</h2>
+      <p>
+        <code>ElmishController</code> runs Model-View-Update inside a component. The update function
+        stays pure and every new model triggers a render.
+      </p>
+      <div class="example">
+        <fl-code lang="fsharp"><pre data-include="Snippets/ElmishCounter.fs"></pre></fl-code>
+        <div class="demo"><my-elmish-counter></my-elmish-counter></div>
+      </div>
+    </section>
+
+    <section id="why">
+      <h2>Why Firelight</h2>
+      <div class="cards">
+        <article>
+          <h3>Built on web standards</h3>
+          <p>Components are native custom elements with Shadow DOM. Nothing takes over the page, so you can use them in plain HTML or alongside any other framework.</p>
+        </article>
+        <article>
+          <h3>Idiomatic F#</h3>
+          <p>Records, discriminated unions and pattern matching drive the UI. Immutable models mean every change is seen by Lit's change detection.</p>
+        </article>
+        <article>
+          <h3>Works with other web components</h3>
+          <p>Libraries like Web Awesome, Fluent UI and Carbon are also web components, so you use their tags directly in your templates without wrappers.</p>
+        </article>
+        <article>
+          <h3>No runtime of its own</h3>
+          <p>The core bindings compile away: your components import Lit directly. The <a href="%BASE_URL%demos/todo/">Todo demo</a>, Lit included, ships <span data-demo-size="todo">–</span> of gzipped JavaScript.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="packages">
+      <h2>Packages</h2>
+      <p>Start with <code>Firelight</code> and add the others as you need them. Each page explains when you'd want the package and has a live example.</p>
+      <table>
+        <thead><tr><th>Package</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><a href="%BASE_URL%packages/firelight/"><code>Firelight</code></a></td><td>Core bindings: <code>LitElement</code>, <code>html</code>/<code>css</code> templates, directives, reactive properties</td></tr>
+          <tr><td><a href="%BASE_URL%packages/context/"><code>Firelight.Context</code></a></td><td>Share state across a component tree without passing it through every layer</td></tr>
+          <tr><td><a href="%BASE_URL%packages/elmish/"><code>Firelight.Elmish</code></a></td><td>Run an Elmish (Model-View-Update) loop inside a component</td></tr>
+          <tr><td><a href="%BASE_URL%packages/router/"><code>Firelight.Router</code></a></td><td>Client-side routing on the URL Pattern API, with routes as an F# union</td></tr>
+          <tr><td><a href="%BASE_URL%packages/signals/"><code>Firelight.Signals</code></a></td><td>Shared reactive state that any component can read</td></tr>
+          <tr><td><a href="%BASE_URL%packages/motion/"><code>Firelight.Motion</code></a></td><td>Animate elements as they move, appear and disappear</td></tr>
+          <tr><td><a href="%BASE_URL%packages/observers/"><code>Firelight.Observers</code></a></td><td>Reactive controllers for resize, intersection, mutation and performance observers</td></tr>
+          <tr><td><a href="%BASE_URL%packages/task/"><code>Firelight.Task</code></a></td><td>Async work with pending, complete and error states</td></tr>
+          <tr><td><a href="%BASE_URL%packages/virtualizer/"><code>Firelight.Virtualizer</code></a></td><td>Long lists that only render the visible items</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="demos">
+      <h2>Demo apps</h2>
+      <div class="cards">
+        <article>
+          <h3><a href="%BASE_URL%demos/todo/">Todo</a></h3>
+          <p>An Elmish loop in the root component, with state and dispatch shared through context. <span data-demo-size="todo">–</span> of gzipped JavaScript.</p>
+        </article>
+        <article>
+          <h3><a href="%BASE_URL%client-side-routing/">Client-side routing</a></h3>
+          <p>URL patterns matched to an F# route type with <code>Firelight.Router</code>, and why the rest of this site doesn't use it.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="get-started">
+      <h2>Get started</h2>
+      <p>Add the package to a Fable project, and install Lit from npm:</p>
+      <fl-code lang="shellscript"><pre><code>dotnet add package Firelight
+npm install lit</code></pre></fl-code>
+      <p>
+        Then work through the <a href="https://github.com/roboz0r/Firelight/tree/main/sample/GettingStarted">GettingStarted sample</a>,
+        which covers each core concept one module at a time.
+      </p>
+    </section>
+  </main>
+
+  <!-- include partials/footer.html -->
+</body>
+</html>

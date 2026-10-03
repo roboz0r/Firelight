@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firelight.Motion: animate Lit components from F#</title>
+  <meta name="description" content="Animate elements as they move, appear and disappear, declared in the template. F# bindings for @lit-labs/motion.">
+  <link rel="stylesheet" href="/site.css">
+  <script type="module" src="/build/Components/CodeBlock.js"></script>
+  <script type="module" src="/build/Snippets/ShuffleList.js"></script>
+</head>
+<body>
+  <!-- include partials/header.html -->
+  <main>
+    <section class="package-intro">
+      <p class="eyebrow"><a href="%BASE_URL%#packages">Packages</a></p>
+      <h1>Firelight.Motion</h1>
+      <p class="lead">Animate elements as they move, appear and disappear, declared right in the template.</p>
+      <ul class="package-links">
+        <li><a href="https://github.com/lit/lit/tree/main/packages/labs/motion">Lit Labs: @lit-labs/motion</a></li>
+        <li><a href="https://www.nuget.org/packages/Firelight.Motion">NuGet</a></li>
+        <li><a href="https://github.com/roboz0r/Firelight/tree/main/src/Firelight.Motion">Source</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Why use it</h2>
+      <p>
+        When a render moves an element, it jumps to its new place. Animating that by hand means
+        measuring where the element was before the update and where it is after, then animating between
+        the two. <code>Motion.animate()</code> does that for you: put it on an element in a template, and
+        when a render moves the element, it slides from its old position to its new one.
+      </p>
+      <p>
+        It can also animate elements in and out of the page with keyframe presets such as
+        <code>Motion.fadeIn</code>. <code>AnimateController</code> controls the animations across a
+        component, for example to pause them, and <code>SpringController</code> adds spring physics.
+      </p>
+    </section>
+
+    <section>
+      <h2>Example</h2>
+      <p>The list is re-rendered in a random order. Each item is the same element as before, animated to its new place.</p>
+      <div class="example">
+        <fl-code lang="fsharp"><pre data-include="Snippets/ShuffleList.fs"></pre></fl-code>
+        <div class="demo"><my-shuffle-list></my-shuffle-list></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Install</h2>
+      <fl-code lang="shellscript"><pre><code>dotnet add package Firelight.Motion
+npm install @lit-labs/motion</code></pre></fl-code>
+    </section>
+
+    <!-- include partials/package-nav.html -->
+  </main>
+  <!-- include partials/footer.html -->
+</body>
+</html>

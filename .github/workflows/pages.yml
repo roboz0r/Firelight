@@ -1,0 +1,75 @@
+# Builds site/ (plus the sample apps under /demos/) and deploys it to
+# https://roboz0r.github.io/Firelight/
+#
+# One-time setup: Settings → Pages → Build and deployment → Source: GitHub Actions.
+
+name: Deploy site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+      - 'sample/**'
+      - 'src/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let an in-progress deployment finish; queue at most one more.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            site/package-lock.json
+            sample/*/package-lock.json
+
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Build site and demos
+        working-directory: site
+        run: npm run build
+        env:
+          CI: true
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
