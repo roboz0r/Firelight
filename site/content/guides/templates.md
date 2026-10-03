@@ -1,11 +1,11 @@
 ---
 title: Templates
-tagline: Lit's html in F# interpolated strings
-description: "Write Lit templates as F# interpolated strings: bindings, conditionals, lists, directives and static values, and the F# mistakes to avoid."
+tagline: plain HTML in F# interpolated strings
+description: "Write templates as plain HTML in F# interpolated strings: bindings, conditionals, lists, directives and static values, and the F# mistakes to avoid."
 section: guides
 order: 10
-summary: "Lit's `html` as F# interpolated strings: bindings, lists, directives"
-lead: "A Firelight template is Lit's `html` written as an F# interpolated string. The markup is plain HTML and the bindings are Lit's, so what you know about either carries over. This guide covers the parts that are F#."
+summary: "Plain HTML in F# interpolated strings: bindings, lists, directives"
+lead: "Firelight templates are plain HTML written inside F# interpolated strings. Passing them to Lit's `html` tag function enables efficient rendering and surgical DOM updates. The bindings are Lit's too, so what you know about HTML and Lit carries over. This guide covers the parts that are F#."
 links:
   - text: "Lit docs: Templates"
     href: https://lit.dev/docs/templates/overview/
