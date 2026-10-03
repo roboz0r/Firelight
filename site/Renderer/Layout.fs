@@ -99,6 +99,13 @@ let headMeta (``base``: string) (h: Head) =
   <meta name="twitter:image" content={image}>
   <meta name="twitter:image:alt" content={brand.SocialImageAlt}>"""
 
+/// The logo beside the header's wordmark: images/logo-small.svg (keep them the same), inline so it
+/// paints with the page. Flat colours and no ids, so it can appear on a page that also inlines the
+/// full logo, and hidden from assistive technology because the wordmark names the link.
+let private headerMark =
+    LitSsr.markup
+        """<svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="none" stroke="#c92a2a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M11 27 5 40 11 53M53 27 59 40 53 53"/><path fill="#f76707" d="M32 60C22.51 60 16 52 16 41.2 16 29.4 22.83 22.8 26.67 14.8 28.59 10.6 28.91 7.3 28.59 4 34.24 7.3 38.51 12.5 40.43 18.6 41.92 16.2 43.09 13.4 43.41 10.6 46.83 15.8 48 23.8 48 34.6 48 49.7 41.92 60 32 60Z"/><path fill="#ffc145" d="M32 60C27.41 60 24.43 56 24.43 50.6 24.43 44.4 28.16 40.4 30.08 34.1 35.2 38.1 39.57 43.6 39.57 50.6 39.57 56 36.59 60 32 60Z"/></svg>"""
+
 /// The site header, on every page (hand-written pages include it with `<!-- firelight:header -->`).
 /// Its section links come from `Pages.sections`.
 let header (``base``: string) =
@@ -112,7 +119,7 @@ let header (``base``: string) =
 
     LitSsr.html
         $"""<header class="site-header">
-    <a class="brand" href={``base``}>Firelight</a>
+    <a class="brand" href={``base``}>{headerMark}Firelight</a>
     <nav>
       <a href="{``base``}#examples">Examples</a>{sectionLinks}
       <a href="https://github.com/roboz0r/Firelight">GitHub</a>
