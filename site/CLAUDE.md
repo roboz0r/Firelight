@@ -46,6 +46,8 @@ file that doesn't exist, naming the file and line.
 
 A demo is one file, `Snippets/<Name>.fs`: one module that registers its elements with Firelight's
 `defineElement`. `Site.fsproj` picks it up by glob; Fable compiles it to `build/Snippets/<Name>.js`.
+`npm run dev` notices new and deleted snippets without a restart (Fable takes 10–20 s to reread the
+project; the page reloads when the module is ready).
 
 ## Prerender-safe components
 

@@ -14,8 +14,14 @@ let siteDir =
 
 let distDir = Path.Combine(siteDir, "dist")
 
-/// Not Vite's default preview port (4173), so this can run next to another preview.
-let port = 4180
+/// Not Vite's default preview port (4173), so this can run next to another preview. Set
+/// SITE_E2E_PORT to run beside another run of these tests.
+let port =
+    match Environment.GetEnvironmentVariable "SITE_E2E_PORT" with
+    | null
+    | "" -> 4180
+    | value -> int value
+
 let origin = $"http://localhost:{port}"
 
 /// Vite's `base`: every page is under it, as on GitHub Pages.

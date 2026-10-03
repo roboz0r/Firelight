@@ -1,5 +1,5 @@
 import { defineConfig, normalizePath } from "vite";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, utimesSync } from "node:fs";
 import { extname, relative as relativePath, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { pageWeights } from "./page-weights.mjs";
@@ -49,7 +49,15 @@ function markdownPages() {
   let server;
   const inputs = new Map(); // build: absolute output path -> content/...md
 
-  const load = (url) => (server ? server.environments.ssr.runner.import(url) : import(fileUrl(url)));
+  // In dev, a module that isn't there yet (a new snippet Fable hasn't compiled) is reported without
+  // asking Vite for it: Vite would remember the failed lookup and keep failing after the file
+  // appears. The page reloads once it does (see configureServer).
+  const load = (url) => {
+    if (!server) return import(fileUrl(url));
+    if (!existsSync(resolve(root, url.slice(1))))
+      return Promise.reject(new Error(`${url} doesn't exist yet. If Fable is still compiling it, the page reloads when it's done.`));
+    return server.environments.ssr.runner.import(url);
+  };
   const host = () => ({ root, base, loadModule: load });
   const render = async (source) => (await load(rendererUrl)).renderPage(host(), source);
   // The sitemap lists the Markdown pages, plus the hand-written pages and the demo apps in public/demos/.
@@ -129,9 +137,12 @@ function markdownPages() {
     configureServer(devServer) {
       server = devServer;
       server.watcher.add(resolve(root, "content"));
-      server.watcher.on("all", (_, file) => {
+      server.watcher.on("all", (event, file) => {
         if (/[\\/]content[\\/].*\.md$|[\\/]build[\\/]Renderer[\\/].*\.js$/.test(file)) reloadSoon();
+        // A new snippet's module, which a page may be waiting for.
+        else if (event === "add" && /[\\/]build[\\/]Snippets[\\/].*\.js$/.test(file)) reloadSoon();
       });
+      watchSnippetGlob(server);
       // In dev, the link check only warns, and covers the page being served: other pages are
       // targets, but their anchors aren't known until they're rendered.
       const checkLinks = async (page, html) => {
@@ -199,6 +210,67 @@ function markdownPages() {
         });
     },
   };
+}
+
+// Dev: `fable watch` reads Site.fsproj's Snippets/**/*.fs glob only when the project file changes,
+// so a snippet added or deleted while it runs would go unnoticed. Touching the project makes it
+// read the glob again, but a touch while it's already reading the project (10-20 s) is lost. So the
+// project is touched when a snippet is added or deleted, then again every 20 s until Fable has
+// caught up: until a new snippet's module exists and is newer than its source, and for a deletion,
+// until a touch 20 s after it (when any reading under way at the time has finished).
+// A deleted snippet's module is removed, so nothing loads the stale copy, and so is any module
+// Fable writes later for a snippet that no longer exists (from a compilation under way).
+function watchSnippetGlob(server) {
+  const snippets = normalizePath(resolve(root, "Snippets")) + "/";
+  const modules = normalizePath(resolve(root, "build", "Snippets")) + "/";
+  const moduleOf = (file) => resolve(root, "build", relativePath(root, file).replace(/\.fs$/, ".js"));
+  const sourceOf = (js) => resolve(root, relativePath(resolve(root, "build"), js).replace(/\.js$/, ".fs"));
+  const retryMs = 20000;
+  const pending = new Map(); // snippet file -> { event: "add" | "unlink", at }
+  let lastTouch = 0;
+  let timer;
+
+  const removeModule = (js) => {
+    // Forgotten by the SSR module runner first, or Vite's reload after the deletion re-imports it.
+    const evaluated = server.environments.ssr.runner.evaluatedModules;
+    for (const mod of evaluated.getModulesByFile(normalizePath(js)) ?? []) {
+      evaluated.idToModuleMap.delete(mod.id);
+      evaluated.urlToIdModuleMap.delete(mod.url);
+      evaluated.fileToModulesMap.delete(mod.file);
+    }
+    for (const file of [js, js + ".map"]) rmSync(file, { force: true });
+  };
+  const caughtUp = (file, { at }) => {
+    if (!existsSync(file)) return lastTouch - at >= retryMs;
+    const js = moduleOf(file);
+    return existsSync(js) && statSync(js).mtimeMs >= statSync(file).mtimeMs;
+  };
+  const touch = () => {
+    lastTouch = Date.now();
+    utimesSync(resolve(root, "Site.fsproj"), new Date(lastTouch), new Date(lastTouch));
+  };
+  const check = () => {
+    clearTimeout(timer);
+    if (Date.now() - lastTouch >= retryMs) touch();
+    for (const [file, change] of pending) if (caughtUp(file, change)) pending.delete(file);
+    if (pending.size > 0) timer = setTimeout(check, 2000);
+  };
+
+  server.watcher.add(snippets);
+  server.watcher.on("all", (event, file) => {
+    const path = normalizePath(file);
+    const isModule = (event === "add" || event === "change") && path.startsWith(modules) && path.endsWith(".js");
+    if (isModule && !existsSync(sourceOf(file))) return removeModule(file);
+    if (!(event === "add" || event === "unlink") || !path.startsWith(snippets) || !path.endsWith(".fs")) return;
+    if (event === "unlink") removeModule(moduleOf(file));
+    pending.set(file, { event, at: Date.now() });
+    clearTimeout(timer);
+    // One touch for a batch of files, then the checks.
+    timer = setTimeout(() => {
+      touch();
+      check();
+    }, 150);
+  });
 }
 
 // GitHub Pages answers every address it has no file for with 404.html and status 404, including a

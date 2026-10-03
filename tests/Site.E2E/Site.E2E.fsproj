@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     Browser checks for the built site: every page in site/dist, served by `vite preview` on port
-    4180, plus interaction tests for the flagship demos. It does not build the site: see Main.fs
+    4180 (or SITE_E2E_PORT), plus interaction tests for the flagship demos. It does not build the site: see Main.fs
     for the commands, in order.
   -->
   <PropertyGroup>

@@ -134,6 +134,10 @@ Prose…
      and the plugin sends one debounced full reload (about 1–2 s from saving an `.fs` file;
      instant for `.md`). Snippet edits update the prerendered shadow DOM too. Re-running a snippet
      logs Lit's harmless "already defined" warning in dev. `npm run dev` chains two `fable watch`es.
+     New and deleted snippets need no restart either (Phase 5): `fable watch` only rereads
+     `Site.fsproj`'s glob when the project changes, so the plugin touches it (again until Fable
+     has caught up, as a touch while it's reading the project is lost), and it never asks Vite's
+     module runner for a module that doesn't exist yet, as Vite would remember the failure.
    - *Page output:* virtual `.html` inputs (`resolveId`/`load`) work with Vite 8: normal asset
      handling, base path and the includes plugin all apply. No generated folders are needed.
    - Decisions taken: markdown-it renders to an HTML string (no token walking), which becomes part of a
