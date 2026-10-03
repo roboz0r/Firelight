@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Firelight campfire mark</title>
+  <path fill="currentColor" fill-rule="evenodd" d="M32 45C22 45 15 38.5 15 30 15 21 21 16 25 10 27 7 28.5 4.5 29 2 35 6 40 11.5 41.5 18 43 15.5 45 13 48 11.5 49.5 16 51 21 51 28 51 38 43 45 32 45ZM32 41C28.5 41 26 38.5 26 35.5 26 31.5 29 29 30.5 25 33 27.5 35 30.5 35.5 33.5 36.5 32.5 37.5 31 38 30 39 32 39 33.5 39 35.5 39 38.5 36 41 32 41Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" d="M8 50 56 59M8 59 56 50"/>
+</svg>

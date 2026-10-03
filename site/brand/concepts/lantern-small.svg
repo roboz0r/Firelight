@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Firelight lantern mark, small</title>
+  <path fill="none" stroke="#9a4f1f" stroke-width="5.5" stroke-linecap="round" d="M23.5 12C23.5 3.5 40.5 3.5 40.5 12"/>
+  <path fill="#9a4f1f" d="M21 11H43A8 8 0 0 1 51 19V50A5 5 0 0 1 46 55H18A5 5 0 0 1 13 50V19A8 8 0 0 1 21 11Z"/>
+  <rect x="19" y="20" width="26" height="29" rx="3" fill="#fff1c9"/>
+  <path fill="#f76707" d="M32 47C27.3 47 24 43.8 24 39.3 24 33.5 28.5 30 30 23 35 25.5 37.5 29 38.5 32.5 39.3 31.6 39.9 30.4 40.2 29 41.2 31.5 41.5 34.5 41 39.3 40.5 43.8 36.7 47 32 47Z"/>
+  <rect x="10" y="54" width="44" height="8" rx="4" fill="#9a4f1f"/>
+</svg>

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Firelight: logo concepts</title>
+  <!-- Dev-only contact sheet. Deliberately not listed in vite.config.js build inputs, so it is never deployed. -->
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="concepts/f-flame-small.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/site.css">
+  <style>
+    main.sheet { max-width: 84rem; }
+    .sheet h2 { margin-bottom: 0.25rem; }
+    .sheet .idea { margin-top: 0; color: var(--muted); max-width: 52rem; }
+    .concept { border-top: 1px solid var(--border); }
+
+    /* Each panel forces its own theme, whatever the system theme is. */
+    .theme-light {
+      --bg: #fffdf9; --fg: #1f1d1a; --muted: #6b645c; --border: #e8e1d8; --surface: #f7f2ec;
+      --accent: #d9480f; --tabbar: #e8e2db; --tab: #fffdf9;
+    }
+    .theme-dark {
+      --bg: #17151a; --fg: #ece8e3; --muted: #a39b92; --border: #2f2b30; --surface: #1f1c22;
+      --accent: #ff8a3d; --tabbar: #0e0d10; --tab: #2a272e;
+    }
+    .themes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .panel {
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem 1.25rem;
+      display: grid;
+      gap: 1.25rem;
+      align-content: start;
+    }
+    .panel h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .label { display: block; font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
+
+    .row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.25rem; }
+    .row figure { margin: 0; display: grid; justify-items: center; }
+    .row img, .mono svg { display: block; }
+    .mono { display: block; line-height: 0; }
+    .mono.accent { color: var(--accent); }
+    .hero-mark { display: flex; justify-content: center; padding: 1rem 0; }
+    canvas.zoom { width: 64px; height: 64px; image-rendering: pixelated; border: 1px solid var(--border); }
+
+    .lockup { display: flex; align-items: center; gap: 0.4rem; }
+    .lockup img, .lockup .mono svg { width: 1.9rem; height: 1.9rem; }
+    .wordmark { color: var(--fg); font-weight: 900; font-size: 1.5rem; letter-spacing: -0.04em; line-height: 1; }
+    .lockups { display: flex; flex-wrap: wrap; gap: 2rem; }
+
+    /* A rough browser tab strip at real size: 16 px favicon, 12 px title. */
+    .tabbar {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      padding: 6px 8px 0;
+      background: var(--tabbar);
+      border-radius: 6px 6px 0 0;
+      font: 12px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 220px;
+      padding: 8px 10px;
+      border-radius: 8px 8px 0 0;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .tab.active { background: var(--tab); color: var(--fg); }
+    .tab span { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .tab img { width: 16px; height: 16px; flex: none; }
+    .tab .close { flex: none; opacity: 0.6; }
+
+    .swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+    .swatches li { width: 7.5rem; font-size: 0.75rem; color: var(--muted); }
+    .swatches li::before {
+      content: ""; display: block; height: 2.5rem; margin-bottom: 0.25rem;
+      border: 1px solid var(--border); border-radius: var(--radius); background: var(--c);
+    }
+    .glance { display: grid; grid-template-columns: 8rem repeat(4, auto) 1fr; align-items: center; gap: 0.75rem 1.25rem; }
+    .glance .name { font-size: 0.85rem; font-weight: 600; }
+    @media (max-width: 60rem) {
+      .themes { grid-template-columns: minmax(0, 1fr); }
+      .glance { grid-template-columns: minmax(0, 1fr) repeat(4, auto); }
+      .glance .lockup { grid-column: 1 / -1; margin-bottom: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- include partials/header.html -->
+
+  <main class="sheet">
+    <section>
+      <h1>Logo concepts</h1>
+      <p class="lead">
+        A warm campfire identity: rounded flames, logs, embers and glow, deliberately unlike Lit's
+        faceted geometric flame. Every concept is shown at 16, 32, 64, 180 and ~320 px, in colour and
+        in one colour (<code>currentColor</code>), on light and dark backgrounds regardless of the
+        system theme. Dev-only page, not part of the production build.
+      </p>
+    </section>
+
+    <section id="palette">
+      <h2>Palette</h2>
+      <p class="idea">Current site palette, and a proposed ember palette for multi-colour marks.</p>
+      <h3>Current (site.css)</h3>
+      <ul class="swatches">
+        <li style="--c:#fffdf9">light bg #fffdf9</li>
+        <li style="--c:#1f1d1a">light fg #1f1d1a</li>
+        <li style="--c:#d9480f">light accent #d9480f</li>
+        <li style="--c:#17151a">dark bg #17151a</li>
+        <li style="--c:#ece8e3">dark fg #ece8e3</li>
+        <li style="--c:#ff8a3d">dark accent #ff8a3d</li>
+      </ul>
+      <h3>Proposed ember palette</h3>
+      <ul class="swatches" id="ember-palette"></ul>
+    </section>
+
+    <section id="glance">
+      <h2>At a glance</h2>
+      <p class="idea">Every concept at favicon and header sizes (the small version where there is one), ranked best first.</p>
+      <div class="themes" id="glance-panels"></div>
+    </section>
+
+    <div id="concepts"></div>
+  </main>
+
+  <!-- include partials/footer.html -->
+
+  <script type="module">
+    // Proposed palette, shown as swatches. Keep in step with the colours used in concepts/*.svg.
+    const ember = [
+      ["#fff1c9", "core cream"],
+      ["#ffc145", "amber"],
+      ["#ff8a3d", "flame light (dark accent)"],
+      ["#f76707", "flame"],
+      ["#d9480f", "ember (light accent)"],
+      ["#c92a2a", "deep red"],
+      ["#a61e1e", "coal red"],
+      ["#9a6440", "wood"],
+      ["#3b2a20", "charcoal"],
+    ];
+    document.getElementById("ember-palette").innerHTML = ember
+      .map(([c, name]) => `<li style="--c:${c}">${name} ${c}</li>`)
+      .join("");
+
+    // Each concept has concepts/<id>.svg and concepts/<id>-mono.svg, plus concepts/<id>-small.svg when
+    // the full mark needs a simplified favicon version.
+    // Ranked best first. `note` is the honest verdict at favicon size.
+    const concepts = [
+      {
+        id: "f-flame", name: "F-flame", small: true,
+        idea: "A plump, rounded flame whose negative space is an F, for F#.",
+        note: "16 px: the bolder small version keeps the F readable. The most ownable of the set.",
+      },
+      {
+        id: "lantern", name: "Lantern", small: true,
+        idea: "Fire light you can carry: a small flame glowing inside a rounded copper lantern.",
+        note: "16 px: unmistakable silhouette, works on both themes. Risk: reads as a generic camping icon.",
+      },
+      {
+        id: "badge", name: "Ember badge",
+        idea: "A minimal flame with a curling tip, knocked out of a round ember-coloured badge. Built for favicons and package icons.",
+        note: "16 px: the strongest favicon contrast. Risk: a flame in a circle is a familiar 'hot' badge.",
+      },
+      {
+        id: "element", name: "Element",
+        idea: "A soft flame between rounded angle brackets: Firelight makes custom elements, so this is fire as a tag.",
+        note: "16 px: still reads as &lt;flame&gt;, but the brackets get thin and the wide shape leaves the flame small.",
+      },
+      {
+        id: "campfire", name: "Campfire", small: true,
+        idea: "The literal campfire: two crossed logs under a soft, two-tongued flame with a warm glow.",
+        note: "16 px: clearly a campfire, but close to the campfire emoji, so not very ownable.",
+      },
+      {
+        id: "cradle", name: "Ember cradle",
+        idea: "A rounded flame cradled in a crescent of glowing embers, with sparks rising.",
+        note: "16 px: the sparks vanish, leaving a flame in a bowl. Reads as an oil lamp (diya) more than a campfire.",
+      },
+    ];
+    const lit = { id: "lit-approx", name: "Lit (approximate, for contrast)", idea: "A rough hand-drawn approximation of Lit's faceted, geometric flame. Not the real logo; it is here only so the concepts can be checked against it.", noMono: true };
+
+    const sizes = [16, 32, 64, 180];
+    const themes = [["theme-light", "Light"], ["theme-dark", "Dark"]];
+    const src = (file) => `concepts/${file}.svg`;
+
+    const monoCache = new Map();
+    const loadMono = (id) => {
+      if (!monoCache.has(id)) monoCache.set(id, fetch(src(`${id}-mono`)).then((r) => r.text()));
+      return monoCache.get(id);
+    };
+
+    const fig = (inner, label) => `<figure>${inner}<figcaption class="label">${label}</figcaption></figure>`;
+    const img = (file, size) => `<img src="${src(file)}" width="${size}" height="${size}" alt="">`;
+    const mono = (id, size, extra = "") => `<span class="mono ${extra}" data-mono="${id}" style="--s:${size}px"></span>`;
+
+    function panel(c, [theme, title]) {
+      const favicon = c.small ? `${c.id}-small` : c.id;
+      return `
+        <div class="panel ${theme}">
+          <h3>${title}</h3>
+          <div class="row">
+            ${sizes.map((s) => fig(img(c.id, s), `${s} px`)).join("")}
+            ${fig(`<canvas class="zoom" data-src="${src(favicon)}" width="16" height="16"></canvas>`, "16 px, ×4")}
+          </div>
+          ${c.small ? `<div class="row">${[16, 32, 64].map((s) => fig(img(`${c.id}-small`, s), `small ${s} px`)).join("")}</div>` : ""}
+          <div class="hero-mark">${img(c.id, 320)}</div>
+          ${c.noMono ? "" : `
+          <div class="row">
+            ${sizes.map((s) => fig(mono(c.id, s), `mono ${s} px`)).join("")}
+            ${fig(mono(c.id, 64, "accent"), "mono, accent")}
+          </div>
+          <div class="lockups">
+            <div class="lockup">${img(c.id, 32)}<span class="wordmark">Firelight</span></div>
+            <div class="lockup">${mono(c.id, 32)}<span class="wordmark">Firelight</span></div>
+          </div>`}
+          <div class="tabbar">
+            <div class="tab active">${img(favicon, 16)}<span>Firelight: Web Components for F#</span><span class="close">✕</span></div>
+            <div class="tab">${img("lit-approx", 16)}<span>Lit</span><span class="close">✕</span></div>
+          </div>
+        </div>`;
+    }
+
+    document.getElementById("glance-panels").innerHTML = themes
+      .map(([theme, title]) => `
+        <div class="panel ${theme}">
+          <h3>${title}</h3>
+          <div class="glance">
+            ${[...concepts, lit].map((c) => {
+              const fav = c.small ? `${c.id}-small` : c.id;
+              return `
+                <span class="name">${c.id === "lit-approx" ? "Lit (approx.)" : c.name}</span>
+                ${img(fav, 16)}${img(fav, 24)}${img(c.id, 32)}
+                ${c.noMono ? "<span></span>" : mono(c.id, 24)}
+                ${c.noMono ? "<span></span>" : `<div class="lockup">${img(c.id, 32)}<span class="wordmark">Firelight</span></div>`}`;
+            }).join("")}
+          </div>
+        </div>`)
+      .join("");
+
+    const root = document.getElementById("concepts");
+    root.innerHTML = [...concepts, lit]
+      .map((c) => `
+        <section class="concept" id="${c.id}">
+          <h2>${c.name}</h2>
+          <p class="idea">${c.idea}</p>
+          ${c.note ? `<p class="idea"><strong>Verdict.</strong> ${c.note}</p>` : ""}
+          <div class="themes">${themes.map((t) => panel(c, t)).join("")}</div>
+        </section>`)
+      .join("");
+
+    // Inline the one-colour marks so currentColor follows each panel's theme.
+    for (const el of document.querySelectorAll("[data-mono]")) {
+      loadMono(el.dataset.mono).then((svg) => {
+        el.innerHTML = svg;
+        const s = el.querySelector("svg");
+        s.setAttribute("width", el.style.getPropertyValue("--s"));
+        s.setAttribute("height", el.style.getPropertyValue("--s"));
+      });
+    }
+
+    // Rasterise the favicon at exactly 16×16 device pixels and magnify it, to show what a 1× screen gets.
+    for (const canvas of document.querySelectorAll("canvas.zoom")) {
+      const image = new Image();
+      image.onload = () => {
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = getComputedStyle(canvas).getPropertyValue("--bg");
+        ctx.fillRect(0, 0, 16, 16);
+        ctx.drawImage(image, 0, 0, 16, 16);
+      };
+      image.src = canvas.dataset.src;
+    }
+  </script>
+</body>
+</html>

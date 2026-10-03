@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Firelight campfire mark, small</title>
+  <path fill="#e8590c" d="M32 46C21.5 46 14 39 14 30 14 20.5 20.5 15 24.5 9 26.5 6 28 3.5 28.5 1 35 5 40.5 11 42 17.5 43.5 15 45.5 12.5 48.5 11 50.5 15.5 52 21 52 28 52 39 43.5 46 32 46Z"/>
+  <path fill="#ffc145" d="M32 46C26.5 46 23 42 23 37 23 31 27.5 28 30 22 35 25.5 38.5 30.5 38.5 35 39.5 34 40.5 32.5 41 31 42 33 42 35 42 37 42 42 38 46 32 46Z"/>
+  <path fill="none" stroke="#8a5530" stroke-width="9" stroke-linecap="round" d="M7 51 57 58.5M7 58.5 57 51"/>
+</svg>

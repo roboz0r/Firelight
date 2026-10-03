@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Lit flame, rough approximation for comparison only</title>
+  <path fill="#324fff" d="M20 4 44 28V52L20 28Z"/>
+  <path fill="#00e8ff" d="M20 28 32 40 20 52Z"/>
+  <path fill="#283198" d="M44 28 32 16 44 4Z"/>
+  <path fill="#0000ff" d="M32 40 44 28V52Z"/>
+  <path fill="#00e8ff" d="M20 52H44L32 40Z" opacity="0.6"/>
+</svg>
