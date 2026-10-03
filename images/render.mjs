@@ -16,13 +16,20 @@
 //   images/social-preview.png   1280×640 GitHub social preview. Not used by anything in the repo:
 //                               upload it in the repository's Settings > General > Social preview.
 //   images/og-default.png       1200×630 default Open Graph image for the site.
+// and the site's icons, which Vite copies from site/public/ to the root of the site:
+//   site/public/favicon.svg           a copy of logo-small.svg.
+//   site/public/favicon-32.png        logo-small.svg at 32 px, transparent, for browsers without SVG favicons.
+//   site/public/apple-touch-icon.png  180×180 on a solid background (iOS doesn't do transparency).
+//   site/public/og-default.png        a copy of images/og-default.png.
 
 import { createRequire } from "node:module";
-import { existsSync, readFileSync } from "node:fs";
-import { delimiter, join, resolve } from "node:path";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { delimiter, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const images = import.meta.dirname;
+const repo = resolve(images, "..");
+const site = resolve(repo, "site/public");
 const svg = (name) => readFileSync(resolve(images, name), "utf8");
 const dataUrl = (text) => `data:image/svg+xml;base64,${Buffer.from(text).toString("base64")}`;
 
@@ -86,22 +93,46 @@ const card = (width, height) => {
 <div><h1>Firelight</h1><p>Web Components for F#</p></div>`;
 };
 
+// The logo on the cards' background and glow, for home-screen icons. The mark keeps clear of the
+// corners that iOS rounds off.
+const tile = (size) => `<!doctype html>
+<style>
+  html, body { margin: 0; }
+  body {
+    width: ${size}px; height: ${size}px; display: grid; place-items: center;
+    background: radial-gradient(closest-side, ${palette.glow}, transparent), ${palette.bg};
+  }
+  img { display: block; width: ${size * 0.72}px; height: ${size * 0.72}px; }
+</style>
+<img src="${dataUrl(svg("logo.svg"))}" alt="">`;
+
 const outputs = [
-  { file: "icon-128.png", width: 128, height: 128, html: icon("logo.svg", 128), transparent: true },
-  { file: "social-preview.png", width: 1280, height: 640, html: card(1280, 640) },
-  { file: "og-default.png", width: 1200, height: 630, html: card(1200, 630) },
+  { path: resolve(images, "icon-128.png"), width: 128, height: 128, html: icon("logo.svg", 128), transparent: true },
+  { path: resolve(images, "social-preview.png"), width: 1280, height: 640, html: card(1280, 640) },
+  { path: resolve(images, "og-default.png"), width: 1200, height: 630, html: card(1200, 630) },
+  { path: resolve(site, "favicon-32.png"), width: 32, height: 32, html: icon("logo-small.svg", 32), transparent: true },
+  { path: resolve(site, "apple-touch-icon.png"), width: 180, height: 180, html: tile(180) },
+];
+const copies = [
+  [resolve(images, "logo-small.svg"), resolve(site, "favicon.svg")],
+  [resolve(images, "og-default.png"), resolve(site, "og-default.png")],
 ];
 
 const browser = await launch();
 try {
-  for (const { file, width, height, html, transparent = false } of outputs) {
+  mkdirSync(site, { recursive: true });
+  for (const { path, width, height, html, transparent = false } of outputs) {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
     await page.setContent(html);
     await page.evaluate(() => document.fonts.ready);
-    await page.screenshot({ path: resolve(images, file), omitBackground: transparent });
+    await page.screenshot({ path, omitBackground: transparent });
     await page.close();
-    console.log(`${file} (${width}×${height})`);
+    console.log(`${relative(repo, path)} (${width}×${height})`);
   }
 } finally {
   await browser.close();
+}
+for (const [from, to] of copies) {
+  copyFileSync(from, to);
+  console.log(`${relative(repo, to)} (copy of ${relative(repo, from)})`);
 }
