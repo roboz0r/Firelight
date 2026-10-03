@@ -19,10 +19,14 @@ let main argv =
             // Inside the try, so a failed browser launch still stops the server.
             Server.setup().GetAwaiter().GetResult()
 
-            testList "Site" [ PageTests.all (); DemoTests.all ]
+            testList "Site" [ PageTests.all (); DemoTests.all; WeightTests.all () ]
             |> runTestsWithCLIArgs [] argv
         finally
             Server.teardown().GetAwaiter().GetResult()
+
+    match WeightTests.zeroJavaScriptPages () with
+    | [] -> printfn "No page is checked for shipping zero JavaScript yet: every page has demos or still uses <fl-code>."
+    | zero -> printfn $"Pages checked for shipping zero JavaScript: {zero.Length}."
 
     // Known accessibility violations don't fail the run, so list them every time.
     for known in PageTests.knownViolations do

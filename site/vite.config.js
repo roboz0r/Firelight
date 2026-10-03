@@ -2,6 +2,7 @@ import { defineConfig, normalizePath } from "vite";
 import { copyFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { pageWeights } from "./page-weights.mjs";
 
 const root = import.meta.dirname;
 
@@ -206,7 +207,14 @@ export default defineConfig({
   // Unknown URLs get a 404, as on GitHub Pages, rather than index.html (Vite's SPA default), so
   // Site.E2E sees missing files.
   appType: "mpa",
-  plugins: [markdownPages(), includes(), routingPageAs404(), demoSizes(), directoryUrls()],
+  plugins: [
+    markdownPages(),
+    includes(),
+    routingPageAs404(),
+    demoSizes(),
+    directoryUrls(),
+    pageWeights({ reportFile: resolve(root, "build/page-weights.json") }),
+  ],
   build: {
     rollupOptions: {
       input: {
