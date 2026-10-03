@@ -19,7 +19,7 @@ let main argv =
             // Inside the try, so a failed browser launch still stops the server.
             Server.setup().GetAwaiter().GetResult()
 
-            testList "Site" [ PageTests.all (); DemoTests.all; WeightTests.all () ]
+            testList "Site" [ PageTests.all (); DemoTests.all; RatingTests.all; WeightTests.all () ]
             |> runTestsWithCLIArgs [] argv
         finally
             Server.teardown().GetAwaiter().GetResult()
