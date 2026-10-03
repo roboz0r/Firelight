@@ -207,6 +207,14 @@ Everything after this phase relies on these checks instead of line-by-line revie
    Playwright smoke test.
 3. **`/start/` tutorial:** install the template, run it, change the component, add a property, an
    event, styles. Every step's code is a compiled snippet.
+   Done: `content/start.md` (section `start`, "Get started" in the header), with a list as the
+   last step. Each step is a whole `App.fs` in `Snippets/Start/`, prerendered on the page. The
+   steps share one page and one project, so each has its own module name and tag; the page says
+   so. Step one is a copy of the template's `App.fs` (the `::: example` container only reads
+   files under `site/`, and the reader's file says `module MyApp.App`), and
+   `check-template.mjs` fails `npm run build` when they differ, or when the template's files,
+   npm scripts or `index.html` stop matching what the page says. Site.E2E clicks through the
+   event and list steps.
 4. Point every "Get started" link at `/start/` instead of GitHub.
 
 **Done when:** someone with only the .NET SDK and Node can follow `/start/` to a running component

@@ -4,7 +4,7 @@ A web app written in F# with [Firelight](https://github.com/roboz0r/Firelight), 
 [Lit](https://lit.dev/). [Fable](https://fable.io/) compiles the F# to JavaScript and
 [Vite](https://vite.dev/) serves it.
 
-You need the .NET 10 SDK (or later) and Node.js (20.19 or later). To run it:
+You need the .NET 10 SDK (or later) and Node.js (22.12 or later, or 20.19 or later on Node 20). To run it:
 
 ```sh
 dotnet tool restore

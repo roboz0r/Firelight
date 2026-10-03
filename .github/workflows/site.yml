@@ -10,6 +10,8 @@ on:
   pull_request:
     paths:
       - 'site/**'
+      # The Getting started tutorial starts from the template's App.fs (site/check-template.mjs).
+      - 'templates/firelight-app/**'
       - 'sample/**'
       - 'src/**'
       - 'tests/**'

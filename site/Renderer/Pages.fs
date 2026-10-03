@@ -41,6 +41,12 @@ type Section =
 let sections =
     [
         {
+            Id = "start"
+            Name = "Get started"
+            Href = "/start/"
+            PageList = None
+        }
+        {
             Id = "packages"
             Name = "Packages"
             Href = "/#packages"

@@ -68,6 +68,44 @@ let private rating =
                 )
     }
 
+// The Getting started tutorial's steps: the event reaches the page script, and the list's buttons work.
+let private tutorial =
+    testTask "the tutorial's counter tells the page when it changes, and its step buttons add" {
+        let page = pageWith "click-counter-events"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let events = opened.Page.Locator("click-counter-events button")
+                        do! events.ClickAsync()
+                        do! events.ClickAsync()
+                        do! Expect(events).ToHaveTextAsync(Regex "Liked 2 times")
+
+                        do!
+                            Expect(opened.Page.Locator("#count-message"))
+                                .ToHaveTextAsync("The page heard count-changed: 2.")
+
+                        let list = opened.Page.Locator("click-counter-list")
+
+                        do!
+                            list
+                                .GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "+10", Exact = true))
+                                .ClickAsync()
+
+                        do!
+                            list
+                                .GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "+1", Exact = true))
+                                .ClickAsync()
+
+                        do! Expect(list.Locator("span")).ToHaveTextAsync("Liked 11 times")
+                        noProblems opened
+                    }
+                )
+    }
+
 let private routing =
     let renders (opened: Browser.OpenPage) (address: string) (description: string) =
         task {
@@ -140,4 +178,4 @@ let private routing =
         }
     ]
 
-let all = testList "Demos" [ counter; rating; routing ]
+let all = testList "Demos" [ counter; rating; tutorial; routing ]

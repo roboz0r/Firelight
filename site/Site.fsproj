@@ -7,6 +7,7 @@
     <None Include="package.json" />
     <None Include="vite.config.js" />
     <None Include="build-demos.mjs" />
+    <None Include="check-template.mjs" />
     <None Include="index.html" />
     <None Include="site.css" />
     <None Include="content/**/*.md" />

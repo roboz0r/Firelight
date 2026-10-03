@@ -10,7 +10,8 @@
     "build:renderer": "dotnet fable ./Renderer -o ./build/Renderer",
     "build:site": "npm run build:renderer && dotnet fable ./ -o ./build/ --run vite build",
     "build:demos": "node ./build-demos.mjs",
-    "build": "npm run clean && npm run build:demos && npm run build:site",
+    "check:template": "node ./check-template.mjs",
+    "build": "npm run clean && npm run check:template && npm run build:demos && npm run build:site",
     "preview": "vite preview"
   },
   "license": "MIT",
