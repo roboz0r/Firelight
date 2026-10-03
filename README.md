@@ -1,3 +1,5 @@
+<p align="center"><img src="images/logo.svg" width="96" alt="Firelight logo: a flame between angle brackets"></p>
+
 # Firelight
 
 **Web Components for F#.** Build reactive, standards-based UI components using [Lit](https://lit.dev/) and [Fable](https://fable.io/).

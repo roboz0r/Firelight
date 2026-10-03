@@ -32,8 +32,25 @@
     <WarningsAsErrors />
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$(RepoRoot)README.md" Pack="true" PackagePath="/" />
     <None Include="$(RepoRoot)LICENSE" Pack="true" PackagePath="/" />
     <None Include="$(RepoRoot)images/icon-128.png" Pack="true" PackagePath="/" />
   </ItemGroup>
+
+  <!--
+    README.md opens with the logo as an HTML <img>, for GitHub. nuget.org doesn't render HTML in a
+    readme (it would show the tag as text) or images with relative paths, and the package has its
+    icon anyway, so packages get a copy of README.md without that first line.
+  -->
+  <Target Name="PackReadmeWithoutLogo" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+      <_PackedReadme>$(IntermediateOutputPath)README.md</_PackedReadme>
+      <_ReadmeText>$([System.IO.File]::ReadAllText('$(RepoRoot)README.md'))</_ReadmeText>
+      <_ReadmeText>$([System.Text.RegularExpressions.Regex]::Replace('$(_ReadmeText)', '^&lt;p align=&quot;center&quot;&gt;&lt;img [^\n]*\n\s*', ''))</_ReadmeText>
+    </PropertyGroup>
+    <Error Condition="$(_ReadmeText.StartsWith('&lt;'))" Text="README.md still starts with HTML after removing the logo line; nuget.org would show it as text." />
+    <WriteLinesToFile File="$(_PackedReadme)" Lines="$([MSBuild]::Escape('$(_ReadmeText)'))" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <None Include="$(_PackedReadme)" Pack="true" PackagePath="/" />
+    </ItemGroup>
+  </Target>
 </Project>
