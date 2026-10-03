@@ -80,6 +80,9 @@ type Frontmatter =
         Eyebrow: Link option
         /// Show an h2/h3 table of contents.
         Toc: bool
+        /// The page is a single-page app: addresses under its route that have no page of their own
+        /// show it too (through 404.html, as GitHub Pages serves that for unknown addresses).
+        Spa: bool
     }
 
 type Page =
@@ -95,6 +98,9 @@ type Page =
         /// numbers still match the file.
         Body: string
     }
+
+/// The page GitHub Pages serves for unknown addresses. It is outside every section and the sitemap.
+let notFoundSource = "content/404.md"
 
 let private frontmatter (source: string) (yaml: string) =
     let data = parseYaml yaml
@@ -130,12 +136,17 @@ let private frontmatter (source: string) (yaml: string) =
             |> Option.defaultWith (fun () -> fail "frontmatter needs 'description'.")
         Section =
             match text "section" with
+            | None when source = notFoundSource -> ""
             | None -> fail "frontmatter needs 'section'."
             | Some section when sections |> List.exists (fun s -> s.Id = section) -> section
             | Some section ->
                 let known = sections |> List.map _.Id |> String.concat ", "
                 fail $"unknown section '{section}' (known sections: {known})."
-        Order = required "order"
+        Order =
+            if source = notFoundSource then
+                optional "order" |> Option.defaultValue 0
+            else
+                required "order"
         Summary = text "summary"
         Lead = text "lead"
         Links =
@@ -144,14 +155,18 @@ let private frontmatter (source: string) (yaml: string) =
             |> Option.defaultValue []
         Eyebrow = optional "eyebrow" |> Option.map (link "eyebrow")
         Toc = optional "toc" |> Option.defaultValue false
+        Spa = optional "spa" |> Option.defaultValue false
     }
 
-/// `content/packages/firelight.md` is served at `packages/firelight/`; an `index.md` at its folder.
+/// `content/packages/firelight.md` is served at `packages/firelight/`; an `index.md` at its folder;
+/// `content/404.md` is `404.html`.
 let private route (source: string) =
     let path =
         source.Substring("content/".Length, source.Length - "content/".Length - ".md".Length)
 
-    if path = "index" then
+    if source = notFoundSource then
+        "404.html"
+    elif path = "index" then
         ""
     elif path.EndsWith "/index" then
         path.Substring(0, path.Length - "index".Length)
@@ -176,7 +191,11 @@ let parse (source: string) (text: string) =
     {
         Source = source
         Route = route source
-        Output = route source + "index.html"
+        Output =
+            if source = notFoundSource then
+                route source
+            else
+                route source + "index.html"
         Meta = frontmatter source yaml
         Body = String.replicate frontLines "\n" + text.Substring(close + 5)
     }

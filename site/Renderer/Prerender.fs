@@ -48,6 +48,74 @@ let private markdown (host: Host) =
                 }
     }
 
+// A page as a complete HTML document, and the demos on it. On 404.html, single-page apps (`spa:
+// true`) are rendered too and carried along, so their addresses still work (see Layout.fallbacks).
+let rec private renderDocument
+    (host: Host)
+    (site: Pages.Page list)
+    (page: Pages.Page)
+    : Async<string * Markdown.Demo list> =
+    async {
+        let! md = markdown host
+        let body = Markdown.render md page.Body
+
+        // Registering a demo's custom elements is what makes Lit SSR prerender them.
+        for demo in body.Demos do
+            if demo.Prerender then
+                do! host.loadModule demo.Module |> Async.AwaitPromise |> Async.Ignore
+
+        let apps =
+            if page.Source = Pages.notFoundSource then
+                site |> List.filter _.Meta.Spa
+            else
+                []
+
+        let mutable fallbacks = []
+
+        for app in apps do
+            let! html, demos = renderDocument host site app
+
+            let main =
+                html.Substring(html.IndexOf "<main>", html.LastIndexOf "</main>" + 7 - html.IndexOf "<main>")
+
+            fallbacks <-
+                fallbacks
+                @ [
+                    ({
+                        Route = host.``base`` + app.Route
+                        Title = Layout.title app.Meta
+                        Demos = demos
+                    }
+                    : Layout.Fallback),
+                    main
+                ]
+
+        let layout =
+            Layout.page
+                {
+                    Page = page
+                    Base = host.``base``
+                    Content = body.Html
+                    Headings = body.Headings
+                    Demos = body.Demos
+                    Lead = page.Meta.Lead |> Option.map (fun lead -> md.renderInline lead)
+                    Intro = body.Intro
+                    Site = site
+                    Fallbacks = List.map fst fallbacks
+                }
+
+        let! html = LitSsr.renderToString layout |> Async.AwaitPromise
+        let mains = fallbacks |> List.map snd |> Array.ofList
+        // The apps' pages go in after rendering, as they are already rendered.
+        let html =
+            Layout.fallbackPlaceholder.Replace(
+                Markdown.restoreVerbatim body html,
+                (fun m -> mains[int m.Groups[1].Value])
+            )
+
+        return html, body.Demos
+    }
+
 /// Renders `content/...md` to a complete HTML document. Vite then processes it like any other
 /// HTML page (module scripts, base path, the includes plugin).
 let renderPage (host: Host) (source: string) : JS.Promise<string> =
@@ -60,29 +128,8 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
                 |> List.tryFind (fun p -> p.Source = source)
                 |> Option.defaultWith (fun () -> failwith "no such page.")
 
-            let! md = markdown host
-            let body = Markdown.render md page.Body
-
-            // Registering a demo's custom elements is what makes Lit SSR prerender them.
-            for demo in body.Demos do
-                if demo.Prerender then
-                    do! host.loadModule demo.Module |> Async.AwaitPromise |> Async.Ignore
-
-            let layout =
-                Layout.page
-                    {
-                        Page = page
-                        Base = host.``base``
-                        Content = body.Html
-                        Headings = body.Headings
-                        Demos = body.Demos
-                        Lead = page.Meta.Lead |> Option.map (fun lead -> md.renderInline lead)
-                        Intro = body.Intro
-                        Site = site
-                    }
-
-            let! html = LitSsr.renderToString layout |> Async.AwaitPromise
-            return Markdown.restoreVerbatim body html
+            let! html, _ = renderDocument host site page
+            return html
         with e ->
             return failwith $"{source}: {e.Message}"
     }
@@ -171,7 +218,11 @@ let private escapeXml (text: string) =
 /// relative to the base path, such as `demos/todo/`), as absolute URLs.
 let sitemap (host: Host) (otherRoutes: string[]) =
     let urls =
-        Array.append otherRoutes (Pages.load host.root |> Array.map _.Route)
+        Array.append
+            otherRoutes
+            (Pages.load host.root
+             |> Array.filter (fun p -> p.Source <> Pages.notFoundSource)
+             |> Array.map _.Route)
         |> Array.distinct
         |> Array.sort
         |> Array.map (fun route -> $"  <url><loc>{escapeXml (Pages.origin + host.``base`` + route)}</loc></url>\n")

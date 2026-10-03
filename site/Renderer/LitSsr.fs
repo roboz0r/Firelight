@@ -33,7 +33,15 @@ let html (fmt: FormattableString) : TemplateResult =
 /// elements in it are prerendered with Declarative Shadow DOM. (So are those inside `unsafeHTML`:
 /// Lit SSR parses its content as a template too. To keep HTML from being prerendered, splice it into
 /// the rendered string instead.)
-let markup (trustedHtml: string) : TemplateResult = html $"{unsafeStatic trustedHtml}"
+///
+/// (Lit marks a template whose text ends in a binding with `<?>`, which Lit SSR writes out. Empty
+/// markup would be such a template, so it renders as a newline instead. Templates of your own should
+/// end with text, not a `{binding}`, for the same reason.)
+let markup (trustedHtml: string) : TemplateResult =
+    if String.IsNullOrEmpty trustedHtml then
+        html $"\n"
+    else
+        html $"{unsafeStatic trustedHtml}"
 
 [<Import("render", "@lit-labs/ssr")>]
 let private render (value: obj) : RenderResult = jsNative

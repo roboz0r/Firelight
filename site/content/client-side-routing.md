@@ -4,6 +4,7 @@ pageTitle: Client-side routing with Firelight.Router
 description: "A live demo of Firelight.Router: URL patterns matched to an F# route type, without reloading the page."
 section: demos
 order: 20
+spa: true
 eyebrow:
   text: Firelight.Router
   href: /packages/router/

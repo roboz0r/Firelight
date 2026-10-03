@@ -1,5 +1,5 @@
 import { defineConfig, normalizePath } from "vite";
-import { copyFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, relative as relativePath, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { pageWeights } from "./page-weights.mjs";
@@ -94,7 +94,7 @@ function markdownPages() {
         const output = normalizePath(resolve(root, page.output));
         if (existsSync(output)) throw new Error(`${page.source} and ${page.output} both define the same page.`);
         // Entry names become asset file names: packages/firelight -> assets/packages-firelight-<hash>.js
-        const name = page.output.replace(/\/?index\.html$/, "").replaceAll("/", "-") || "index";
+        const name = page.output.replace(/\/?(index)?\.html$/, "").replaceAll("/", "-") || "index";
         if (name in input || name in handWritten) throw new Error(`${page.source} has the same entry name as another page ("${name}").`);
         inputs.set(output, page.source);
         input[name] = output;
@@ -120,6 +120,12 @@ function markdownPages() {
       server.watcher.on("all", (_, file) => {
         if (/[\\/]content[\\/].*\.md$|[\\/]build[\\/]Renderer[\\/].*\.js$/.test(file)) reloadSoon();
       });
+      const send = async (res, page, req, status = 200) => {
+        const html = await server.transformIndexHtml("/" + page.output, await render(page.source), req.originalUrl);
+        res.statusCode = status;
+        res.setHeader("Content-Type", "text/html");
+        res.end(html);
+      };
       server.middlewares.use(async (req, res, next) => {
         const [path, query] = req.url.split("?");
         try {
@@ -138,30 +144,52 @@ function markdownPages() {
             res.writeHead(301, { Location: path + "/" + (query ? "?" + query : "") });
             return res.end();
           }
-          const html = await server.transformIndexHtml("/" + page.output, await render(page.source), req.originalUrl);
-          res.setHeader("Content-Type", "text/html");
-          res.end(html);
+          await send(res, page, req);
         } catch (e) {
           next(e);
         }
       });
+      // Anything nothing else served gets 404.html, as on GitHub Pages: "page not found", or a
+      // single-page app's page for addresses under its route. (Runs after Vite's own middlewares.)
+      return () =>
+        server.middlewares.use(async (req, res, next) => {
+          if (!wantsMissingPage(req, root)) return next();
+          try {
+            const { pages } = await load(rendererUrl);
+            const notFound = pages(root).find((p) => p.output === "404.html");
+            if (!notFound) return next();
+            await send(res, notFound, req, 404);
+          } catch (e) {
+            next(e);
+          }
+        });
+    },
+    configurePreviewServer(previewServer) {
+      const notFound = resolve(previewServer.config.root, previewServer.config.build.outDir, "404.html");
+      const outDir = resolve(previewServer.config.root, previewServer.config.build.outDir);
+      return () =>
+        previewServer.middlewares.use((req, res, next) => {
+          if (!wantsMissingPage(req, outDir) || !existsSync(notFound)) return next();
+          res.statusCode = 404;
+          res.setHeader("Content-Type", "text/html");
+          res.end(readFileSync(notFound));
+        });
     },
   };
 }
 
-// GitHub Pages serves 404.html for any unknown path. Making it the routing page lets deep links
-// like /Firelight/client-side-routing/users/42 load, and unknown URLs render the router's NotFound.
-function routingPageAs404() {
-  let outDir;
-  return {
-    name: "firelight-routing-404",
-    apply: "build",
-    configResolved: (config) => {
-      outDir = resolve(config.root, config.build.outDir);
-    },
-    writeBundle: () =>
-      copyFileSync(resolve(outDir, "client-side-routing/index.html"), resolve(outDir, "404.html")),
-  };
+// A page request (GET, accepting HTML) that Vite's middlewares didn't resolve to an .html file in
+// `dir`. Vite has already taken the base path off `req.url` at this point.
+function wantsMissingPage(req, dir) {
+  if (req.method !== "GET" && req.method !== "HEAD") return false;
+  if (!(req.headers.accept ?? "").includes("text/html")) return false;
+  let path;
+  try {
+    path = decodeURIComponent(req.url.split("?")[0]);
+  } catch {
+    return true;
+  }
+  return !(path.endsWith(".html") && existsSync(resolve(dir, "." + path)));
 }
 
 // Writes the sizes measured by build-demos.mjs into <span data-demo-size="todo"></span>,
@@ -192,13 +220,11 @@ function demoSizes() {
 // - /Firelight and /Firelight/demos/todo redirect to the trailing-slash form.
 // - In dev, /Firelight/demos/todo/ serves public/demos/todo/index.html. (Vite's dev server only
 //   maps directory URLs to index.html for pages in the project root, not for files in public/.)
-// - Deep links into the client-side routing demo serve the routing page, like 404.html on GitHub Pages.
 function directoryUrls() {
   const base = "/Firelight";
   const publicDir = resolve(root, "public");
   const dirs = [root, publicDir, resolve(root, "dist")];
   const relative = (path) => path.slice(base.length + 1);
-  const routingPage = base + "/client-side-routing/";
   const handle = (req, res, next) => {
     const [path, query] = req.url.split("?");
     if (path !== base && !path.startsWith(base + "/")) return next();
@@ -209,9 +235,6 @@ function directoryUrls() {
     }
     if (path.endsWith("/") && path !== base + "/" && existsSync(resolve(publicDir, relative(path), "index.html")))
       req.url = path + "index.html" + (query ? "?" + query : "");
-    // Deep links into the client-side routing demo get the routing page, as 404.html does on GitHub Pages.
-    else if (path.startsWith(routingPage) && path !== routingPage && !extname(path))
-      req.url = routingPage + "index.html" + (query ? "?" + query : "");
     next();
   };
   return {
@@ -224,15 +247,13 @@ function directoryUrls() {
 
 export default defineConfig({
   base: "/Firelight/",
-  // Unknown URLs get a 404, as on GitHub Pages, rather than index.html (Vite's SPA default), so
-  // Site.E2E sees missing files.
+  // Unknown addresses get 404.html with a 404 status, as on GitHub Pages (see markdownPages), rather
+  // than index.html (Vite's SPA default), so Site.E2E sees missing files.
   appType: "mpa",
-  // directoryUrls runs first (both are "pre"): it rewrites routing-demo deep links to the routing page, which markdownPages serves.
   plugins: [
     directoryUrls(),
     markdownPages(),
     snippetIncludes(),
-    routingPageAs404(),
     demoSizes(),
     pageWeights({ reportFile: resolve(root, "build/page-weights.json") }),
   ],
