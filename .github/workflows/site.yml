@@ -1,0 +1,81 @@
+# Builds and checks the site on pull requests, without deploying: the site and demo build (which
+# fails on a demo over its size budget), the docs examples, every page in a browser (Site.E2E,
+# including links within the site), and the Kanban sample's E2E tests against its build under
+# /Firelight/demos/kanban/.
+# pages.yml runs the same build and Site.E2E before every deploy.
+
+name: Site checks
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'sample/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - '.config/dotnet-tools.json'
+      - '.github/workflows/site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to the pull request supersedes the run in progress.
+concurrency:
+  group: site-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            site/package-lock.json
+            sample/*/package-lock.json
+
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Build site and demos
+        working-directory: site
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Check README and site docs examples compile
+        run: dotnet build tests/Docs.Snippets/Docs.Snippets.fsproj
+
+      - name: Build the browser tests
+        run: |
+          dotnet build tests/Site.E2E/Site.E2E.fsproj
+          dotnet build sample/Kanban.E2E/Kanban.E2E.fsproj
+
+      - name: Install Chromium
+        run: pwsh tests/Site.E2E/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Check every page in a browser
+        run: dotnet run --project tests/Site.E2E/Site.E2E.fsproj --no-build
+
+      - name: Kanban E2E tests against the site build
+        run: |
+          (cd site && exec node node_modules/vite/bin/vite.js preview --port 4181 --strictPort) &
+          trap "kill $!" EXIT
+          KANBAN_E2E_URL=http://localhost:4181/Firelight/demos/kanban/ \
+            dotnet run --project sample/Kanban.E2E/Kanban.E2E.fsproj --no-build

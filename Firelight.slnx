@@ -11,7 +11,9 @@
   <Folder Name="/GitHub/">
     <File Path=".github/workflows/build.yml" />
     <File Path=".github/workflows/publish.yml" />
+    <File Path=".github/workflows/links.yml" />
     <File Path=".github/workflows/pages.yml" />
+    <File Path=".github/workflows/site.yml" />
     <File Path=".github/workflows/templates.yml" />
   </Folder>
   <Folder Name="/sample/">

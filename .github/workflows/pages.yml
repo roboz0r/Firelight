@@ -57,6 +57,16 @@ jobs:
         env:
           CI: true
 
+      # A site that fails its browser checks never deploys. (site.yml runs these on pull requests.)
+      - name: Build the browser tests
+        run: dotnet build tests/Site.E2E/Site.E2E.fsproj
+
+      - name: Install Chromium
+        run: pwsh tests/Site.E2E/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Check every page in a browser
+        run: dotnet run --project tests/Site.E2E/Site.E2E.fsproj --no-build
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v4

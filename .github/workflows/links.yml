@@ -1,0 +1,78 @@
+# Weekly check of the links on the built site, with lychee: mainly external ones, which can break
+# without any change here (internal links resolve to files in dist/ and are checked too). It never
+# blocks anything: broken links open an issue ("Broken links on the site"), or update the open one.
+
+name: Link check
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            site/package-lock.json
+            sample/*/package-lock.json
+
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Build site and demos
+        working-directory: site
+        run: npm run build
+        env:
+          CI: true
+
+      # The pages link to /Firelight/..., so lychee's root dir needs dist/ as a Firelight/ folder.
+      - name: Lay out the site as it is served
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          cp -r site/dist "$RUNNER_TEMP/site/Firelight"
+
+      - name: Check links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress --max-retries 3
+            --include-fragments --index-files index.html
+            --root-dir ${{ runner.temp }}/site
+            '${{ runner.temp }}/site/Firelight/**/*.html'
+          output: lychee/out.md
+          fail: false
+
+      - name: Open or update the broken links issue
+        if: steps.lychee.outputs.exit_code != 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Broken links on the site"
+          body="$(cat lychee/out.md; echo; echo "From $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
+          number=$(gh issue list --state open --search "\"$title\" in:title" --json number,title \
+            --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi

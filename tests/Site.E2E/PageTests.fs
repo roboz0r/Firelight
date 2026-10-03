@@ -26,6 +26,71 @@ let private loadsCleanly (page: Page) =
                 )
     }
 
+let private http = new Net.Http.HttpClient()
+
+/// Every same-site URL linked to, fetched once per run: its status and HTML.
+let private fetched =
+    Collections.Concurrent.ConcurrentDictionary<string, Lazy<Threading.Tasks.Task<int * string>>>()
+
+let private fetch (url: string) =
+    fetched
+        .GetOrAdd(
+            url,
+            fun url ->
+                lazy
+                    (task {
+                        use! response = http.GetAsync url
+                        let! body = response.Content.ReadAsStringAsync()
+                        return int response.StatusCode, body
+                    })
+        )
+        .Value
+
+let private hasAnchor (html: string) (id: string) =
+    let id = Text.RegularExpressions.Regex.Escape id
+    Text.RegularExpressions.Regex.IsMatch(html, $"""\s(id|name)\s*=\s*["']?{id}["'\s>]""")
+
+// Links on the site, including in demos and shadow roots, must lead to a page that exists and,
+// with a #fragment, to an element with that id. (Links to other sites are links.yml's job.)
+let private linksResolve (page: Page) =
+    testTask "every link within the site resolves" {
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let! hrefs =
+                            opened.Page.EvaluateAsync<string[]>(
+                                """() => {
+                              const hrefs = new Set();
+                              const walk = (root) => {
+                                for (const a of root.querySelectorAll("a[href], area[href]")) hrefs.add(a.href);
+                                for (const el of root.querySelectorAll("*")) if (el.shadowRoot) walk(el.shadowRoot);
+                              };
+                              walk(document);
+                              return [...hrefs];
+                            }"""
+                            )
+
+                        let broken = Collections.Generic.List<string>()
+
+                        for href in hrefs |> Array.filter (fun h -> h.StartsWith(Server.origin + "/")) do
+                            let uri = Uri href
+                            let! status, html = fetch (uri.GetLeftPart UriPartial.Query)
+                            let fragment = Uri.UnescapeDataString(uri.Fragment.TrimStart '#')
+
+                            if status >= 400 then
+                                broken.Add $"{uri.PathAndQuery}{uri.Fragment}: HTTP {status}"
+                            elif fragment <> "" && not (hasAnchor html fragment) then
+                                broken.Add $"{uri.PathAndQuery}{uri.Fragment}: no element with id \"{fragment}\""
+
+                        if broken.Count > 0 then
+                            fail page "broken links:" broken
+                    }
+                )
+    }
+
 let private demosRender (page: Page) =
     testTask "every demo renders something" {
         do!
@@ -204,6 +269,7 @@ let private pageTests (page: Page) =
     testList page.Path [
         loadsCleanly page
         demosRender page
+        linksResolve page
         elementsRegistered page
         accessible page
         hydratesWithoutDuplicates page
