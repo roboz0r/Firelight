@@ -41,12 +41,8 @@ let private weightOf (page: Page) =
 let private html (page: Page) =
     File.ReadAllText(Path.Combine(Server.distDir, page.File))
 
-/// A demo is a `.demo` box, as `::: example` and the hand-written pages render them.
+/// A demo is a `.demo` box, as `::: example` and `::: demo` render them.
 let private hasDemos (page: Page) = (html page).Contains "class=\"demo"
-
-/// Hand-written pages still highlight code at runtime with <fl-code>, which ships Shiki. Moving them
-/// to Markdown (build-time Shiki, PLAN.md Phase 1 step 4) removes it.
-let private usesRuntimeHighlighter (page: Page) = (html page).Contains "<fl-code"
 
 let private gzipSize (file: string) =
     use output = new MemoryStream()
@@ -123,7 +119,7 @@ let private pageTests (page: Page) =
         }
 
         test "a page without demos ships no JavaScript" {
-            if not (hasDemos page) && not (usesRuntimeHighlighter page) then
+            if not (hasDemos page) then
                 let weight = weightOf page
 
                 if weight.JsGzip <> 0 then
@@ -155,8 +151,6 @@ let all () =
         yield! sitePages |> List.map pageTests
     ]
 
-/// Pages the zero-JavaScript check applies to, for the run's summary: until the hand-written
-/// pages are migrated there may be none.
+/// Pages the zero-JavaScript check applies to, for the run's summary.
 let zeroJavaScriptPages () =
-    pages
-    |> List.filter (fun p -> not (isDemoApp p) && not (hasDemos p) && not (usesRuntimeHighlighter p))
+    pages |> List.filter (fun p -> not (isDemoApp p) && not (hasDemos p))

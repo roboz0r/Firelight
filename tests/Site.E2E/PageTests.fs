@@ -138,15 +138,7 @@ type KnownViolation =
 /// or on other work. They are reported on every run instead of failing it; anything else fails.
 /// Fix them rather than add to them: a full run fails once an entry no longer occurs, so this list
 /// only shrinks.
-let knownViolations =
-    [
-        {
-            Rule = "valid-lang"
-            Covers = fun target -> target.Contains "fl-code"
-            Reason =
-                "<fl-code lang=\"fsharp\"> uses the global lang attribute for the code's language. Goes away as pages move to build-time Shiki (PLAN.md Phase 1 step 4)."
-        }
-    ]
+let knownViolations: KnownViolation list = []
 
 /// Pages on which each known violation was seen, and the number of pages axe ran on.
 let knownViolationsSeen =

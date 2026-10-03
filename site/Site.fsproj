@@ -8,7 +8,6 @@
     <None Include="vite.config.js" />
     <None Include="build-demos.mjs" />
     <None Include="check-template.mjs" />
-    <None Include="index.html" />
     <None Include="site.css" />
     <None Include="content/**/*.md" />
   </ItemGroup>
@@ -16,7 +15,6 @@
     <!-- Each file registers its own custom element; the HTML pages load them as module scripts.
          Snippets are independent modules, so the glob's alphabetical order doesn't matter, and a
          new page's snippet needs no edit here. -->
-    <Compile Include="Components/CodeBlock.fs" />
     <Compile Include="Snippets/**/*.fs" />
     <Compile Include="Routing/RouteExplorer.fs" />
   </ItemGroup>
@@ -30,6 +28,5 @@
     <ProjectReference Include="..\src\Firelight.Signals\Firelight.Signals.fsproj" />
     <ProjectReference Include="..\src\Firelight.Task\Firelight.Task.fsproj" />
     <ProjectReference Include="..\src\Firelight.Virtualizer\Firelight.Virtualizer.fsproj" />
-    <ProjectReference Include="Fable.Shiki\Fable.Shiki.fsproj" />
   </ItemGroup>
 </Project>

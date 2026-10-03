@@ -14,9 +14,9 @@
   --code-bg: #ffffff;
   --radius: 0.5rem;
   --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
-  --fl-code-font: 0.875rem/1.6 var(--mono);
-  --fl-code-padding: 1rem 1.25rem;
-  --fl-code-radius: var(--radius);
+  --code-font: 0.875rem/1.6 var(--mono);
+  --code-padding: 1rem 1.25rem;
+  --code-radius: var(--radius);
   --lit-logo-text-color: var(--fg);
 }
 
@@ -105,28 +105,14 @@ h2:first-child { margin-top: 0; }
 }
 .demo.routed { display: block; }
 
-/* Unhighlighted fallback, shown until <fl-code> upgrades. Matches its padding and font to avoid a layout shift. */
-fl-code { display: block; margin-block: 1rem; }
-.example fl-code { margin: 0; }
-fl-code > pre {
-  margin: 0;
-  padding: var(--fl-code-padding);
-  border: 1px solid var(--border);
-  border-radius: var(--fl-code-radius);
-  background: var(--code-bg);
-  overflow-x: auto;
-  font: var(--fl-code-font);
-}
-fl-code > pre code { font: inherit; }
-
-/* Code highlighted at build time (Markdown pages): the same look as <fl-code>. Shiki writes the light
-   colours inline and the dark ones as --shiki-dark variables. */
+/* Code highlighted at build time. Shiki writes the light colours inline and the dark ones as
+   --shiki-dark variables. */
 pre.shiki {
   margin-block: 1rem;
-  padding: var(--fl-code-padding);
-  border-radius: var(--fl-code-radius);
+  padding: var(--code-padding);
+  border-radius: var(--code-radius);
   overflow-x: auto;
-  font: var(--fl-code-font);
+  font: var(--code-font);
 }
 pre.shiki code { font: inherit; }
 .example pre.shiki { margin: 0; }

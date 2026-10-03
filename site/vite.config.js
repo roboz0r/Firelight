@@ -6,39 +6,10 @@ import { pageWeights } from "./page-weights.mjs";
 
 const root = import.meta.dirname;
 
-const escapeHtml = (text) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-const readText = (file) => readFileSync(resolve(root, file), "utf8").replace(/\r\n/g, "\n").trimEnd();
-
-// <pre data-include="Snippets/Counter.fs"></pre> fills in an F# source file at build time, so the
-// code shown on a hand-written page is the same code that runs the live demo beside it, and the
-// page is complete before any JavaScript loads. (Markdown pages use `::: example` instead.)
-function snippetIncludes() {
-  const snippet = /<pre data-include="([^"]+)"><\/pre>/g;
-  return {
-    name: "firelight-snippet-includes",
-    transformIndexHtml: {
-      order: "pre",
-      handler: (html) =>
-        html.replace(snippet, (_, file) => `<pre data-include="${file}"><code>${escapeHtml(readText(file))}</code></pre>`),
-    },
-    configureServer(server) {
-      for (const dir of ["Snippets", "Routing"]) server.watcher.add(resolve(root, dir));
-      server.watcher.on("change", (file) => {
-        // (Renderer/ sources only matter once Fable has compiled them; markdownPages reloads then.)
-        if (/\.fs$/.test(file) && !/[\\/]Renderer[\\/]/.test(file)) server.ws.send({ type: "full-reload" });
-      });
-    },
-  };
-}
-
 // Markdown pages: content/<path>.md becomes <path>/index.html. The renderer is F# (Renderer/,
 // compiled by Fable to build/Renderer/) running here in Node: markdown-it, Shiki and Lit SSR, with
 // each `::: example` demo prerendered to Declarative Shadow DOM. Vite then processes the result like
-// any hand-written page (module scripts, base path, the includes above).
-// Hand-written pages share the generated layout through placeholders such as <!-- firelight:header -->,
-// and the plugin also writes sitemap.xml.
+// any HTML page (module scripts, base path). The plugin also writes sitemap.xml.
 // - Dev: pages are rendered on request. The renderer and the demo modules are loaded through Vite's
 //   SSR module runner, which re-runs whatever Fable recompiles, so edits need no restart.
 // - Build: each page is a virtual .html input that this plugin renders when Rollup loads it.
@@ -60,14 +31,13 @@ function markdownPages() {
   };
   const host = () => ({ root, base, loadModule: load });
   const render = async (source) => (await load(rendererUrl)).renderPage(host(), source);
-  // The sitemap lists the Markdown pages, plus the hand-written pages and the demo apps in public/demos/.
-  let handWrittenRoutes = [];
+  // The sitemap lists the Markdown pages, plus the demo apps in public/demos/.
   const demoRoutes = () => {
     const demos = resolve(root, "public", "demos");
     if (!existsSync(demos)) return [];
     return readdirSync(demos).filter((name) => existsSync(resolve(demos, name, "index.html"))).map((name) => `demos/${name}/`);
   };
-  const sitemap = async () => (await load(rendererUrl)).sitemap(host(), [...handWrittenRoutes, ...demoRoutes()]);
+  const sitemap = async () => (await load(rendererUrl)).sitemap(host(), demoRoutes());
 
   const reload = () => server.ws.send({ type: "full-reload" });
   let timer;
@@ -79,17 +49,14 @@ function markdownPages() {
   return {
     name: "firelight-markdown-pages",
     enforce: "pre",
-    async config(userConfig, { command }) {
-      handWrittenRoutes = Object.values(userConfig.build?.rollupOptions?.input ?? {}).map((file) =>
-        normalizePath(relativePath(root, file)).replace(/index\.html$/, ""),
-      );
+    async config(_, { command }) {
       // Vite's dependency scan only reads HTML files on disk, so it can't see the rendered pages'
       // imports (hydration support, then each demo module). Without scanning them up front, each is
       // found on first visit, and Vite re-optimizes and reloads, briefly loading two copies of Lit.
       if (command !== "build")
         return {
           optimizeDeps: {
-            entries: ["index.html", "build/Snippets/**/*.js", "build/Routing/**/*.js", "build/Components/**/*.js"],
+            entries: ["build/Snippets/**/*.js", "build/Routing/**/*.js", "build/Components/**/*.js"],
             include: ["@lit-labs/ssr-client/lit-element-hydrate-support.js"],
           },
         };
@@ -97,13 +64,12 @@ function markdownPages() {
         throw new Error(`Can't load the page renderer; run "npm run build:renderer" first. (${e.message})`);
       });
       const input = {};
-      const handWritten = userConfig.build?.rollupOptions?.input ?? {};
       for (const page of pages(root)) {
         const output = normalizePath(resolve(root, page.output));
         if (existsSync(output)) throw new Error(`${page.source} and ${page.output} both define the same page.`);
         // Entry names become asset file names: packages/firelight -> assets/packages-firelight-<hash>.js
         const name = page.output.replace(/\/?(index)?\.html$/, "").replaceAll("/", "-") || "index";
-        if (name in input || name in handWritten) throw new Error(`${page.source} has the same entry name as another page ("${name}").`);
+        if (name in input) throw new Error(`${page.source} has the same entry name as another page ("${name}").`);
         inputs.set(output, page.source);
         input[name] = output;
       }
@@ -114,11 +80,6 @@ function markdownPages() {
     },
     resolveId: (id) => (inputs.has(id) ? id : undefined),
     load: (id) => (inputs.has(id) ? render(inputs.get(id)) : undefined),
-    transformIndexHtml: {
-      order: "pre",
-      handler: async (html, { path }) =>
-        html.includes("<!-- firelight:") ? (await load(rendererUrl)).renderIncludes(host(), path.slice(1), html) : html,
-    },
     async generateBundle() {
       this.emitFile({ type: "asset", fileName: "sitemap.xml", source: await sitemap() });
     },
@@ -136,9 +97,12 @@ function markdownPages() {
     },
     configureServer(devServer) {
       server = devServer;
-      server.watcher.add(resolve(root, "content"));
+      for (const dir of ["content", "Routing"]) server.watcher.add(resolve(root, dir));
       server.watcher.on("all", (event, file) => {
         if (/[\\/]content[\\/].*\.md$|[\\/]build[\\/]Renderer[\\/].*\.js$/.test(file)) reloadSoon();
+        // An edited snippet's code shows at once, its demo once Fable has compiled it. (Renderer/
+        // sources only matter once Fable has compiled them.)
+        else if (event === "change" && /\.fs$/.test(file) && !/[\\/]Renderer[\\/]/.test(file)) reloadSoon();
         // A new snippet's module, which a page may be waiting for.
         else if (event === "add" && /[\\/]build[\\/]Snippets[\\/].*\.js$/.test(file)) reloadSoon();
       });
@@ -147,7 +111,7 @@ function markdownPages() {
       // targets, but their anchors aren't known until they're rendered.
       const checkLinks = async (page, html) => {
         const renderer = await load(rendererUrl);
-        const targets = [{ output: "index.html", source: "index.html", html: null }, ...renderer.pages(root).map((p) => ({ ...p, html: null }))];
+        const targets = renderer.pages(root).map((p) => ({ ...p, html: null }));
         const built = targets.map((t) => (t.output === page.output ? { ...t, html } : t));
         const { errors, warnings } = renderer.checkLinks(host(), false, ["public"], built);
         for (const problem of [...errors, ...warnings]) server.config.logger.warn(`[links] ${problem}`, { timestamp: true });
@@ -359,17 +323,9 @@ export default defineConfig({
   plugins: [
     directoryUrls(),
     markdownPages(),
-    snippetIncludes(),
     demoSizes(),
     pageWeights({ reportFile: resolve(root, "build/page-weights.json") }),
   ],
-  build: {
-    rollupOptions: {
-      input: {
-        home: resolve(root, "index.html"),
-      },
-    },
-  },
   server: {
     host: false,
   },

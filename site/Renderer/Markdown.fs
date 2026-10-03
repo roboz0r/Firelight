@@ -27,7 +27,7 @@ module Highlight =
 
     /// The two GitHub colours below WCAG AA's 4.5:1 on their theme's background, each swapped for a
     /// darker or lighter one of the same hue: github-light's orange (identifiers, 3.5:1 on white) and
-    /// github-dark's comment grey (3.1:1 on #24292e). Keep in step with Components/CodeBlock.fs.
+    /// github-dark's comment grey (3.1:1 on #24292e).
     let private colorReplacements =
         ColorReplacements.create [
             "github-light", [ "#e36209", "#bc4c00" ] // 5.0:1
@@ -51,8 +51,8 @@ module Highlight =
     let create () =
         Shiki.createHighlighter (HighlighterOptions(languages, [| "github-light"; "github-dark" |]))
 
-    /// A `<pre class="shiki">` with light colours inline and dark ones as CSS variables, the same
-    /// output as `fl-code`. Unknown languages are shown as plain text, with a warning.
+    /// A `<pre class="shiki">` with light colours inline and dark ones as CSS variables (site.css
+    /// switches to them in dark mode). Unknown languages are shown as plain text, with a warning.
     let toHtml (highlighter: Highlighter) (lang: string) (code: string) =
         let lang = if String.IsNullOrWhiteSpace lang then "text" else lang
         // A fence's content ends with a newline, which Shiki would show as an empty last line.
@@ -87,6 +87,9 @@ type Settings =
         /// Vite's base path, such as `/Firelight/`. Prefixed to root-relative links.
         Base: string
         Highlighter: Highlighter
+        /// More kinds of container, by name, rendered to HTML: those that need more than the page,
+        /// such as `::: package-table`.
+        Containers: Map<string, Container -> string>
     }
 
 /// What rendering a page found, besides its HTML.
@@ -96,6 +99,8 @@ type Collected =
         Demos: ResizeArray<Demo>
         /// Demo HTML that must not be prerendered (`ssr=false`), left as placeholders in the HTML.
         Verbatim: ResizeArray<string>
+        /// Every id given to a heading so far, including in containers rendered separately.
+        Ids: HashSet<string>
     }
 
 type Rendered =
@@ -110,6 +115,10 @@ type Rendered =
         Headings: Heading list
         Demos: Demo list
     }
+
+// `{#id .same-section}` at the end of a heading.
+let private headingAttributes =
+    Text.RegularExpressions.Regex "\\s*\\{([^{}]*)\\}\\s*$"
 
 let private verbatimPlaceholder =
     Text.RegularExpressions.Regex "<!--firelight-verbatim:(\d+)-->"
@@ -191,6 +200,27 @@ let rebaseHtml (``base``: string) (html: string) =
         )
     )
 
+/// Tracks fenced code blocks line by line: the opening marker of the block that `line` leaves us
+/// in, given the one we were in before it (None outside code).
+let nextFence (fence: string option) (line: string) =
+    let marker =
+        let line = line.TrimStart()
+        let run (c: char) = line.Length - line.TrimStart(c).Length
+
+        if run '`' >= 3 then Some(String('`', run '`'))
+        elif run '~' >= 3 then Some(String('~', run '~'))
+        else None
+
+    match fence, marker with
+    | None, Some marker -> Some marker
+    | Some opening, Some marker when
+        marker.[0] = opening.[0]
+        && marker.Length >= opening.Length
+        && line.Trim() = marker
+        ->
+        None
+    | _ -> fence
+
 // Block rule: `::: name args` up to a line that is just `:::`, as one `container` token.
 // Containers don't nest, and an unclosed one is an error rather than swallowing the page.
 let private containerRule =
@@ -211,27 +241,8 @@ let private containerRule =
             // The opening marker of a fenced code block we're inside, whose `:::` lines are code.
             let mutable fence: string option = None
 
-            let fenceMarker (line: string) =
-                let line = line.TrimStart()
-                let run (c: char) = line.Length - line.TrimStart(c).Length
-
-                if run '`' >= 3 then Some(String('`', run '`'))
-                elif run '~' >= 3 then Some(String('~', run '~'))
-                else None
-
             while close < endLine && (fence.IsSome || lineText(close).Trim() <> ":::") do
-                let line = lineText close
-
-                match fence, fenceMarker line with
-                | None, Some marker -> fence <- Some marker
-                | Some opening, Some marker when
-                    marker.[0] = opening.[0]
-                    && marker.Length >= opening.Length
-                    && line.Trim() = marker
-                    ->
-                    fence <- None
-                | _ -> ()
-
+                fence <- nextFence fence (lineText close)
                 close <- close + 1
 
             let words =
@@ -333,7 +344,7 @@ let private demo (settings: Settings) (page: Collected) (c: Container) =
 let private postProcess (settings: Settings) (md: MarkdownIt) =
     MarkdownIt.Core.RuleCore(fun state ->
         let page = collected state.env
-        let ids = HashSet<string>()
+        let ids = page.Ids
         let tokens = ResizeArray<Token>()
         let mutable inSection = false
 
@@ -348,19 +359,60 @@ let private postProcess (settings: Settings) (md: MarkdownIt) =
             if t.``type`` = "heading_open" then
                 let children = state.tokens[i + 1].children |> Option.defaultValue [||]
 
+                // markdown-it's [start, end] lines of the block, from 0.
+                let line: int = if isNull t?map then 0 else t?map?(0) + 1
+
+                // `## Heading {#id .same-section}`: an id of its own, and for an h2, staying in the
+                // section before it rather than starting one.
+                let explicitId, sameSection =
+                    match Array.tryLast children with
+                    | Some last when last.``type`` = "text" && headingAttributes.IsMatch last.content ->
+                        let m = headingAttributes.Match last.content
+                        last.content <- last.content.Substring(0, m.Index)
+                        state.tokens[i + 1].content <- headingAttributes.Replace(state.tokens[i + 1].content, "")
+
+                        let attributes =
+                            m.Groups[1].Value.Split(' ') |> Array.filter (String.IsNullOrWhiteSpace >> not)
+
+                        let id = attributes |> Array.tryFind _.StartsWith("#") |> Option.map _.Substring(1)
+
+                        match
+                            attributes
+                            |> Array.filter (fun a -> not (a.StartsWith "#") && a <> ".same-section")
+                        with
+                        | [||] -> ()
+                        | unknown ->
+                            let unknown = String.Join(" ", unknown)
+                            failwith $"Line {line}: unknown heading attributes {unknown} (known: #id, .same-section)."
+
+                        match id with
+                        | Some "" -> failwith $"Line {line}: '#' needs an id after it."
+                        | Some id when not (ids.Add id) ->
+                            failwith $"Line {line}: another heading already has the id '{id}'."
+                        | _ -> ()
+
+                        id, Array.contains ".same-section" attributes
+                    | _ -> None, false
+
                 let text =
                     children
                     |> Array.filter (fun c -> c.``type`` = "text" || c.``type`` = "code_inline")
                     |> Array.map _.content
                     |> String.concat ""
 
-                let baseId = slug text
-                let mutable id = baseId
-                let mutable n = 1
+                let id =
+                    match explicitId with
+                    | Some id -> id
+                    | None ->
+                        let baseId = slug text
+                        let mutable id = baseId
+                        let mutable n = 1
 
-                while not (ids.Add id) do
-                    n <- n + 1
-                    id <- $"{baseId}-{n}"
+                        while not (ids.Add id) do
+                            n <- n + 1
+                            id <- $"{baseId}-{n}"
+
+                        id
 
                 t.attrSet ("id", id)
                 let level = int (t.tag.Substring 1)
@@ -378,7 +430,7 @@ let private postProcess (settings: Settings) (md: MarkdownIt) =
                             Html = md.renderer.renderInline (label, md.options, state.env)
                         }
 
-                if t.tag = "h2" && t.level = 0 then
+                if t.tag = "h2" && t.level = 0 && not (sameSection && inSection) then
                     if inSection then
                         tokens.Add(blockToken "section_close" "section" -1)
 
@@ -446,6 +498,48 @@ let create (settings: Settings) =
 
         $"<div class=\"compare\">\n{md.render (c.Body, env.Value)}</div>\n"
 
+    // `::: cards`: Markdown in which each `###` heading starts a card, laid out in a grid.
+    let cards (env: obj option) (c: Container) =
+        if not c.Args.IsEmpty then
+            failwith $"Line {c.Line + 1}: '::: cards' takes no options."
+
+        let lines = c.Body.TrimEnd('\n').Split('\n')
+
+        if not (lines[0].StartsWith "### ") then
+            failwith $"Line {c.Line + 2}: '::: cards' starts with a '### ' heading for its first card."
+
+        // Card headings, not `###` lines in fenced code.
+        let starts =
+            lines
+            |> Array.scan
+                (fun (fence, _) line -> nextFence fence line, fence.IsNone && line.StartsWith "### ")
+                (None, false)
+            |> Array.tail
+            |> Array.indexed
+            |> Array.filter (snd >> snd)
+            |> Array.map fst
+            |> List.ofArray
+
+        // The cards' headings stay out of the table of contents: they would come after every
+        // other heading, as cards are rendered once the page has been parsed.
+        let env =
+            Some(
+                box
+                    { collected env with
+                        Headings = ResizeArray()
+                    }
+            )
+
+        let articles =
+            starts
+            |> List.mapi (fun n start ->
+                let finish = List.tryItem (n + 1) starts |> Option.defaultValue lines.Length
+                let card = String.Join("\n", lines[start .. finish - 1])
+                $"<article>\n{md.render (card, env.Value)}</article>\n"
+            )
+
+        "<div class=\"cards\">\n" + String.concat "" articles + "</div>\n"
+
     // Containers are rendered here, by name. This is the hook for new kinds.
     md.renderer.rules["container"] <-
         Some(
@@ -464,6 +558,8 @@ let create (settings: Settings) =
                 | "example" -> example settings (collected env) container
                 | "demo" -> demo settings (collected env) container
                 | "compare" -> compare env container
+                | "cards" -> cards env container
+                | name when settings.Containers.ContainsKey name -> settings.Containers[name] container
                 | name -> failwith $"Line {container.Line + 1}: unknown container '::: {name}'."
             )
         )
@@ -477,6 +573,7 @@ let render (md: MarkdownIt) (markdown: string) : Rendered =
             Headings = ResizeArray()
             Demos = ResizeArray()
             Verbatim = ResizeArray()
+            Ids = HashSet()
         }
 
     let tokens = md.parse (markdown, Some(box page))

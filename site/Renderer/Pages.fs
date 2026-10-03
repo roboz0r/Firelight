@@ -95,6 +95,9 @@ type Frontmatter =
         /// The page is a single-page app: addresses under its route that have no page of their own
         /// show it too (through 404.html, as GitHub Pages serves that for unknown addresses).
         Spa: bool
+        /// The homepage (`layout: home`): the heading, lead and links become the hero, and the
+        /// page is in no section.
+        Home: bool
     }
 
 type Page =
@@ -139,6 +142,15 @@ let private frontmatter (source: string) (yaml: string) =
             | _ -> fail $"'{key}' should be text."
         )
 
+    let home =
+        match text "layout" with
+        | None -> false
+        | Some "home" -> true
+        | Some layout -> fail $"unknown layout '{layout}' (the only one is 'home')."
+
+    // The not-found page and the homepage are in no section.
+    let sectionless = source = notFoundSource || home
+
     {
         Title = text "title" |> Option.defaultWith (fun () -> fail "frontmatter needs 'title'.")
         Tagline = text "tagline"
@@ -148,14 +160,15 @@ let private frontmatter (source: string) (yaml: string) =
             |> Option.defaultWith (fun () -> fail "frontmatter needs 'description'.")
         Section =
             match text "section" with
-            | None when source = notFoundSource -> ""
+            | None when sectionless -> ""
             | None -> fail "frontmatter needs 'section'."
+            | Some _ when sectionless -> fail "this page is in no section; remove 'section'."
             | Some section when sections |> List.exists (fun s -> s.Id = section) -> section
             | Some section ->
                 let known = sections |> List.map _.Id |> String.concat ", "
                 fail $"unknown section '{section}' (known sections: {known})."
         Order =
-            if source = notFoundSource then
+            if sectionless then
                 optional "order" |> Option.defaultValue 0
             else
                 required "order"
@@ -168,6 +181,7 @@ let private frontmatter (source: string) (yaml: string) =
         Eyebrow = optional "eyebrow" |> Option.map (link "eyebrow")
         Toc = optional "toc" |> Option.defaultValue false
         Spa = optional "spa" |> Option.defaultValue false
+        Home = home
     }
 
 /// `content/packages/firelight.md` is served at `packages/firelight/`; an `index.md` at its folder;
@@ -241,10 +255,11 @@ let inSection (section: string) (pages: Page seq) =
     |> Seq.sortBy (fun p -> p.Meta.Order, p.Route)
     |> List.ofSeq
 
-/// The pages before and after `page` in its section, for previous/next links.
+/// The pages before and after `page` in its section, for previous/next links. None for pages in
+/// no section.
 let neighbours (pages: Page seq) (page: Page) =
     let siblings = inSection page.Meta.Section pages |> Array.ofList
 
     match siblings |> Array.tryFindIndex (fun p -> p.Source = page.Source) with
-    | Some i -> Array.tryItem (i - 1) siblings, Array.tryItem (i + 1) siblings
-    | None -> None, None
+    | Some i when page.Meta.Section <> "" -> Array.tryItem (i - 1) siblings, Array.tryItem (i + 1) siblings
+    | _ -> None, None

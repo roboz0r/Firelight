@@ -1,6 +1,6 @@
 /// The internal link check: every `<a href>` that stays on the site must point at a page or file
 /// that exists, and any `#anchor` at an id on that page. Run over the built pages, so links from
-/// Markdown, frontmatter, the layout and hand-written pages are all covered.
+/// Markdown, frontmatter and the layout are all covered.
 module Site.Renderer.Links
 
 open System
@@ -100,7 +100,7 @@ let private routeOf (output: string) =
         output
 
 /// Where `href` is written in `source`: the first line containing it, in the forms an author uses
-/// (`/packages/router/` in Markdown, `%BASE_URL%packages/router/` in hand-written HTML).
+/// (`/packages/router/` in Markdown, or with the base path).
 let private locate (root: string) (``base``: string) (source: string) (href: string) =
     let text =
         try
@@ -111,7 +111,7 @@ let private locate (root: string) (``base``: string) (source: string) (href: str
     let forms =
         if href.StartsWith ``base`` then
             let rest = href.Substring ``base``.Length
-            [ href; "/" + rest; "%BASE_URL%" + rest ]
+            [ href; "/" + rest ]
         else
             [ href ]
 

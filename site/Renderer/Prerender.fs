@@ -37,17 +37,28 @@ let pages (root: string) =
         |}
     )
 
-let private markdown (host: Host) =
+let private markdown (host: Host) (site: Pages.Page list) =
     async {
         let! highlighter = highlighter.Value |> Async.AwaitPromise
+        // The package table renders summaries with the instance it belongs to.
+        let mutable md = Unchecked.defaultof<MarkdownIt.MarkdownIt>
 
-        return
+        let packageTable (c: Markdown.Container) =
+            if not c.Args.IsEmpty || not (System.String.IsNullOrWhiteSpace c.Body) then
+                failwith $"Line {c.Line + 1}: '::: package-table' takes no options and has no body."
+
+            Layout.packageTable host.``base`` (fun s -> md.renderInline s) site
+
+        md <-
             Markdown.create
                 {
                     Root = host.root
                     Base = host.``base``
                     Highlighter = highlighter
+                    Containers = Map [ "package-table", packageTable ]
                 }
+
+        return md
     }
 
 // A page as a complete HTML document, and the demos on it. On 404.html, single-page apps (`spa:
@@ -58,7 +69,7 @@ let rec private renderDocument
     (page: Pages.Page)
     : Async<string * Markdown.Demo list> =
     async {
-        let! md = markdown host
+        let! md = markdown host site
         let body = Markdown.render md page.Body
 
         // Registering a demo's custom elements is what makes Lit SSR prerender them.
@@ -119,7 +130,7 @@ let rec private renderDocument
     }
 
 /// Renders `content/...md` to a complete HTML document. Vite then processes it like any other
-/// HTML page (module scripts, base path, the includes plugin).
+/// HTML page (module scripts, base path).
 let renderPage (host: Host) (source: string) : JS.Promise<string> =
     async {
         try
@@ -137,87 +148,11 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
     }
     |> Async.StartAsPromise
 
-// `<!-- firelight:name -->` in a hand-written page.
-let private placeholder =
-    System.Text.RegularExpressions.Regex "<!-- firelight:([a-z-]+) -->"
-
-[<Emit("String.fromCodePoint($0)")>]
-let private fromCodePoint (codePoint: int) : string = jsNative
-
-// Decodes the character references an attribute or <title> may hold, so they aren't escaped twice
-// when the text is repeated in the social tags: numeric ones and the five XML names. Other named
-// references are an error rather than a silently wrong preview; write the character itself.
-let private unescapeHtml (source: string) (text: string) =
-    System.Text.RegularExpressions.Regex.Replace(
-        text,
-        "&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);",
-        fun (m: System.Text.RegularExpressions.Match) ->
-            match m.Groups[1].Value with
-            | "lt" -> "<"
-            | "gt" -> ">"
-            | "quot" -> "\""
-            | "apos" -> "'"
-            | "amp" -> "&"
-            | ref when ref.StartsWith "#x" || ref.StartsWith "#X" ->
-                fromCodePoint (System.Convert.ToInt32(ref.Substring 2, 16))
-            | ref when ref.StartsWith "#" -> fromCodePoint (int (ref.Substring 1))
-            | ref -> failwith $"{source}: write '&{ref};' in the <title> or description as the character itself."
-    )
-
-// The page's own <title> and description, which the head placeholder repeats for link previews.
-let private headOf (source: string) (html: string) : Layout.Head =
-    let find (pattern: string) what =
-        let m = System.Text.RegularExpressions.Regex.Match(html, pattern)
-
-        if m.Success then
-            unescapeHtml source (m.Groups[1].Value.Trim())
-        else
-            failwith $"{source}: <!-- firelight:head --> needs the page's {what} before it."
-
-    {
-        Title = find "<title>([^<]*)</title>" "<title>"
-        Description = find "<meta name=\"description\" content=\"([^\"]*)\">" "<meta name=\"description\">"
-        // index.html -> "", demos/index.html -> "demos/"
-        Route = Some(source.Substring(0, source.Length - "index.html".Length))
-    }
-
-/// Fills in the `<!-- firelight:name -->` placeholders in a hand-written HTML page (`head`,
-/// `header`, `footer`, `package-table`), so it shares the generated parts of the layout. `source` is the page's path
-/// relative to the site root, such as `index.html`.
-let renderIncludes (host: Host) (source: string) (html: string) : JS.Promise<string> =
-    async {
-        let! md = markdown host
-
-        let fragment name =
-            match name with
-            | "head" when source.EndsWith "index.html" -> Layout.headMeta host.``base`` (headOf source html)
-            | "header" -> Layout.header host.``base``
-            | "footer" -> Layout.footer
-            | "package-table" -> Layout.packageTable host.``base`` (fun s -> md.renderInline s) (Pages.load host.root)
-            | _ -> failwith $"{source}: unknown placeholder '<!-- firelight:{name} -->'."
-
-        let names =
-            placeholder.Matches html
-            |> Seq.cast<System.Text.RegularExpressions.Match>
-            |> Seq.map (fun m -> m.Groups[1].Value)
-            |> Seq.distinct
-            |> List.ofSeq
-
-        let rendered = System.Collections.Generic.Dictionary<string, string>()
-
-        for name in names do
-            let! text = LitSsr.renderToString (fragment name) |> Async.AwaitPromise
-            rendered[name] <- text
-
-        return placeholder.Replace(html, (fun m -> rendered[m.Groups[1].Value]))
-    }
-    |> Async.StartAsPromise
-
 let private escapeXml (text: string) =
     text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;")
 
-/// `sitemap.xml`: every Markdown page, plus `otherRoutes` (hand-written pages and demo apps,
-/// relative to the base path, such as `demos/todo/`), as absolute URLs.
+/// `sitemap.xml`: every Markdown page, plus `otherRoutes` (the demo apps, relative to the base
+/// path, such as `demos/todo/`), as absolute URLs.
 let sitemap (host: Host) (otherRoutes: string[]) =
     let urls =
         Array.append

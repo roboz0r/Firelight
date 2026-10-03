@@ -25,7 +25,7 @@ let main argv =
             Server.teardown().GetAwaiter().GetResult()
 
     match WeightTests.zeroJavaScriptPages () with
-    | [] -> printfn "No page is checked for shipping zero JavaScript yet: every page has demos or still uses <fl-code>."
+    | [] -> printfn "No page is checked for shipping zero JavaScript: every page has demos."
     | zero -> printfn $"Pages checked for shipping zero JavaScript: {zero.Length}."
 
     // Known accessibility violations don't fail the run, so list them every time.

@@ -65,7 +65,7 @@ type Head =
     }
 
 /// Head tags besides `<title>` and the description: canonical URL, favicon, Open Graph and Twitter
-/// cards. Hand-written pages include them with `<!-- firelight:head -->`.
+/// cards.
 let headMeta (``base``: string) (h: Head) =
     let absolute (path: string) = origin + withBase ``base`` path
     let image = absolute brand.SocialImage
@@ -106,7 +106,7 @@ let private headerMark =
     LitSsr.markup
         """<svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="none" stroke="#c92a2a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M11 27 5 40 11 53M53 27 59 40 53 53"/><path fill="#f76707" d="M32 60C22.51 60 16 52 16 41.2 16 29.4 22.83 22.8 26.67 14.8 28.59 10.6 28.91 7.3 28.59 4 34.24 7.3 38.51 12.5 40.43 18.6 41.92 16.2 43.09 13.4 43.41 10.6 46.83 15.8 48 23.8 48 34.6 48 49.7 41.92 60 32 60Z"/><path fill="#ffc145" d="M32 60C27.41 60 24.43 56 24.43 50.6 24.43 44.4 28.16 40.4 30.08 34.1 35.2 38.1 39.57 43.6 39.57 50.6 39.57 56 36.59 60 32 60Z"/></svg>"""
 
-/// The site header, on every page (hand-written pages include it with `<!-- firelight:header -->`).
+/// The site header, on every page.
 /// Its section links come from `Pages.sections`.
 let header (``base``: string) =
     let sectionLinks =
@@ -126,7 +126,7 @@ let header (``base``: string) =
     </nav>
   </header>"""
 
-/// The site footer, on every page (`<!-- firelight:footer -->` in hand-written pages).
+/// The site footer, on every page.
 let footer =
     LitSsr.html
         $"""<footer class="site-footer">
@@ -207,6 +207,48 @@ let private intro (m: Model) =
       {LitSsr.markup m.Intro}
     </section>"""
 
+/// images/logo.svg, inline so it paints with the page. Decorative: the header names the site.
+let private heroMark =
+    LitSsr.markup
+        """<svg class="hero-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="firelight-coal" x1="0" y1="52" x2="0" y2="28" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#c92a2a"/>
+            <stop offset="1" stop-color="#d9480f"/>
+          </linearGradient>
+          <linearGradient id="firelight-flame" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#ff8a3d"/>
+            <stop offset="1" stop-color="#f76707"/>
+          </linearGradient>
+        </defs>
+        <path fill="none" stroke="url(#firelight-coal)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" d="M10.5 29 4.8 40 10.5 51M53.5 29 59.2 40 53.5 51"/>
+        <path fill="url(#firelight-flame)" d="M32 60C23.1 60 17 52 17 41.2 17 29.4 23.4 22.8 27 14.8 28.8 10.6 29.1 7.3 28.8 4 34.1 7.3 38.1 12.5 39.9 18.6 41.3 16.2 42.4 13.4 42.7 10.6 45.9 15.8 47 23.8 47 34.6 47 49.7 41.3 60 32 60Z"/>
+        <path fill="#ffc145" d="M32 60C27.7 60 24.9 56 24.9 50.6 24.9 44.4 28.4 40.4 30.2 34.1 35 38.1 39.1 43.6 39.1 50.6 39.1 56 36.3 60 32 60Z"/>
+      </svg>"""
+
+// The homepage's intro (`layout: home`): the logo, heading and lead, with the links as buttons
+// (the first one primary).
+let private hero (m: Model) =
+    let lead =
+        m.Lead
+        |> Option.map (fun lead -> LitSsr.html $"""<p class="lead">{LitSsr.markup lead}</p>""")
+
+    let actions =
+        m.Page.Meta.Links
+        |> List.mapi (fun i link ->
+            let buttonClass = if i = 0 then "button primary" else "button"
+            LitSsr.html $"""<a class={buttonClass} href={withBase m.Base link.Href}>{link.Text}</a>"""
+        )
+
+    LitSsr.html
+        $"""<section class="hero">
+      {heroMark}
+      <h1>{m.Page.Meta.Title}</h1>
+      {optional lead}
+      <p class="actions">{actions}</p>
+      {LitSsr.markup m.Intro}
+    </section>"""
+
 let private toc (headings: Heading list) =
     let items =
         headings
@@ -220,7 +262,10 @@ let private toc (headings: Heading list) =
       <ul>{items}</ul>
     </nav>"""
 
-/// The homepage's package table (`<!-- firelight:package-table -->`): each page in the packages
+let private escapeHtml (text: string) =
+    text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;")
+
+/// The package table (`::: package-table`, on the homepage) as HTML: each page in the packages
 /// section with its `summary`, rendered as inline Markdown by `renderSummary`.
 let packageTable (``base``: string) (renderSummary: string -> string) (site: Page seq) =
     let rows =
@@ -229,20 +274,16 @@ let packageTable (``base``: string) (renderSummary: string -> string) (site: Pag
             let summary =
                 p.Meta.Summary
                 |> Option.defaultWith (fun () ->
-                    failwith $"{p.Source}: package pages need a 'summary' for the homepage table."
+                    failwith $"{p.Source}: package pages need a 'summary' for the package table."
                 )
 
-            LitSsr.html
-                $"""
-          <tr><td><a href="{``base``}{p.Route}"><code>{p.Meta.Title}</code></a></td><td>{LitSsr.markup (renderSummary summary)}</td></tr>"""
+            $"""    <tr><td><a href="{escapeHtml (``base`` + p.Route)}"><code>{escapeHtml p.Meta.Title}</code></a></td><td>{renderSummary summary}</td></tr>"""
+            + "\n"
         )
 
-    LitSsr.html
-        $"""<table>
-        <thead><tr><th>Package</th><th>What it does</th></tr></thead>
-        <tbody>{rows}
-        </tbody>
-      </table>"""
+    "<table>\n  <thead><tr><th>Package</th><th>What it does</th></tr></thead>\n  <tbody>\n"
+    + String.concat "" rows
+    + "  </tbody>\n</table>\n"
 
 // Previous and next pages in the same section.
 let private pager (m: Model) =
@@ -390,7 +431,7 @@ let page (m: Model) =
 <body>
   {header m.Base}
   <main>
-    {intro m}
+    {if meta.Home then hero m else intro m}
     {optional toc}
     {LitSsr.markup m.Content}
     {optional (pager m)}

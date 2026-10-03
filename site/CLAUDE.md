@@ -2,13 +2,15 @@
 
 Pages are Markdown in `content/`, rendered to static HTML at build time by the F# renderer in
 `Renderer/` (design and history: `PLAN.md`). `content/guides/events.md` is served at
-`/guides/events/`; an `index.md` at its folder. Markdown before the first `##` sits with the
-heading and lead; each `##` starts a `<section>`.
+`/guides/events/`; an `index.md` at its folder (`content/index.md` is the homepage). Markdown
+before the first `##` sits with the heading and lead; each `##` starts a `<section>`.
+`## Heading {#id}` gives a heading its own id instead of one made from its text, and
+`{.same-section}` keeps an h2 in the section before it.
 
 ## Frontmatter
 
 A page starts with YAML between `---` lines. The first four fields are required (except on
-`404.md`); the rest are optional.
+`404.md` and the homepage); the rest are optional.
 
 ```yaml
 ---
@@ -24,6 +26,7 @@ links: [{ text: NuGet, href: "https://www.nuget.org/packages/Firelight" }]  # pi
 eyebrow: { text: Firelight.Router, href: /packages/router/ }  # link above the h1; defaults to the section
 toc: true                      # h2/h3 table of contents
 spa: true                      # 404.html serves it under its route (page scripts don't run there)
+layout: home                   # the homepage: title, lead and links (as buttons) become the hero
 ---
 ```
 
@@ -42,6 +45,8 @@ file that doesn't exist, naming the file and line.
   demo box. With no body it shows just the code.
 - `::: demo Snippets/Rating.fs` shows the live demo without its code.
 - `::: compare` holds two fenced code blocks (Lit TypeScript, then Firelight) side by side.
+- `::: cards` holds Markdown in which each `### ` heading starts a card, in a grid.
+- `::: package-table` (no body) is the table of packages, from the package pages' `summary`.
 - Add `ssr=false` to `example`/`demo` for a demo that can't prerender (below).
 
 A demo is one file, `Snippets/<Name>.fs`: one module that registers its elements with Firelight's
@@ -68,12 +73,6 @@ Pages may carry plain `<script type="module">` blocks. On a page with a prerende
 script uses the DOM, the demos' events (as `content/packages/firelight.md` does) or `import()`,
 never a static import of Lit or a module using it: hydration support must load before
 `LitElement`, and a static import puts Lit first, so the demos silently render twice.
-
-## The homepage
-
-`index.html` is hand-written. It takes the generated parts through placeholders:
-`<!-- firelight:head -->` (after its `<title>` and description), `header`, `footer` and
-`package-table`. Its links use `%BASE_URL%`.
 
 ## Done means
 

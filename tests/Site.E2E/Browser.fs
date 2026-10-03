@@ -137,7 +137,7 @@ let withPage (javaScript: bool) (path: string) (f: OpenPage -> Task<'T>) =
             opened.Context.CloseAsync().GetAwaiter().GetResult()
     }
 
-/// The page's demos (`.demo` boxes, which `::: example` and the hand-written pages use) that show
+/// The page's demos (`.demo` boxes, which `::: example` and `::: demo` render) that show
 /// nothing: no custom element in them rendered any content, or the box has no height.
 let emptyDemos (page: IPage) =
     page.EvaluateAsync<string[]>(

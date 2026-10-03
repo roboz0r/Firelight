@@ -33,7 +33,7 @@ docs spend their words on the thin Firelight-specific layer instead.
 ## Information architecture
 
 ```
-/                         Home (hand-written HTML landing page; package table generated)
+/                         Home (content/index.md, `layout: home`; package table generated)
 /start/                   Getting started: zero to a running component
 /why/                     Firelight vs Fable.Lit, Feliz, Sutil, Lit in TypeScript
 /guides/<topic>/          Templates, properties & attributes, events, styling, lifecycle,
@@ -176,7 +176,8 @@ Prose…
 **Done when:** `npm run build` produces the same set of pages, the rendered text matches the
 current site, pages without demos ship no JavaScript, and prerendered demos are visible with
 JavaScript disabled. Met: the old and new builds' visible words match page by page, and
-Site.E2E covers the rest. The homepage still highlights code at runtime with `<fl-code>`.
+Site.E2E covers the rest. The homepage was the last page to highlight code at runtime with
+`<fl-code>`; in Phase 5 it moved to Markdown (`content/index.md`, `layout: home`), so `fl-code` is gone.
 
 ## Phase 2: Automated checks (M)
 
