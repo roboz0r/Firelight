@@ -45,3 +45,6 @@ jobs:
         env:
           CONFIGURATION: ${{ matrix.configuration }}
           CI: true
+
+      - name: Check README examples compile
+        run: dotnet build ./tests/Readme.Snippets/Readme.Snippets.fsproj -c ${{ matrix.configuration }}

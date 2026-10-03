@@ -25,18 +25,23 @@ Firelight gives you idiomatic F# bindings to Lit's lightweight Web Components pl
 Define a component by inheriting `LitElement`, declare reactive properties, and implement `render`:
 
 ```fsharp
+open Fable.Core
 open Firelight
-open Fable.Core.JsInterop
+open type Firelight.Lit
 
+[<AttachMembers>]
 type Counter() =
     inherit LitElement()
 
-    let mutable count = 0
+    static member properties =
+        PropertyDeclarations.create [ "count", PropertyDeclaration<int>() ]
 
-    override _.render() =
+    member val count = 0 with get, set
+
+    override this.render() =
         html $"""
-            <p>Count: {count}</p>
-            <button @click={fun _ -> count <- count + 1; base.requestUpdate()}>
+            <p>Count: {this.count}</p>
+            <button @click={fun _ -> this.count <- this.count + 1}>
                 Increment
             </button>
         """
@@ -55,23 +60,25 @@ Use it anywhere in HTML:
 For components with non-trivial state, `Firelight.Elmish` wires an Elmish `Program` directly to the component lifecycle:
 
 ```fsharp
+open Fable.Core
 open Firelight
 open Firelight.Elmish
+open type Firelight.Lit
 
 type Msg = Increment | Decrement
 
-type Counter() =
+let init () = 0
+
+let update msg model =
+    match msg with
+    | Increment -> model + 1
+    | Decrement -> model - 1
+
+[<AttachMembers>]
+type Counter() as this =
     inherit LitElement()
 
-    let elmish =
-        ElmishController.simple(
-            base,
-            init = fun () -> 0,
-            update = fun msg model ->
-                match msg with
-                | Increment -> model + 1
-                | Decrement -> model - 1
-        )
+    let elmish = ElmishController.simple this init update
 
     override _.render() =
         let model = elmish.model
@@ -89,16 +96,40 @@ defineElement<Counter> "my-counter"
 `Firelight.Context` lets you broadcast state (like an Elmish dispatch function) to any descendant component, regardless of nesting depth:
 
 ```fsharp
+open Fable.Core
+open Fable.Core.JsInterop
+open Firelight
 open Firelight.Context
+open type Firelight.Lit
 
-// Define a typed context
-let dispatchContext = LitContext.createContext<Symbol, Msg -> unit>()
+type Msg = Increment | Decrement
+
+// Define a typed context: a symbol branded with the type of value it carries
+type DispatchContext =
+    inherit Context<Msg -> unit>
+    inherit symbol
+
+let dispatchContext: DispatchContext = LitContext.createContext (JS.Symbol())
 
 // Provide it from a parent component
-let provider = ContextProvider(host, dispatchContext, dispatch)
+[<AttachMembers>]
+type App() =
+    inherit LitElement()
+
+    let dispatch (msg: Msg) = JS.console.log msg
+    let provider = ContextProvider(jsThis, ContextProvider.Options(dispatchContext, dispatch))
+
+    override _.render() = html $"<increment-button></increment-button>"
 
 // Consume it in any descendant
-let consumer = ContextConsumer(host, dispatchContext)
+[<AttachMembers>]
+type IncrementButton() =
+    inherit LitElement()
+
+    let consumer = ContextConsumer(jsThis, ContextConsumer.Options(dispatchContext))
+
+    override _.render() =
+        html $"""<button @click={fun _ -> consumer.value |> Option.iter (fun dispatch -> dispatch Increment)}>+</button>"""
 ```
 
 ## Router
@@ -106,6 +137,8 @@ let consumer = ContextConsumer(host, dispatchContext)
 `Firelight.Router` provides client-side routing built on the browser's [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern). Define routes as URL patterns with typed extractors, and use `RouterController` to wire routing into Lit's reactive lifecycle:
 
 ```fsharp
+open Fable.Core
+open Browser.Types.URLPattern
 open Firelight
 open Firelight.Router
 open type Firelight.Lit
@@ -137,18 +170,24 @@ type MyApp() as this =
         | NotFound -> html $"<h1>Not Found</h1>"
 ```
 
-The `RouterController` handles `popstate` events, intercepts internal link clicks (including hash links with smooth scrolling), and manages `history.pushState` navigation automatically. A `urlpattern-polyfill` npm dependency is included for browsers without native support.
+The `RouterController` handles `popstate` events, intercepts clicks on links that match one of its routes (plus hash links, with smooth scrolling), and manages `history.pushState` navigation automatically. A `urlpattern-polyfill` npm dependency is included for browsers without native support.
 
 ## Async Tasks
 
 `Firelight.Task` binds Lit's [`@lit/task`](https://lit.dev/docs/data/task/) controller. The F# type is named `LitTask` to keep it distinct from `System.Threading.Tasks.Task`. Pass an argument array to run automatically when its values change, or set `autoRun = U2.Case1 false` and call `run()` yourself.
 
-The example assumes `fetchProduct : string -> JS.Promise<string>`.
-
 ```fsharp
+open Fable.Core
 open Firelight
 open Firelight.Task
-open Fable.Core
+
+// Stands in for a real request, e.g. a fetch to your API.
+let fetchProduct (id: string) : JS.Promise<string> =
+    async {
+        do! Async.Sleep 500
+        return $"Product {id}"
+    }
+    |> Async.StartAsPromise
 
 [<AttachMembers>]
 type ProductView() as this =
@@ -170,7 +209,7 @@ type ProductView() as this =
 
     override _.render() =
         product.render(
-            TaskRenderer(
+            StatusRenderer(
                 pending = (fun () -> Lit.html $"<p>Loading...</p>"),
                 complete = (fun name -> Lit.html $"<p>{name}</p>"),
                 error = (fun error -> Lit.html $"<p>{error}</p>")
@@ -212,18 +251,19 @@ defineElement<SignalCounter> "signal-counter"
 `Firelight.Motion` binds [`@lit-labs/motion`](https://github.com/lit/lit/tree/main/packages/labs/motion). Use `Motion.animate()` in an element expression to animate layout changes between renders. `MotionOptions` supports timing, entry and exit keyframes, guards, IDs for transitions between elements, and callbacks. The package also exposes `AnimateController`, `SpringController`, and `SpringController2D`.
 
 ```fsharp
+open Fable.Core
 open Firelight
 open Firelight.Motion
-open Fable.Core
 
+[<AttachMembers>]
 type MovingBox() =
     inherit LitElement()
 
     let mutable shifted = false
 
-    override _.render() =
+    override this.render() =
         Lit.html $"""
-            <button @click={fun _ -> shifted <- not shifted; base.requestUpdate()}>Move</button>
+            <button @click={fun _ -> shifted <- not shifted; this.requestUpdate()}>Move</button>
             <div class={if shifted then "shifted" else ""}
                  {Motion.animate(MotionOptions(keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 300.0), ``in`` = Motion.fade))}>
             </div>
