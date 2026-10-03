@@ -66,11 +66,15 @@ type LitSignals =
     [<Import("SignalWatcher", "@lit-labs/signals")>]
     static member inline private signalWatcher(constructor: 'TConstructor) : 'TConstructor = nativeOnly
 
+    // The global registry rather than window.customElements, so the module also loads under Lit SSR in Node.
+    [<Emit("customElements")>]
+    static member inline private customElements: Browser.Types.CustomElementRegistry = nativeOnly
+
     /// Register a LitElement subclass with SignalWatcher applied to it.
     /// Signal reads during updates then request another update when they change.
     [<RequiresExplicitTypeArguments>]
     static member inline defineElement<'T when 'T :> LitElement>(name: string) : unit =
-        window.customElements.define (name, LitSignals.signalWatcher (jsConstructor<'T>))
+        LitSignals.customElements.define (name, LitSignals.signalWatcher (jsConstructor<'T>))
 
     /// Run an effect tied to a component registered with defineElement.
     /// Returns a function that disposes the effect. Effects are also disposed

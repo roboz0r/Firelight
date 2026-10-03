@@ -218,6 +218,11 @@ type Lit =
         : RootPart =
         nativeOnly
 
+    // The global registry rather than window.customElements: the same object in a browser, but
+    // Lit SSR's DOM shim provides a global customElements in Node and no window.
+    [<Emit("customElements")>]
+    static member inline private customElements: CustomElementRegistry = nativeOnly
+
     /// <summary>
     /// Maps the name to the `LitElement` as an autonomous custom element.
     /// </summary>
@@ -231,7 +236,7 @@ type Lit =
     /// <seealso href="https://lit.dev/docs/tools/publishing/#self-define-elements"/>
     [<RequiresExplicitTypeArguments>]
     static member inline defineElement<'T when 'T :> LitElement>(name: string) =
-        window.customElements.define (name, jsConstructor<'T>)
+        Lit.customElements.define (name, jsConstructor<'T>)
 
 
     /// <summary>
