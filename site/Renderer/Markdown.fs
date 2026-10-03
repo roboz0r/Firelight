@@ -95,6 +95,8 @@ type Rendered =
         /// `restoreVerbatim` puts them back after rendering, so their custom elements are never
         /// prerendered, even if another page has registered them.
         Html: string
+        /// Anything before the first h2, which belongs with the page's heading and lead.
+        Intro: string
         Verbatim: string list
         Headings: Heading list
         Demos: Demo list
@@ -164,6 +166,22 @@ let withBase (``base``: string) (url: string) =
     else
         url
 
+let private rawLink =
+    // `<a ... href = "/path"` with either quote; `\s` before `href` keeps out `data-href`.
+    Text.RegularExpressions.Regex "(<a\\s(?:[^>]*?\\s)?href\\s*=\\s*)([\"'])(/[^\"']*)\\2"
+
+/// Adds the base path to root-relative `<a href>`s in raw HTML, so `<a href="/packages/router/">`
+/// in Markdown works like `[text](/packages/router/)`. (The link check in the build catches any
+/// form this misses.)
+let rebaseHtml (``base``: string) (html: string) =
+    rawLink.Replace(
+        html,
+        (fun m ->
+            let quote = m.Groups[2].Value
+            m.Groups[1].Value + quote + withBase ``base`` m.Groups[3].Value + quote
+        )
+    )
+
 // Block rule: `::: name args` up to a line that is just `:::`, as one `container` token.
 // Containers don't nest, and an unclosed one is an error rather than swallowing the page.
 let private containerRule =
@@ -203,10 +221,8 @@ let private containerRule =
                 true
     )
 
-/// `::: example <file.fs> [.class ...] [ssr=false]`, with the demo's HTML as the body: the source
-/// file next to the live demo. Its module is loaded on the page and, unless `ssr=false`, its
-/// custom elements are prerendered. With no body, just the code.
-let private example (settings: Settings) (page: Collected) (c: Container) =
+// `::: example` and `::: demo` take an F# file under the site root, then options.
+let private snippetArgs (c: Container) =
     // The path also becomes a module URL in a script, so keep it to plain path characters.
     let isPlainPath (file: string) =
         file
@@ -214,44 +230,72 @@ let private example (settings: Settings) (page: Collected) (c: Container) =
         && not (file.Contains "..")
 
     match c.Args with
-    | file :: options when file.EndsWith ".fs" && isPlainPath file ->
-        let code =
-            Highlight.toHtml settings.Highlighter "fsharp" (readText settings.Root file)
-
-        if String.IsNullOrWhiteSpace c.Body then
-            code
-        else
-            let isClass (option: string) =
-                option.Length > 1
-                && option.StartsWith "."
-                && option.Substring(1)
-                   |> Seq.forall (fun ch -> Char.IsLetterOrDigit ch || ch = '-' || ch = '_')
-
-            let classes = options |> List.filter isClass |> List.map _.Substring(1)
-            let prerender = not (List.contains "ssr=false" options)
-
-            match options |> List.filter (fun o -> not (isClass o) && o <> "ssr=false") with
-            | [] -> ()
-            | unknown -> failwith $"Line {c.Line + 1}: unknown ::: example options {unknown}."
-
-            page.Demos.Add
-                {
-                    Module = "/build/" + file.Substring(0, file.Length - 3) + ".js"
-                    Prerender = prerender
-                }
-
-            let demo =
-                if prerender then
-                    c.Body
-                else
-                    page.Verbatim.Add c.Body
-                    $"<!--firelight-verbatim:{page.Verbatim.Count - 1}-->"
-
-            let demoClass = String.Join(" ", "demo" :: classes)
-            $"<div class=\"example\">\n{code}\n<div class=\"{demoClass}\">\n{demo}\n</div>\n</div>\n"
+    | file :: options when file.EndsWith ".fs" && isPlainPath file -> file, options
     | _ ->
         failwith
-            $"Line {c.Line + 1}: '::: example' needs an F# file under the site root, as in '::: example Snippets/Counter.fs'."
+            $"Line {c.Line + 1}: '::: {c.Name}' needs an F# file under the site root, as in '::: {c.Name} Snippets/Counter.fs'."
+
+// The live demo: the container's HTML in a `.demo` box, with the module that defines its custom
+// elements loaded on the page. Options: `.class` adds a class to the box; `ssr=false` skips
+// prerendering.
+let private liveDemo (settings: Settings) (page: Collected) (c: Container) (file: string) (options: string list) =
+    let isClass (option: string) =
+        option.Length > 1
+        && option.StartsWith "."
+        && option.Substring(1)
+           |> Seq.forall (fun ch -> Char.IsLetterOrDigit ch || ch = '-' || ch = '_')
+
+    let classes = options |> List.filter isClass |> List.map _.Substring(1)
+    let prerender = not (List.contains "ssr=false" options)
+
+    match options |> List.filter (fun o -> not (isClass o) && o <> "ssr=false") with
+    | [] -> ()
+    | unknown -> failwith $"Line {c.Line + 1}: unknown ::: {c.Name} options {unknown}."
+
+    page.Demos.Add
+        {
+            Module = "/build/" + file.Substring(0, file.Length - 3) + ".js"
+            Prerender = prerender
+        }
+
+    let body = rebaseHtml settings.Base c.Body
+
+    let demo =
+        if prerender then
+            body
+        else
+            page.Verbatim.Add body
+            $"<!--firelight-verbatim:{page.Verbatim.Count - 1}-->"
+
+    let demoClass = String.Join(" ", "demo" :: classes)
+    $"<div class=\"{demoClass}\">\n{demo}\n</div>"
+
+/// `::: example <file.fs> [.class ...] [ssr=false]`, with the demo's HTML as the body: the source
+/// file next to the live demo. Its module is loaded on the page and, unless `ssr=false`, its
+/// custom elements are prerendered. With no body, just the code.
+let private example (settings: Settings) (page: Collected) (c: Container) =
+    let file, options = snippetArgs c
+
+    let code =
+        Highlight.toHtml settings.Highlighter "fsharp" (readText settings.Root file)
+
+    if String.IsNullOrWhiteSpace c.Body then
+        if not options.IsEmpty then
+            failwith $"Line {c.Line + 1}: options {options} need a demo in the body."
+
+        code
+    else
+        $"<div class=\"example\">\n{code}\n{liveDemo settings page c file options}\n</div>\n"
+
+/// `::: demo <file.fs> [.class ...] [ssr=false]`: the live demo without its code, for pages that
+/// show the code somewhere else.
+let private demo (settings: Settings) (page: Collected) (c: Container) =
+    let file, options = snippetArgs c
+
+    if String.IsNullOrWhiteSpace c.Body then
+        failwith $"Line {c.Line + 1}: '::: demo' needs the demo's HTML in its body."
+
+    liveDemo settings page c file options + "\n"
 
 // Core rule, after inline parsing: heading ids and the table of contents, `<section>` around each
 // h2 and what follows it (the page styles space sections), and base-path and asset links.
@@ -310,9 +354,13 @@ let private postProcess (settings: Settings) (md: MarkdownIt) =
                     tokens.Add(blockToken "section_open" "section" 1)
                     inSection <- true
 
+            if t.``type`` = "html_block" then
+                t.content <- rebaseHtml settings.Base t.content
+
             if t.``type`` = "inline" then
                 for c in t.children |> Option.defaultValue [||] do
                     match c.``type`` with
+                    | "html_inline" -> c.content <- rebaseHtml settings.Base c.content
                     | "link_open" ->
                         match c.attrGet "href" with
                         | Some href ->
@@ -374,6 +422,7 @@ let create (settings: Settings) =
 
                 match container.Name with
                 | "example" -> example settings (collected env) container
+                | "demo" -> demo settings (collected env) container
                 | name -> failwith $"Line {container.Line + 1}: unknown container '::: {name}'."
             )
         )
@@ -389,8 +438,19 @@ let render (md: MarkdownIt) (markdown: string) : Rendered =
             Verbatim = ResizeArray()
         }
 
+    let tokens = md.parse (markdown, Some(box page))
+
+    let firstSection =
+        tokens
+        |> Array.tryFindIndex (fun t -> t.``type`` = "section_open")
+        |> Option.defaultValue tokens.Length
+
+    let html (tokens: Token[]) =
+        md.renderer.render (tokens, md.options, Some(box page))
+
     {
-        Html = md.render (markdown, page)
+        Html = html tokens[firstSection..]
+        Intro = html tokens[.. firstSection - 1]
         Verbatim = List.ofSeq page.Verbatim
         Headings = List.ofSeq page.Headings
         Demos = List.ofSeq page.Demos

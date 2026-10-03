@@ -17,6 +17,8 @@ type Model =
         Demos: Demo list
         /// The frontmatter lead, rendered as inline Markdown.
         Lead: string option
+        /// The Markdown before the first h2, rendered. It goes in the intro section.
+        Intro: string
         /// Every page on the site, for navigation.
         Site: Page list
     }
@@ -132,25 +134,40 @@ let private links (``base``: string) (links: Link list) =
 
         Some(LitSsr.html $"""<ul class="package-links">{items}</ul>""")
 
+let private sectionOf (page: Page) =
+    sections |> List.find (fun s -> s.Id = page.Meta.Section)
+
+// The heading, with the eyebrow link above it, the lead and links below it, and any Markdown before
+// the first h2.
 let private intro (m: Model) =
+    let meta = m.Page.Meta
+    let section = sectionOf m.Page
+
+    let eyebrow =
+        meta.Eyebrow
+        |> Option.defaultValue
+            {
+                Text = section.Name
+                Href = section.Href
+            }
+
     let lead =
         m.Lead
         |> Option.map (fun lead -> LitSsr.html $"""<p class="lead">{LitSsr.markup lead}</p>""")
 
-    match m.Page.Meta.Section with
-    | "packages" ->
-        LitSsr.html
-            $"""<section class="package-intro">
-      <p class="eyebrow"><a href="{m.Base}#packages">Packages</a></p>
-      <h1>{m.Page.Meta.Title}</h1>
+    let introClass =
+        if section.Id = "packages" then
+            "package-intro"
+        else
+            "page-intro"
+
+    LitSsr.html
+        $"""<section class={introClass}>
+      <p class="eyebrow"><a href={withBase m.Base eyebrow.Href}>{eyebrow.Text}</a></p>
+      <h1>{meta.Title}</h1>
       {optional lead}
-      {optional (links m.Base m.Page.Meta.Links)}
-    </section>"""
-    | _ ->
-        LitSsr.html
-            $"""<section class="page-intro">
-      <h1>{m.Page.Meta.Title}</h1>
-      {optional lead}
+      {optional (links m.Base meta.Links)}
+      {LitSsr.markup m.Intro}
     </section>"""
 
 let private toc (headings: Heading list) =
@@ -165,6 +182,30 @@ let private toc (headings: Heading list) =
       <p>On this page</p>
       <ul>{items}</ul>
     </nav>"""
+
+/// The homepage's package table (`<!-- firelight:package-table -->`): each page in the packages
+/// section with its `summary`, rendered as inline Markdown by `renderSummary`.
+let packageTable (``base``: string) (renderSummary: string -> string) (site: Page seq) =
+    let rows =
+        inSection "packages" site
+        |> List.map (fun p ->
+            let summary =
+                p.Meta.Summary
+                |> Option.defaultWith (fun () ->
+                    failwith $"{p.Source}: package pages need a 'summary' for the homepage table."
+                )
+
+            LitSsr.html
+                $"""
+          <tr><td><a href="{``base``}{p.Route}"><code>{p.Meta.Title}</code></a></td><td>{LitSsr.markup (renderSummary summary)}</td></tr>"""
+        )
+
+    LitSsr.html
+        $"""<table>
+        <thead><tr><th>Package</th><th>What it does</th></tr></thead>
+        <tbody>{rows}
+        </tbody>
+      </table>"""
 
 // Previous and next pages in the same section.
 let private pager (m: Model) =
@@ -191,9 +232,10 @@ let page (m: Model) =
     let meta = m.Page.Meta
 
     let title =
-        match meta.Tagline with
-        | Some tagline -> $"{meta.Title}: {tagline}"
-        | None -> $"{meta.Title} · Firelight"
+        match meta.PageTitle, meta.Tagline with
+        | Some pageTitle, _ -> pageTitle
+        | None, Some tagline -> $"{meta.Title}: {tagline}"
+        | None, None -> $"{meta.Title} · Firelight"
 
     let headTags =
         headMeta
@@ -210,13 +252,25 @@ let page (m: Model) =
         else
             None
 
-    // The package list is still a partial (filled in by the includes plugin in vite.config.js);
-    // Phase 1 step 4 generates it from frontmatter.
-    let packageNav =
-        if meta.Section = "packages" then
-            Some(LitSsr.html $"""<!-- include partials/package-nav.html -->""")
-        else
-            None
+    // Every page in the section ("All packages"), for sections that list them.
+    let pageList =
+        (sectionOf m.Page).PageList
+        |> Option.map (fun heading ->
+            let items =
+                inSection meta.Section m.Site
+                |> List.map (fun p ->
+                    LitSsr.html
+                        $"""
+        <li><a href="{m.Base}{p.Route}">{p.Meta.Title}</a></li>"""
+                )
+
+            LitSsr.html
+                $"""<nav class="package-nav" aria-label={(sectionOf m.Page).Name}>
+      <h2>{heading}</h2>
+      <ul>{items}
+      </ul>
+    </nav>"""
+        )
 
     LitSsr.html
         $"""<!doctype html>
@@ -237,7 +291,7 @@ let page (m: Model) =
     {optional toc}
     {LitSsr.markup m.Content}
     {optional (pager m)}
-    {optional packageNav}
+    {optional pageList}
   </main>
   {footer}
 </body>

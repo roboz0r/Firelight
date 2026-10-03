@@ -8,10 +8,7 @@
     <None Include="vite.config.js" />
     <None Include="build-demos.mjs" />
     <None Include="index.html" />
-    <None Include="client-side-routing/index.html" />
     <None Include="site.css" />
-    <None Include="partials/*.html" />
-    <None Include="packages/*/index.html" />
     <None Include="content/**/*.md" />
   </ItemGroup>
   <ItemGroup>

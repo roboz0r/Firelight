@@ -14,29 +14,20 @@ const readText = (file) => readFileSync(resolve(root, file), "utf8").replace(/\r
 // <pre data-include="Snippets/Counter.fs"></pre> fills in an F# source file at build time, so the
 // code shown on a hand-written page is the same code that runs the live demo beside it, and the
 // page is complete before any JavaScript loads. (Markdown pages use `::: example` instead.)
-// (Until the package pages move to Markdown, <!-- include partials/package-nav.html --> also inserts
-// the hand-written package list.)
 function snippetIncludes() {
-  const partial = /<!-- include (\S+) -->/g;
   const snippet = /<pre data-include="([^"]+)"><\/pre>/g;
-  let base;
   return {
     name: "firelight-snippet-includes",
-    configResolved: (config) => {
-      base = config.base;
-    },
     transformIndexHtml: {
       order: "pre",
       handler: (html) =>
-        html
-          .replace(partial, (_, file) => readText(file).replaceAll("%BASE_URL%", base))
-          .replace(snippet, (_, file) => `<pre data-include="${file}"><code>${escapeHtml(readText(file))}</code></pre>`),
+        html.replace(snippet, (_, file) => `<pre data-include="${file}"><code>${escapeHtml(readText(file))}</code></pre>`),
     },
     configureServer(server) {
-      for (const dir of ["Snippets", "Routing", "partials"]) server.watcher.add(resolve(root, dir));
+      for (const dir of ["Snippets", "Routing"]) server.watcher.add(resolve(root, dir));
       server.watcher.on("change", (file) => {
         // (Renderer/ sources only matter once Fable has compiled them; markdownPages reloads then.)
-        if (/\.fs$|[\\/]partials[\\/]/.test(file) && !/[\\/]Renderer[\\/]/.test(file)) server.ws.send({ type: "full-reload" });
+        if (/\.fs$/.test(file) && !/[\\/]Renderer[\\/]/.test(file)) server.ws.send({ type: "full-reload" });
       });
     },
   };
@@ -84,9 +75,16 @@ function markdownPages() {
       handWrittenRoutes = Object.values(userConfig.build?.rollupOptions?.input ?? {}).map((file) =>
         normalizePath(relativePath(root, file)).replace(/index\.html$/, ""),
       );
-      // Vite's dependency scan only reads HTML files on disk, so it can't see this import in the
-      // rendered pages; without this it's found on the first visit and the page reloads.
-      if (command !== "build") return { optimizeDeps: { include: ["@lit-labs/ssr-client/lit-element-hydrate-support.js"] } };
+      // Vite's dependency scan only reads HTML files on disk, so it can't see the rendered pages'
+      // imports (hydration support, then each demo module). Without scanning them up front, each is
+      // found on first visit, and Vite re-optimizes and reloads, briefly loading two copies of Lit.
+      if (command !== "build")
+        return {
+          optimizeDeps: {
+            entries: ["index.html", "build/Snippets/**/*.js", "build/Routing/**/*.js", "build/Components/**/*.js"],
+            include: ["@lit-labs/ssr-client/lit-element-hydrate-support.js"],
+          },
+        };
       const { pages } = await import(fileUrl(rendererUrl)).catch((e) => {
         throw new Error(`Can't load the page renderer; run "npm run build:renderer" first. (${e.message})`);
       });
@@ -150,13 +148,6 @@ function markdownPages() {
     },
   };
 }
-
-// One page per package: packages/<name>/index.html. (Packages written in Markdown are added by markdownPages.)
-const packagePages = Object.fromEntries(
-  readdirSync(resolve(root, "packages"))
-    .filter((name) => existsSync(resolve(root, "packages", name, "index.html")))
-    .map((name) => [`package-${name}`, resolve(root, "packages", name, "index.html")]),
-);
 
 // GitHub Pages serves 404.html for any unknown path. Making it the routing page lets deep links
 // like /Firelight/client-side-routing/users/42 load, and unknown URLs render the router's NotFound.
@@ -225,6 +216,7 @@ function directoryUrls() {
   };
   return {
     name: "firelight-directory-urls",
+    enforce: "pre",
     configureServer: (server) => void server.middlewares.use(handle),
     configurePreviewServer: (server) => void server.middlewares.use(handle),
   };
@@ -235,20 +227,19 @@ export default defineConfig({
   // Unknown URLs get a 404, as on GitHub Pages, rather than index.html (Vite's SPA default), so
   // Site.E2E sees missing files.
   appType: "mpa",
+  // directoryUrls runs first (both are "pre"): it rewrites routing-demo deep links to the routing page, which markdownPages serves.
   plugins: [
+    directoryUrls(),
     markdownPages(),
     snippetIncludes(),
     routingPageAs404(),
     demoSizes(),
-    directoryUrls(),
     pageWeights({ reportFile: resolve(root, "build/page-weights.json") }),
   ],
   build: {
     rollupOptions: {
       input: {
         home: resolve(root, "index.html"),
-        routing: resolve(root, "client-side-routing/index.html"),
-        ...packagePages,
       },
     },
   },

@@ -35,6 +35,19 @@ let pages (root: string) =
         |}
     )
 
+let private markdown (host: Host) =
+    async {
+        let! highlighter = highlighter.Value |> Async.AwaitPromise
+
+        return
+            Markdown.create
+                {
+                    Root = host.root
+                    Base = host.``base``
+                    Highlighter = highlighter
+                }
+    }
+
 /// Renders `content/...md` to a complete HTML document. Vite then processes it like any other
 /// HTML page (module scripts, base path, the includes plugin).
 let renderPage (host: Host) (source: string) : JS.Promise<string> =
@@ -47,16 +60,7 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
                 |> List.tryFind (fun p -> p.Source = source)
                 |> Option.defaultWith (fun () -> failwith "no such page.")
 
-            let! highlighter = highlighter.Value |> Async.AwaitPromise
-
-            let md =
-                Markdown.create
-                    {
-                        Root = host.root
-                        Base = host.``base``
-                        Highlighter = highlighter
-                    }
-
+            let! md = markdown host
             let body = Markdown.render md page.Body
 
             // Registering a demo's custom elements is what makes Lit SSR prerender them.
@@ -73,6 +77,7 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
                         Headings = body.Headings
                         Demos = body.Demos
                         Lead = page.Meta.Lead |> Option.map (fun lead -> md.renderInline lead)
+                        Intro = body.Intro
                         Site = site
                     }
 
@@ -128,15 +133,18 @@ let private headOf (source: string) (html: string) : Layout.Head =
     }
 
 /// Fills in the `<!-- firelight:name -->` placeholders in a hand-written HTML page (`head`,
-/// `header`, `footer`), so it shares the generated parts of the layout. `source` is the page's path
+/// `header`, `footer`, `package-table`), so it shares the generated parts of the layout. `source` is the page's path
 /// relative to the site root, such as `index.html`.
 let renderIncludes (host: Host) (source: string) (html: string) : JS.Promise<string> =
     async {
+        let! md = markdown host
+
         let fragment name =
             match name with
             | "head" when source.EndsWith "index.html" -> Layout.headMeta host.``base`` (headOf source html)
             | "header" -> Layout.header host.``base``
             | "footer" -> Layout.footer
+            | "package-table" -> Layout.packageTable host.``base`` (fun s -> md.renderInline s) (Pages.load host.root)
             | _ -> failwith $"{source}: unknown placeholder '<!-- firelight:{name} -->'."
 
         let names =

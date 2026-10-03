@@ -29,8 +29,11 @@ type Section =
         Id: string
         /// Its name in the header.
         Name: string
-        /// Where the header links to. Root-relative; the base path is added when rendering.
+        /// Where the header (and each page's eyebrow link) points. Root-relative; the base path is
+        /// added when rendering.
         Href: string
+        /// The heading of a list of all the section's pages at the foot of each of them, if any.
+        PageList: string option
     }
 
 /// The site's sections, in header order. A page's `section` must be one of these, so adding a
@@ -41,11 +44,13 @@ let sections =
             Id = "packages"
             Name = "Packages"
             Href = "/#packages"
+            PageList = Some "All packages"
         }
         {
             Id = "demos"
             Name = "Demos"
             Href = "/#demos"
+            PageList = None
         }
     ]
 
@@ -56,6 +61,9 @@ type Frontmatter =
         Title: string
         /// Completes the `<title>`: "Firelight: Lit web components in F#".
         Tagline: string option
+        /// The whole `<title>`, when "title: tagline" doesn't read well. Without either, the
+        /// `<title>` is "Title · Firelight".
+        PageTitle: string option
         /// The meta description.
         Description: string
         /// The site section the page belongs to, such as `packages` or `guides`.
@@ -68,6 +76,8 @@ type Frontmatter =
         Lead: string option
         /// Links shown under the lead (Lit docs, NuGet, source).
         Links: Link list
+        /// The small link above the heading. Defaults to the page's section.
+        Eyebrow: Link option
         /// Show an h2/h3 table of contents.
         Toc: bool
     }
@@ -98,6 +108,11 @@ let private frontmatter (source: string) (yaml: string) =
         optional key
         |> Option.defaultWith (fun () -> fail $"frontmatter needs '{key}'.")
 
+    let link (key: string) (value: obj) =
+        match (value?text: obj), (value?href: obj) with
+        | (:? string as text), (:? string as href) -> { Text = text; Href = href }
+        | _ -> fail $"each of '{key}' needs 'text' and 'href'."
+
     let text key : string option =
         optional key
         |> Option.map (fun (value: obj) ->
@@ -109,6 +124,7 @@ let private frontmatter (source: string) (yaml: string) =
     {
         Title = text "title" |> Option.defaultWith (fun () -> fail "frontmatter needs 'title'.")
         Tagline = text "tagline"
+        PageTitle = text "pageTitle"
         Description =
             text "description"
             |> Option.defaultWith (fun () -> fail "frontmatter needs 'description'.")
@@ -124,17 +140,9 @@ let private frontmatter (source: string) (yaml: string) =
         Lead = text "lead"
         Links =
             optional "links"
-            |> Option.map (fun (links: obj[]) ->
-                links
-                |> Array.map (fun link ->
-                    {
-                        Text = string link?text
-                        Href = string link?href
-                    }
-                )
-                |> List.ofArray
-            )
+            |> Option.map (fun (links: obj[]) -> links |> Array.map (link "links") |> List.ofArray)
             |> Option.defaultValue []
+        Eyebrow = optional "eyebrow" |> Option.map (link "eyebrow")
         Toc = optional "toc" |> Option.defaultValue false
     }
 
