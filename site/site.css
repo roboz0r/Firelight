@@ -122,6 +122,10 @@ pre.shiki {
 }
 pre.shiki code { font: inherit; }
 .example pre.shiki { margin: 0; }
+
+/* `::: compare`: two code blocks side by side, stacked when there isn't room for both. */
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; margin-block: 1rem; }
+.compare pre.shiki { margin: 0; }
 @media (prefers-color-scheme: dark) {
   .shiki, .shiki span {
     color: var(--shiki-dark) !important;

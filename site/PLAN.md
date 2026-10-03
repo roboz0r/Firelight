@@ -57,6 +57,10 @@ title: Events
 description: Raise and handle DOM events from F# components.
 section: guides
 order: 30
+tagline: raise DOM events from F#      # optional, like the rest
+lead: The paragraph under the heading.
+links: [{ text: "Lit docs: Events", href: "https://lit.dev/docs/components/events/" }]
+toc: true
 ---
 
 Prose…
@@ -83,13 +87,14 @@ Prose…
 ```
 ```
 
-- `::: example <file>` produces the existing `.example` layout (source on the left, live demo on
-  the right) and adds `<script type="module" src="/build/<file>.js">` to the page automatically.
-  With no body, it shows the code only.
+- `::: example <file>` produces the existing `.example` layout (the live demo above its source)
+  and loads `/build/<file>.js` on the page automatically. With no body, it shows the code only.
 - `::: compare` lays out two code blocks side by side using CSS only (no JS tabs).
 - Plain ```` ```fsharp ```` blocks must be self-contained, because they get compiled.
   ```` ```fsharp fragment ```` opts out (`tests/Docs.Snippets` skips any block with more after `fsharp` in its info string).
 - Internal links are written as `/guides/events/` and the base path is added at build time.
+- Frontmatter also takes `tagline` (completes the `<title>`), `lead`, `links` and `toc`, plus a
+  few more the migration needed. `site/CLAUDE.md` is the authoring guide and lists them all.
 
 ---
 
@@ -101,7 +106,8 @@ Prose…
      constructor, `willUpdate` and `render` (not `connectedCallback` or `firstUpdated`), so check
      that Fable's module-level code doesn't touch `window` or `document`.
    - *Dev loop:* with `dotnet fable watch` recompiling the F# renderer, the Vite plugin must
-     re-import it (cache-busting the import) and reload the page, with no restart needed.
+     load it through Vite's SSR module runner (so whatever Fable rewrites is re-run) and reload
+     the page, with no restart needed.
    - *Page output:* in dev, pages are rendered on request through `server.transformIndexHtml`.
      In build, Rollup gets virtual `.html` inputs through `resolveId`/`load`. If virtual inputs
      misbehave, generate the HTML into gitignored folders under `site/` before Vite starts.
@@ -135,34 +141,38 @@ Prose…
      SSR prerenders any custom element in the Markdown and the page itself has no hydration
      markers. Frontmatter is YAML (`yaml` package) and adds `tagline`, `lead`, `links` and `toc`.
      Page scripts are plain `<script type="module">` blocks in the Markdown (`html: true`).
-     Typographer, linkify and `breaks` are off so migrated text stays exact. Header and footer are
-     duplicated in `Layout.fs` until the partials go; the package nav is still the partial.
+     Typographer, linkify and `breaks` are off so migrated text stays exact.
    - `ssr=false` can't just mean "don't import the module": once any page registers an element,
      Lit SSR renders it everywhere, including inside `unsafeHTML`, because Lit SSR parses that
      content as a template too. Opted-out demo bodies are left as placeholder comments and spliced
      into the HTML after rendering.
-   - Still to do in steps 2–6: `Pages.fs` nav model (prev/next, sidebar, generated package nav and
-     homepage table), head metadata (step 3), the other eight package pages and routing (step 4),
-     then delete `partials/` and the `packagePages` input list. Before extracting `Fable.Shiki`
-     (Later), add custom grammar/theme objects and engine options as inputs. The spike didn't
-     need them, so its API is unchanged.
+   - Before extracting `Fable.Shiki` (Later), add custom grammar/theme objects and engine options
+     as inputs. The spike didn't need them, so its API is unchanged.
 2. Put the renderer in `site/Renderer/` (a Fable project run in Node, separate from the browser
    code in `Site.fsproj`): `Markdown.fs` (Fable.MarkdownIt, Shiki, containers, heading ids, TOC),
    `Layout.fs` (head metadata, header, sidebar, TOC, prev/next, footer as Firelight templates),
    `Pages.fs` (scans frontmatter, builds the nav model) and `Prerender.fs` (Lit SSR to string).
    `vite.config.js` keeps only a thin plugin that calls the renderer.
+   Done: `Pages.fs` holds the section registry (`Pages.sections`, which orders the header) and
+   the nav model. The header, footer, prev/next, the "All packages" list, the homepage package
+   table and `sitemap.xml` are generated; the hand-written homepage takes them through
+   `<!-- firelight:name -->` placeholders. There is no sidebar yet (Phase 5, mobile navigation).
 3. Head metadata on every page: title, description, canonical URL, Open Graph and Twitter tags,
-   favicon.
+   favicon. Done: the favicon and Open Graph image paths are placeholders in `Layout.brand`.
 4. Migrate the nine package pages and the routing page to Markdown, with no wording changes.
-   Generate the homepage package table and `package-nav` from frontmatter.
+   Generate the homepage package table and `package-nav` from frontmatter. Done: the visible
+   words of every page match the old build. Task's demo is `ssr=false` too: the client's first
+   update starts the task, so its first render doesn't match the server's.
 5. **Real 404 page.** `404.html` becomes a "page not found" page; an inline script loads the
-   routing demo only for paths under `/client-side-routing/`.
+   routing demo only for paths under `/client-side-routing/`. Done generally: pages with
+   `spa: true` travel inside 404.html as a `<template>`; dev and preview serve 404.html too.
 6. `site/CLAUDE.md`: authoring conventions (the format above, where snippets go, the
-   definition of done). Short.
+   definition of done). Short. Done, with `::: compare` and `::: demo` implemented.
 
 **Done when:** `npm run build` produces the same set of pages, the rendered text matches the
 current site, pages without demos ship no JavaScript, and prerendered demos are visible with
-JavaScript disabled.
+JavaScript disabled. Met: the old and new builds' visible words match page by page, and
+Site.E2E covers the rest. The homepage still highlights code at runtime with `<fl-code>`.
 
 ## Phase 2: Automated checks (M)
 
@@ -172,7 +182,8 @@ Everything after this phase relies on these checks instead of line-by-line revie
    ```` ```fsharp ```` blocks in `README.md` and `site/content/**/*.md`. Errors still point at
    Markdown line numbers.
 2. **Internal link check inside the build.** The Markdown plugin already knows every page, so an
-   unknown internal `href` or `#anchor` fails the build.
+   unknown internal `href` or `#anchor` fails the build. Done: `Renderer/Links.fs`, over the
+   built HTML of every page (the homepage too), naming the source file and line.
 3. **`tests/Site.E2E`** (Expecto + Playwright, the same setup as `sample/Kanban.E2E`), run against
    `vite preview`. For every page in the generated sitemap:
    - no console errors and no failed requests (this also catches Lit hydration mismatch warnings);

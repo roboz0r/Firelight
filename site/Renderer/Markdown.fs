@@ -199,8 +199,30 @@ let private containerRule =
             true
         else
             let mutable close = startLine + 1
+            // The opening marker of a fenced code block we're inside, whose `:::` lines are code.
+            let mutable fence: string option = None
 
-            while close < endLine && lineText(close).Trim() <> ":::" do
+            let fenceMarker (line: string) =
+                let line = line.TrimStart()
+                let run (c: char) = line.Length - line.TrimStart(c).Length
+
+                if run '`' >= 3 then Some(String('`', run '`'))
+                elif run '~' >= 3 then Some(String('~', run '~'))
+                else None
+
+            while close < endLine && (fence.IsSome || lineText(close).Trim() <> ":::") do
+                let line = lineText close
+
+                match fence, fenceMarker line with
+                | None, Some marker -> fence <- Some marker
+                | Some opening, Some marker when
+                    marker.[0] = opening.[0]
+                    && marker.Length >= opening.Length
+                    && line.Trim() = marker
+                    ->
+                    fence <- None
+                | _ -> ()
+
                 close <- close + 1
 
             let words =
@@ -406,7 +428,16 @@ let create (settings: Settings) =
 
     md.core.ruler.push ("site_post_process", postProcess settings md)
 
-    // Containers are rendered here, by name. This is the hook for new kinds (`::: compare`...).
+    // `::: compare`: Markdown holding two code blocks (Lit in TypeScript and Firelight, say), shown
+    // side by side with CSS only. The blocks are ordinary fences, so a plain ```fsharp one is
+    // compiled by tests/Docs.Snippets like any other.
+    let compare (env: obj option) (c: Container) =
+        if not c.Args.IsEmpty then
+            failwith $"Line {c.Line + 1}: '::: compare' takes no options."
+
+        $"<div class=\"compare\">\n{md.render (c.Body, env.Value)}</div>\n"
+
+    // Containers are rendered here, by name. This is the hook for new kinds.
     md.renderer.rules["container"] <-
         Some(
             Renderer.RenderRule(fun tokens idx _ env _ ->
@@ -423,6 +454,7 @@ let create (settings: Settings) =
                 match container.Name with
                 | "example" -> example settings (collected env) container
                 | "demo" -> demo settings (collected env) container
+                | "compare" -> compare env container
                 | name -> failwith $"Line {container.Line + 1}: unknown container '::: {name}'."
             )
         )
