@@ -26,6 +26,54 @@ let private optional (value: TemplateResult option) : obj =
     | Some template -> box template
     | None -> box Lit.nothing
 
+/// The logo files, as root-relative URLs. Placeholders until the logo is chosen (PLAN.md, Phase 5
+/// step 2): point these at the real files and every page follows. `SocialImage` (Open Graph and
+/// Twitter cards) should be a 1200×630 PNG; it doesn't exist yet.
+let brand =
+    {|
+        Favicon = "/favicon.svg"
+        SocialImage = "/social-card.png"
+    |}
+
+/// What a page tells search engines and link previews.
+type Head =
+    {
+        Title: string
+        Description: string
+        /// The page's URL relative to the base path (`packages/firelight/`), for the canonical
+        /// link. `None` for pages served at many addresses, such as 404.html.
+        Route: string option
+    }
+
+/// Head tags besides `<title>` and the description: canonical URL, favicon, Open Graph and Twitter
+/// cards. Hand-written pages include them with `<!-- firelight:head -->`.
+let headMeta (``base``: string) (h: Head) =
+    let absolute (path: string) = origin + withBase ``base`` path
+    let image = absolute brand.SocialImage
+
+    let canonical =
+        h.Route
+        |> Option.map (fun route ->
+            let url = absolute ("/" + route)
+
+            LitSsr.html
+                $"""<link rel="canonical" href={url}>
+  <meta property="og:url" content={url}>"""
+        )
+
+    LitSsr.html
+        $"""{optional canonical}
+  <link rel="icon" href={brand.Favicon} type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Firelight">
+  <meta property="og:title" content={h.Title}>
+  <meta property="og:description" content={h.Description}>
+  <meta property="og:image" content={image}>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={h.Title}>
+  <meta name="twitter:description" content={h.Description}>
+  <meta name="twitter:image" content={image}>"""
+
 /// The site header, on every page (hand-written pages include it with `<!-- firelight:header -->`).
 /// Its section links come from `Pages.sections`.
 let header (``base``: string) =
@@ -147,6 +195,15 @@ let page (m: Model) =
         | Some tagline -> $"{meta.Title}: {tagline}"
         | None -> $"{meta.Title} · Firelight"
 
+    let headTags =
+        headMeta
+            m.Base
+            {
+                Title = title
+                Description = meta.Description
+                Route = Some m.Page.Route
+            }
+
     let toc =
         if meta.Toc && not m.Headings.IsEmpty then
             Some(toc m.Headings)
@@ -169,6 +226,7 @@ let page (m: Model) =
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title}</title>
   <meta name="description" content={meta.Description}>
+  {headTags}
   <link rel="stylesheet" href="/site.css">
   {scripts m.Demos}
 </head>

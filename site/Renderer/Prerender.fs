@@ -87,12 +87,54 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
 let private placeholder =
     System.Text.RegularExpressions.Regex "<!-- firelight:([a-z-]+) -->"
 
-/// Fills in the `<!-- firelight:name -->` placeholders in a hand-written HTML page (`header`,
-/// `footer`), so it shares the generated parts of the layout. `source` is used in error messages.
+[<Emit("String.fromCodePoint($0)")>]
+let private fromCodePoint (codePoint: int) : string = jsNative
+
+// Decodes the character references an attribute or <title> may hold, so they aren't escaped twice
+// when the text is repeated in the social tags: numeric ones and the five XML names. Other named
+// references are an error rather than a silently wrong preview; write the character itself.
+let private unescapeHtml (source: string) (text: string) =
+    System.Text.RegularExpressions.Regex.Replace(
+        text,
+        "&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);",
+        fun (m: System.Text.RegularExpressions.Match) ->
+            match m.Groups[1].Value with
+            | "lt" -> "<"
+            | "gt" -> ">"
+            | "quot" -> "\""
+            | "apos" -> "'"
+            | "amp" -> "&"
+            | ref when ref.StartsWith "#x" || ref.StartsWith "#X" ->
+                fromCodePoint (System.Convert.ToInt32(ref.Substring 2, 16))
+            | ref when ref.StartsWith "#" -> fromCodePoint (int (ref.Substring 1))
+            | ref -> failwith $"{source}: write '&{ref};' in the <title> or description as the character itself."
+    )
+
+// The page's own <title> and description, which the head placeholder repeats for link previews.
+let private headOf (source: string) (html: string) : Layout.Head =
+    let find (pattern: string) what =
+        let m = System.Text.RegularExpressions.Regex.Match(html, pattern)
+
+        if m.Success then
+            unescapeHtml source (m.Groups[1].Value.Trim())
+        else
+            failwith $"{source}: <!-- firelight:head --> needs the page's {what} before it."
+
+    {
+        Title = find "<title>([^<]*)</title>" "<title>"
+        Description = find "<meta name=\"description\" content=\"([^\"]*)\">" "<meta name=\"description\">"
+        // index.html -> "", demos/index.html -> "demos/"
+        Route = Some(source.Substring(0, source.Length - "index.html".Length))
+    }
+
+/// Fills in the `<!-- firelight:name -->` placeholders in a hand-written HTML page (`head`,
+/// `header`, `footer`), so it shares the generated parts of the layout. `source` is the page's path
+/// relative to the site root, such as `index.html`.
 let renderIncludes (host: Host) (source: string) (html: string) : JS.Promise<string> =
     async {
         let fragment name =
             match name with
+            | "head" when source.EndsWith "index.html" -> Layout.headMeta host.``base`` (headOf source html)
             | "header" -> Layout.header host.``base``
             | "footer" -> Layout.footer
             | _ -> failwith $"{source}: unknown placeholder '<!-- firelight:{name} -->'."

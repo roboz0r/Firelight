@@ -1,0 +1,5 @@
+<!-- Placeholder favicon until the logo is chosen (site/PLAN.md, Phase 5 step 2). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#d9480f"/>
+  <path d="M16 5c1 5 7 8 7 15a7 7 0 0 1-14 0c0-4 2-6 4-8 0 3 1 5 3 5-1-4 0-8 0-12z" fill="#fff"/>
+</svg>
