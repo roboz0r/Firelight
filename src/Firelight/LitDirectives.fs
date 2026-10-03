@@ -88,6 +88,99 @@ type Lit with
     static member inline join<'T, 'U>(items: seq<'T> option, joiner: 'U) : seq<U2<'T, 'U>> = nativeOnly
 
     /// <summary>
+    /// Renders <c>trueCase ()</c> when <c>condition</c> is true, otherwise <c>falseCase ()</c>.
+    /// Only the chosen case runs.
+    /// </summary>
+    /// <remarks>
+    /// Lit's <c>when</c>, renamed because <c>when</c> is an F# keyword. In F#,
+    /// <c>if condition then ... else ...</c> does the same and reads better; <c>when'</c> is here for code
+    /// ported from Lit.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#when"/>
+    [<Import("when", "lit/directives/when.js")>]
+    static member inline when'(condition: bool, trueCase: unit -> 'T, falseCase: unit -> 'T) : 'T = nativeOnly
+
+    /// <summary>
+    /// Renders <c>trueCase ()</c> when <c>condition</c> is true, otherwise nothing.
+    /// </summary>
+    /// <remarks>
+    /// Lit's <c>when</c> with no false case, for child content: when <c>condition</c> is false it returns
+    /// <c>undefined</c>, which renders nothing. In F#, <c>if condition then html $"..." else nothing</c>
+    /// does the same.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#when"/>
+    [<Import("when", "lit/directives/when.js")>]
+    static member inline when'<'T when 'T :> ChildRenderable>(condition: bool, trueCase: unit -> 'T) : ChildRenderable =
+        nativeOnly
+
+    /// <summary>
+    /// Renders the case whose key equals <c>value</c>, or <c>defaultCase ()</c> when none does.
+    /// Only the chosen case runs.
+    /// </summary>
+    /// <remarks>
+    /// Lit compares keys with JavaScript's <c>===</c>, so use strings, numbers or booleans as keys.
+    /// F# unions and records are compared by reference and never match a different instance:
+    /// <c>match</c> on them instead.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#choose"/>
+    [<Import("choose", "lit/directives/choose.js")>]
+    static member inline choose(value: 'T, cases: seq<'T * (unit -> 'V)>, defaultCase: unit -> 'V) : 'V = nativeOnly
+
+    /// <summary>
+    /// Renders the case whose key equals <c>value</c>, or nothing when none does.
+    /// Only the chosen case runs.
+    /// </summary>
+    /// <remarks>
+    /// For child content: with no match, Lit returns <c>undefined</c>, which renders nothing.
+    /// Lit compares keys with JavaScript's <c>===</c>, so use strings, numbers or booleans as keys.
+    /// F# unions and records are compared by reference and never match a different instance:
+    /// <c>match</c> on them instead.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#choose"/>
+    [<Import("choose", "lit/directives/choose.js")>]
+    static member inline choose<'T, 'V when 'V :> ChildRenderable>
+        (value: 'T, cases: seq<'T * (unit -> 'V)>)
+        : ChildRenderable =
+        nativeOnly
+
+    /// <summary>
+    /// The integers from 0 up to, but not including, <c>stop</c>.
+    /// </summary>
+    /// <remarks>
+    /// The result is a JavaScript generator: it can be enumerated once. Call <c>range</c> again on each
+    /// render rather than keeping the result.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#range"/>
+    [<Import("range", "lit/directives/range.js")>]
+    static member inline range(stop: int) : seq<int> = nativeOnly
+
+    /// <summary>
+    /// The integers from <c>start</c> up to, but not including, <c>stop</c>, counting by <c>step</c>
+    /// (default 1). A negative <c>step</c> counts down to, but not including, <c>stop</c>.
+    /// </summary>
+    /// <remarks>
+    /// The result is a JavaScript generator: it can be enumerated once. Call <c>range</c> again on each
+    /// render rather than keeping the result.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#range"/>
+    [<Import("range", "lit/directives/range.js")>]
+    static member inline range(start: int, stop: int, ?step: int) : seq<int> = nativeOnly
+
+    /// <summary>
+    /// Calls <c>f</c> on each item of <c>items</c> as Lit renders them, and renders the results.
+    /// </summary>
+    /// <remarks>
+    /// Lit's <c>map</c> is lazy and takes any iterable, so it works on an F# list, array or <c>seq</c>.
+    /// <c>List.map</c> does the same job; for the item's index, use <c>List.mapi</c> or <c>Seq.mapi</c>.
+    /// To keep each item's DOM with the item when the list changes, use <c>repeat</c>.
+    /// The result is a JavaScript generator: it can be enumerated once. Call <c>map</c> again on each
+    /// render rather than keeping the result.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#map"/>
+    [<Import("map", "lit/directives/map.js")>]
+    static member inline map(items: seq<'T>, f: 'T -> 'R) : seq<'R> = nativeOnly
+
+    /// <summary>
     /// Sets an attribute if the value is defined and removes the attribute if undefined.
     /// </summary>
     /// <remarks>
