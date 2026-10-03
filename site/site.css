@@ -153,9 +153,18 @@ pre.shiki code { font: inherit; }
 .cards h3 { margin-top: 0; }
 .cards p { margin-bottom: 0; color: var(--muted); }
 
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
-td:first-child { white-space: nowrap; }
+/* Tables and lists keep to the same reading width as paragraphs (section > p). */
+table { width: 100%; max-width: 48rem; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+section > ul, section > ol { max-width: 48rem; }
+/* The homepage's package table spans the page, and its package names never wrap. */
+.package-table { max-width: none; }
+.package-table td:first-child { white-space: nowrap; }
+/* On narrow screens a table too wide for the page (code doesn't wrap) scrolls on its own, rather
+   than the whole page scrolling sideways. */
+@media (max-width: 46rem) {
+  table { display: block; overflow-x: auto; }
+}
 
 .package-list { list-style: none; margin: 0; padding: 0; }
 .package-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); color: var(--muted); }

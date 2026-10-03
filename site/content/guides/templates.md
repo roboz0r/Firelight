@@ -48,14 +48,20 @@ Lit doesn't parse the markup itself. The first time a template renders, Lit join
 with a marker in place of each hole and hands the result to the browser's own HTML parser, through
 a `<template>` element. Lit clones the parsed DOM wherever the template renders, and the markers
 tell it which nodes and attributes each hole updates. So a hole only works where the parser leaves
-a marker Lit can find:
+a marker Lit can find. A hole works:
 
-| A hole can go | A hole can't go |
-|---|---|
-| Between tags, as child content | In a tag name or an attribute name (see [Static values](#static-values)) |
-| In an attribute value, whole or in part | Inside an HTML comment: it isn't updated |
-| In an element's opening tag, as an element directive | Inside a `<template>` element's content: Lit throws in development builds |
-| Inside `<title>`, `<style>` or `<script>` (for a component's styles, prefer `css`) | Inside a `<textarea>` or a `contenteditable` element: typing breaks Lit's markers. Bind `.value` or `.innerText` instead |
+- between tags, as child content;
+- in an attribute value, whole or in part;
+- in an element's opening tag, as an element directive;
+- inside `<title>`, `<style>` or `<script>` (for a component's styles, prefer `css`).
+
+A hole doesn't work:
+
+- in a tag name or an attribute name (see [Static values](#static-values));
+- inside an HTML comment, where it isn't updated;
+- inside a `<template>` element's content, where Lit throws in development builds;
+- inside a `<textarea>` or a `contenteditable` element, where typing breaks Lit's markers. Bind
+  `.value` or `.innerText` instead.
 
 Where a hole goes also decides what it sets, which the next section covers.
 

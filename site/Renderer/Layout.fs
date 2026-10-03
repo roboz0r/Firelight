@@ -284,7 +284,7 @@ let packageTable (``base``: string) (renderSummary: string -> string) (site: Pag
             + "\n"
         )
 
-    "<table>\n  <thead><tr><th>Package</th><th>What it does</th></tr></thead>\n  <tbody>\n"
+    "<table class=\"package-table\">\n  <thead><tr><th>Package</th><th>What it does</th></tr></thead>\n  <tbody>\n"
     + String.concat "" rows
     + "  </tbody>\n</table>\n"
 
