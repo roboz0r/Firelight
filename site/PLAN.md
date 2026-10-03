@@ -215,7 +215,9 @@ Everything after this phase relies on these checks instead of line-by-line revie
    `check-template.mjs` fails `npm run build` when they differ, or when the template's files,
    npm scripts or `index.html` stop matching what the page says. Site.E2E clicks through the
    event and list steps.
-4. Point every "Get started" link at `/start/` instead of GitHub.
+4. Point every "Get started" link at `/start/` instead of GitHub. Done: the homepage button and
+   section, and the Firelight package page. The GettingStarted sample is still linked from the
+   tutorial's "Where next".
 
 **Done when:** someone with only the .NET SDK and Node can follow `/start/` to a running component
 without leaving the site.

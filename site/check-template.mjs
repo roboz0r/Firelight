@@ -31,9 +31,17 @@ const removed = described.filter((f) => !files.includes(f));
 if (added.length || removed.length)
   problems.push(`The template's files changed (added: ${added.join(", ") || "none"}; removed: ${removed.join(", ") || "none"}).`);
 
+// `dotnet new firelight -n MyApp`, and what -n replaces.
+const config = JSON.parse(read("../templates/firelight-app/.template.config/template.json"));
+if (config.shortName !== "firelight") problems.push(`The template's shortName is "${config.shortName}", not "firelight".`);
+if (config.sourceName !== "FirelightApp") problems.push(`The template's sourceName is "${config.sourceName}", not "FirelightApp".`);
+
+// `npm run dev` compiles the F# and starts Vite, which reloads the page on save; `npm run build`
+// bundles to dist/, and `npm run preview` serves it.
 const scripts = JSON.parse(read("../templates/firelight-app/package.json")).scripts ?? {};
-for (const name of ["dev", "build", "preview"])
-  if (!scripts[name]) problems.push(`The template's package.json has no "${name}" script.`);
+const expected = { dev: /^dotnet fable watch .*--run vite$/, build: /^dotnet fable .*--run vite build$/, preview: /^vite preview$/ };
+for (const [name, pattern] of Object.entries(expected))
+  if (!pattern.test(scripts[name] ?? "")) problems.push(`The template's "${name}" script is "${scripts[name]}", not ${pattern}.`);
 if (!JSON.parse(read("../templates/firelight-app/.config/dotnet-tools.json")).tools?.fable)
   problems.push("The template's .config/dotnet-tools.json no longer installs Fable.");
 

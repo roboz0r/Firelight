@@ -51,4 +51,4 @@ dotnet add package Firelight
 npm install lit
 ```
 
-Then work through the [GettingStarted sample](https://github.com/roboz0r/Firelight/tree/main/sample/GettingStarted), which covers each core concept one module at a time.
+New to Firelight? The [Get started](/start/) tutorial creates an app from a template, then gives its component an attribute, an event, styles and a list.
