@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 244 64">
+  <title>Firelight tag wordmark</title>
+  <g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17 20 5 36 17 52M227 20 239 36 227 52"/>
+    <path d="M33 46V17C33 12.5 36 10 40.5 10M27 26H39"/>
+    <path d="M52 26V46"/>
+    <path d="M65 46V26M65 36C65 30 69.5 26 75.5 26"/>
+    <path d="M83 36H103A10 10 0 1 0 100.1 43.1"/>
+    <path d="M116 10V46"/>
+    <path d="M129 26V46"/>
+    <circle cx="152" cy="36" r="10"/>
+    <path d="M162 26V50C162 56 158 59 152 59 148 59 145 57.5 143.5 55.5"/>
+    <path d="M175 10V46M175 35A9 9 0 0 1 193 35V46"/>
+    <path d="M208 15V40C208 44 210.5 46 214.5 46M202 26H214"/>
+  </g>
+  <circle cx="129" cy="15.5" r="3.6" fill="currentColor"/>
+  <path fill="currentColor" d="M52 20C48.4 20 46 17.2 46 13.4 46 9.3 48.5 7 50 4.3 50.7 2.8 50.8 1.6 50.7 0.5 52.9 1.6 54.4 3.4 55.2 5.6 55.7 4.8 56.2 3.8 56.3 2.8 57.6 4.6 58 7.4 58 11.1 58 16.4 55.7 20 52 20Z"/>
+</svg>

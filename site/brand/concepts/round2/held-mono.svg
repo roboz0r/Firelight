@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Firelight element mark, held flame</title>
+  <defs>
+    <!-- Cuts a gap around the flame, so the brackets tuck behind it. (Mask luminance, not a drawn colour.) -->
+    <mask id="r2-held-mono-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <path fill="#000" stroke="#000" stroke-width="11" stroke-linejoin="round" d="M32 57.8C21.6 57.8 14.6 50.4 14.6 40.4 14.6 29.5 22.1 23.4 26.2 16 28.3 12.1 28.7 9.1 28.3 6 34.5 9.1 39 13.9 41.1 19.5 42.8 17.3 44 14.7 44.4 12.1 48.1 16.9 49.4 24.3 49.4 34.3 49.4 48.2 42.8 57.8 32 57.8Z"/>
+    </mask>
+  </defs>
+  <path fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" mask="url(#r2-held-mono-gap)" d="M20 22 4 40 20 58M44 22 60 40 44 58"/>
+  <path fill="currentColor" fill-rule="evenodd" d="M32 57.8C21.6 57.8 14.6 50.4 14.6 40.4 14.6 29.5 22.1 23.4 26.2 16 28.3 12.1 28.7 9.1 28.3 6 34.5 9.1 39 13.9 41.1 19.5 42.8 17.3 44 14.7 44.4 12.1 48.1 16.9 49.4 24.3 49.4 34.3 49.4 48.2 42.8 57.8 32 57.8ZM32 52.7C29 52.7 27 50.4 27 47.4 27 43.7 29.5 41.6 30.9 37.9 34.3 40.3 37 43.3 37 47.4 37 50.4 35 52.7 32 52.7Z"/>
+</svg>

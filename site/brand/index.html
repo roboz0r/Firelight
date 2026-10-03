@@ -6,7 +6,7 @@
   <title>Firelight: logo concepts</title>
   <!-- Dev-only contact sheet. Deliberately not listed in vite.config.js build inputs, so it is never deployed. -->
   <meta name="robots" content="noindex">
-  <link rel="icon" href="concepts/f-flame-small.svg" type="image/svg+xml">
+  <link rel="icon" href="concepts/round2/ember-small.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/site.css">
   <style>
     main.sheet { max-width: 84rem; }
@@ -34,19 +34,20 @@
       gap: 1.25rem;
       align-content: start;
     }
+    .panel > * { min-width: 0; }
     .panel h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
     .label { display: block; font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
 
     .row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.25rem; }
     .row figure { margin: 0; display: grid; justify-items: center; }
-    .row img, .mono svg { display: block; }
-    .mono { display: block; line-height: 0; }
-    .mono.accent { color: var(--accent); }
+    .row img, .inline svg { display: block; }
+    .inline { display: block; line-height: 0; }
+    .inline.accent { color: var(--accent); }
     .hero-mark { display: flex; justify-content: center; padding: 1rem 0; }
     canvas.zoom { width: 64px; height: 64px; image-rendering: pixelated; border: 1px solid var(--border); }
 
     .lockup { display: flex; align-items: center; gap: 0.4rem; }
-    .lockup img, .lockup .mono svg { width: 1.9rem; height: 1.9rem; }
+    .lockup img, .lockup .inline svg { width: 1.9rem; height: 1.9rem; }
     .wordmark { color: var(--fg); font-weight: 900; font-size: 1.5rem; letter-spacing: -0.04em; line-height: 1; }
     .lockups { display: flex; flex-wrap: wrap; gap: 2rem; }
 
@@ -58,6 +59,7 @@
       padding: 6px 8px 0;
       background: var(--tabbar);
       border-radius: 6px 6px 0 0;
+      overflow: hidden;
       font: 12px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
     }
     .tab {
@@ -76,6 +78,14 @@
     .tab img { width: 16px; height: 16px; flex: none; }
     .tab .close { flex: none; opacity: 0.6; }
 
+    /* A rough site header, for the wordmark at its real size. */
+    .mock-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+    }
+    .mock-header { flex-wrap: wrap; }
+    .mock-header nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.85rem; color: var(--muted); }
+
     .swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
     .swatches li { width: 7.5rem; font-size: 0.75rem; color: var(--muted); }
     .swatches li::before {
@@ -84,10 +94,25 @@
     }
     .glance { display: grid; grid-template-columns: 8rem repeat(4, auto) 1fr; align-items: center; gap: 0.75rem 1.25rem; }
     .glance .name { font-size: 0.85rem; font-weight: 600; }
+
+    /* Round 2 comparison strip: name, favicon at 16 px, the same magnified ×4, then 32 and 64 px. */
+    .compare { display: grid; grid-template-columns: 9rem repeat(4, auto) 1fr; align-items: center; gap: 0.75rem 1.25rem; overflow-x: auto; min-width: 0; }
+    /* Keep hero-size marks and the wordmark inside narrow panels. */
+    .hero-mark img, .hero-mark svg { max-width: 100%; height: auto; }
+    .compare .name { font-size: 0.85rem; font-weight: 600; }
+    .compare .name small { display: block; font-weight: 400; color: var(--muted); }
+    .compare .head { font-size: 0.7rem; color: var(--muted); }
+    .compare .round1 { grid-column: 1 / -1; width: 100%; margin: 0; border: 0; border-top: 1px dashed var(--muted); }
+    .compare .wide { grid-column: 2 / -1; display: flex; align-items: center; gap: 1.25rem; }
+
+    .round-divider { margin: 4rem 0 1rem; border: 0; border-top: 3px double var(--border); }
+    details.round > summary { cursor: pointer; font-size: 1.75rem; font-weight: 700; margin: 1rem 0; }
+    details.round > summary small { font-size: 1rem; font-weight: 400; color: var(--muted); }
     @media (max-width: 60rem) {
       .themes { grid-template-columns: minmax(0, 1fr); }
       .glance { grid-template-columns: minmax(0, 1fr) repeat(4, auto); }
       .glance .lockup { grid-column: 1 / -1; margin-bottom: 0.5rem; }
+      .compare { grid-template-columns: 6rem repeat(4, auto) 0; gap: 0.75rem; }
     }
   </style>
 </head>
@@ -99,41 +124,67 @@
       <h1>Logo concepts</h1>
       <p class="lead">
         A warm campfire identity: rounded flames, logs, embers and glow, deliberately unlike Lit's
-        faceted geometric flame. Every concept is shown at 16, 32, 64, 180 and ~320 px, in colour and
+        faceted geometric flame. Every concept is shown at favicon, header and hero sizes, in colour and
         in one colour (<code>currentColor</code>), on light and dark backgrounds regardless of the
         system theme. Dev-only page, not part of the production build.
       </p>
     </section>
 
-    <section id="palette">
-      <h2>Palette</h2>
-      <p class="idea">Current site palette, and a proposed ember palette for multi-colour marks.</p>
-      <h3>Current (site.css)</h3>
-      <ul class="swatches">
-        <li style="--c:#fffdf9">light bg #fffdf9</li>
-        <li style="--c:#1f1d1a">light fg #1f1d1a</li>
-        <li style="--c:#d9480f">light accent #d9480f</li>
-        <li style="--c:#17151a">dark bg #17151a</li>
-        <li style="--c:#ece8e3">dark fg #ece8e3</li>
-        <li style="--c:#ff8a3d">dark accent #ff8a3d</li>
-      </ul>
-      <h3>Proposed ember palette</h3>
-      <ul class="swatches" id="ember-palette"></ul>
+    <section id="round2">
+      <h2>Round 2: Element</h2>
+      <p class="idea">
+        Refining round 1's Element (a soft flame between rounded angle brackets). Its problem: the brackets
+        took most of the width, so the flame was the middle third of the square and became a speck at
+        16–32 px. Each variant below is a different answer to that, keeping the flame held in a tag, the
+        soft round shapes and the warm palette. Files are in <code>concepts/round2/</code>; the
+        <code>-small</code> files are favicon versions.
+      </p>
+
+      <h3>Comparison: is the flame still there at 16 px?</h3>
+      <p class="idea">
+        Ranked best first. The 16 px column and its ×4 magnification use each variant's favicon file;
+        32 and 64 px use the full mark. Round 1's Element and F-flame are below the dashed line for reference.
+      </p>
+      <div class="themes" id="r2-compare"></div>
+
+      <div id="r2-concepts"></div>
     </section>
 
-    <section id="glance">
-      <h2>At a glance</h2>
-      <p class="idea">Every concept at favicon and header sizes (the small version where there is one), ranked best first.</p>
-      <div class="themes" id="glance-panels"></div>
-    </section>
+    <hr class="round-divider">
 
-    <div id="concepts"></div>
+    <details class="round" id="round1">
+      <summary>Round 1: six directions <small>(collapsed; click to open)</small></summary>
+
+      <section id="palette">
+        <h2>Palette</h2>
+        <p class="idea">Current site palette, and a proposed ember palette for multi-colour marks.</p>
+        <h3>Current (site.css)</h3>
+        <ul class="swatches">
+          <li style="--c:#fffdf9">light bg #fffdf9</li>
+          <li style="--c:#1f1d1a">light fg #1f1d1a</li>
+          <li style="--c:#d9480f">light accent #d9480f</li>
+          <li style="--c:#17151a">dark bg #17151a</li>
+          <li style="--c:#ece8e3">dark fg #ece8e3</li>
+          <li style="--c:#ff8a3d">dark accent #ff8a3d</li>
+        </ul>
+        <h3>Proposed ember palette</h3>
+        <ul class="swatches" id="ember-palette"></ul>
+      </section>
+
+      <section id="glance">
+        <h2>At a glance</h2>
+        <p class="idea">Every concept at favicon and header sizes (the small version where there is one), ranked best first.</p>
+        <div class="themes" id="glance-panels"></div>
+      </section>
+
+      <div id="concepts"></div>
+    </details>
   </main>
 
   <!-- include partials/footer.html -->
 
   <script type="module">
-    // Proposed palette, shown as swatches. Keep in step with the colours used in concepts/*.svg.
+    // Proposed palette, shown as swatches. Keep in step with the colours used in concepts/**/*.svg.
     const ember = [
       ["#fff1c9", "core cream"],
       ["#ffc145", "amber"],
@@ -149,17 +200,169 @@
       .map(([c, name]) => `<li style="--c:${c}">${name} ${c}</li>`)
       .join("");
 
+    const themes = [["theme-light", "Light"], ["theme-dark", "Dark"]];
+    const src = (dir, file) => `${dir}/${file}.svg`;
+
+    // Inline SVGs (one-colour marks, and the wordmark whose letters are currentColor) so currentColor
+    // follows each panel's theme. Ids are made unique per copy, so gradients and masks never clash.
+    const svgCache = new Map();
+    const loadSvg = (url) => {
+      if (!svgCache.has(url)) svgCache.set(url, fetch(url).then((r) => r.text()));
+      return svgCache.get(url);
+    };
+    let copies = 0;
+    const inline = (dir, file, w, h = w, extra = "") =>
+      `<span class="inline ${extra}" data-svg="${src(dir, file)}" data-w="${w}" data-h="${h}"></span>`;
+
+    const fig = (inner, label) => `<figure>${inner}<figcaption class="label">${label}</figcaption></figure>`;
+    const img = (dir, file, size) => `<img src="${src(dir, file)}" width="${size}" height="${size}" alt="">`;
+    const zoom = (dir, file) => `<canvas class="zoom" data-src="${src(dir, file)}" width="16" height="16"></canvas>`;
+    const tabbar = (dir, favicon) => `
+      <div class="tabbar">
+        <div class="tab active">${img(dir, favicon, 16)}<span>Firelight: Web Components for F#</span><span class="close">✕</span></div>
+        <div class="tab">${img("concepts", "lit-approx", 16)}<span>Lit</span><span class="close">✕</span></div>
+      </div>`;
+
+    // One concept on one theme: sizes, the ×4 favicon, the small version, hero, mono, lockups and a browser tab.
+    function panel(c, [theme, title], sizes) {
+      const favicon = c.fav ?? c.id;
+      return `
+        <div class="panel ${theme}">
+          <h3>${title}</h3>
+          <div class="row">
+            ${sizes.map((s) => fig(img(c.dir, c.id, s), `${s} px`)).join("")}
+            ${fig(zoom(c.dir, favicon), `16 px, ×4${favicon !== c.id ? " (favicon)" : ""}`)}
+          </div>
+          ${favicon !== c.id ? `<div class="row">${[16, 24, 32, 64].map((s) => fig(img(c.dir, favicon, s), `favicon ${s} px`)).join("")}</div>` : ""}
+          <div class="hero-mark">${img(c.dir, c.id, 320)}</div>
+          ${c.noMono ? "" : `
+          <div class="row">
+            ${sizes.map((s) => fig(inline(c.dir, `${c.id}-mono`, s), `mono ${s} px`)).join("")}
+            ${fig(inline(c.dir, `${c.id}-mono`, 64, 64, "accent"), "mono, accent")}
+          </div>
+          <div class="lockups">
+            <div class="lockup">${img(c.dir, c.id, 32)}<span class="wordmark">Firelight</span></div>
+            <div class="lockup">${inline(c.dir, `${c.id}-mono`, 32)}<span class="wordmark">Firelight</span></div>
+          </div>`}
+          ${tabbar(c.dir, favicon)}
+        </div>`;
+    }
+
+    // ---------------------------------------------------------------- Round 2
+    const r2 = "concepts/round2";
+    // Ranked best first. `fav` is the file used as the favicon, when it isn't the full mark.
+    const round2 = [
+      {
+        id: "ember", name: "Ember brackets", fav: "ember-small",
+        idea: "The tight tag's proportions, with heavier brackets in the fire's own colours: deep red at the base warming to ember at the top. The mark becomes one warm object instead of brown plus orange, and stops looking like a generic code icon.",
+        note: "16 px: the flame is about 8 × 14 px (round 1: 6 × 9), and the red brackets stay separate from the orange flame by hue alone, so this is the clearest &lt;flame&gt; of the set on both themes. The brackets are 2 px wide, so they read as rounded ( ) more than sharp chevrons; that is true of every bracket variant at this size. 32 px: reads at once as a tag around a fire. The best balance of meaning and legibility.",
+        favicon: "Simplified small version (<code>ember-small.svg</code>): flat deep-red brackets, a step heavier and taller, and a flat flame, in the same layout. The brackets are kept.",
+      },
+      {
+        id: "tight", name: "Tight tag", fav: "tight-small",
+        idea: "Brackets pulled in close and made short, sitting low beside the flame's belly; the flame is taller and breaks well above them, so it fills most of the square. Round 1's brown, so the proportion fix can be judged on its own.",
+        note: "16 px: the flame now dominates (about 8 × 14 px) and the brown brackets are two small ( ) marks at its sides. On dark the brown is lower contrast and starts to merge with the flame's dark-orange edge. 32 px: clean and balanced; the tag reading is intact. The proportion problem is fixed; the 'generic code icon' brown is not.",
+        favicon: "Simplified small version (<code>tight-small.svg</code>): heavier, taller brackets and a flat flame.",
+      },
+      {
+        id: "hybrid", name: "F-flame hybrid", fav: "../f-flame-small",
+        idea: "Round 1's F-flame, with its F cut out, held between the tight tag's brackets: &lt;F&gt; on fire, so F#, tags and fire in one mark.",
+        note: "32 px: the most distinctive of the set; the F is clear and &lt;F&gt; reads instantly. 16 px with the brackets: the F closes up into a smudge, so honestly it does not survive. 24 px is the smallest size where the F is still legible with the brackets.",
+        favicon: "Flame-only crop: the brackets are dropped and the favicon is round 1's <code>f-flame-small.svg</code>, unchanged, where the plump F-flame fills the square and the F stays readable. The tag appears from 24 px up.",
+      },
+      {
+        id: "held", name: "Held flame",
+        idea: "The brackets tuck behind the flame's lower edges, as if the tag cradles it: one compact silhouette with the flame as large as the square allows. A cut-out gap (an SVG mask) separates the brackets from the flame.",
+        note: "16 px: the most compact silhouette and the biggest flame of the bracket variants, but the visible bits of bracket are short wings, so it reads as a flame on a crest or shield rather than a tag. 32 px: the brackets read as curved ( ) wings hugging the flame; attractive, but the &lt; &gt; meaning is weaker than in the tight tag. At hero size the brackets and the gap make a diamond-shaped frame.",
+        favicon: "Same mark: the silhouette is already compact and has no detail to lose.",
+      },
+      {
+        id: "logs", name: "Log brackets", fav: "logs-small",
+        idea: "Each bracket is two short logs, a front log leaning on a back log and poking just past the point, with pale end-grain at the open ends: <code>&lt; &gt;</code> that is also a campfire.",
+        note: "64 px and up: a nice double meaning, and still brackets first. 32 px: the end-grain is a dot and the two-tone wood is barely visible, so it is the tight tag in a lighter brown. 16 px: no log detail survives. The idea only pays off at hero size.",
+        favicon: "Simplified small version (<code>logs-small.svg</code>): plain wood-coloured chevrons with no crossing or end-grain; in effect the tight tag in wood colour.",
+      },
+    ];
+    const wordmark = {
+      id: "wordmark", name: "Tag wordmark", mark: "ember", markFav: "ember-small",
+      idea: "A lowercase <code>&lt;firelight&gt;</code> tag in rounded monoline strokes that match the brackets, with the first i dotted by a small flame. For the header and hero, paired with one of the marks above for the favicon (shown here with Ember brackets). The letters are stroked paths (no font) in <code>currentColor</code>, so the colour version follows the text colour when inlined; the brackets and flame keep their colours.",
+      note: "Not a favicon. At 16 px tall the wordmark is still legible but the flame is a single orange speck; from 24 px up the flame reads. It solves the header, where round 1 used a bold system font beside a 32 px mark, without asking the square mark to carry the name.",
+      favicon: "Uses Ember brackets' <code>ember-small.svg</code>.",
+    };
+    for (const c of round2) c.dir = r2;
+    const round1Refs = [
+      { dir: "concepts", id: "element", name: "Element", round: "round 1" },
+      { dir: "concepts", id: "f-flame", fav: "f-flame-small", name: "F-flame", round: "round 1" },
+    ];
+
+    const compareRow = (c) => {
+      const fav = c.fav ?? c.id;
+      return `
+        <span class="name">${c.name}${c.round ? `<small>${c.round}</small>` : ""}</span>
+        ${img(c.dir, fav, 16)}${zoom(c.dir, fav)}${img(c.dir, c.id, 32)}${img(c.dir, c.id, 64)}<span></span>`;
+    };
+    document.getElementById("r2-compare").innerHTML = themes
+      .map(([theme, title]) => `
+        <div class="panel ${theme}">
+          <h3>${title}</h3>
+          <div class="compare">
+            <span></span><span class="head">16 px (favicon)</span><span class="head">16 px, ×4</span><span class="head">32 px</span><span class="head">64 px</span><span></span>
+            ${round2.map((c) => compareRow(c)).join("")}
+            <span class="name">${wordmark.name}<small>favicon: ${wordmark.mark}</small></span>
+            <div class="wide">${inline(r2, "wordmark", 61, 16)}${inline(r2, "wordmark", 92, 24)}${inline(r2, "wordmark", 122, 32)}</div>
+            <hr class="round1">
+            ${round1Refs.map((c) => compareRow(c)).join("")}
+          </div>
+        </div>`)
+      .join("");
+
+    function wordmarkPanel(c, [theme, title]) {
+      const w = (h) => Math.round((h * 244) / 64);
+      return `
+        <div class="panel ${theme}">
+          <h3>${title}</h3>
+          <div class="mock-header">${inline(r2, "wordmark", w(28), 28)}<nav><span>Examples</span><span>Packages</span><span>Demos</span><span>GitHub</span></nav></div>
+          <div class="row">
+            ${[16, 24, 32, 48].map((h) => fig(inline(r2, "wordmark", w(h), h), `${h} px tall`)).join("")}
+          </div>
+          <div class="hero-mark">${inline(r2, "wordmark", w(120), 120)}</div>
+          <div class="row">
+            ${fig(inline(r2, "wordmark-mono", w(28), 28), "mono 28 px")}
+            ${fig(inline(r2, "wordmark-mono", w(28), 28, "accent"), "mono, accent")}
+          </div>
+          <div class="row">
+            ${[16, 24, 32, 64].map((s) => fig(img(r2, c.markFav, s), `favicon ${s} px`)).join("")}
+            ${fig(zoom(r2, c.markFav), "16 px, ×4")}
+          </div>
+          ${tabbar(r2, c.markFav)}
+        </div>`;
+    }
+
+    const section = (c, body) => `
+      <section class="concept" id="r2-${c.id}">
+        <h2>${c.name}</h2>
+        <p class="idea">${c.idea}</p>
+        <p class="idea"><strong>At 16 and 32 px.</strong> ${c.note}</p>
+        <p class="idea"><strong>Favicon.</strong> ${c.favicon}</p>
+        <div class="themes">${body}</div>
+      </section>`;
+    const r2Sizes = [16, 24, 32, 64, 180];
+    document.getElementById("r2-concepts").innerHTML =
+      round2.map((c) => section(c, themes.map((t) => panel(c, t, r2Sizes)).join(""))).join("") +
+      section(wordmark, themes.map((t) => wordmarkPanel(wordmark, t)).join(""));
+
+    // ---------------------------------------------------------------- Round 1
     // Each concept has concepts/<id>.svg and concepts/<id>-mono.svg, plus concepts/<id>-small.svg when
     // the full mark needs a simplified favicon version.
     // Ranked best first. `note` is the honest verdict at favicon size.
     const concepts = [
       {
-        id: "f-flame", name: "F-flame", small: true,
+        id: "f-flame", name: "F-flame", fav: "f-flame-small",
         idea: "A plump, rounded flame whose negative space is an F, for F#.",
         note: "16 px: the bolder small version keeps the F readable. The most ownable of the set.",
       },
       {
-        id: "lantern", name: "Lantern", small: true,
+        id: "lantern", name: "Lantern", fav: "lantern-small",
         idea: "Fire light you can carry: a small flame glowing inside a rounded copper lantern.",
         note: "16 px: unmistakable silhouette, works on both themes. Risk: reads as a generic camping icon.",
       },
@@ -174,7 +377,7 @@
         note: "16 px: still reads as &lt;flame&gt;, but the brackets get thin and the wide shape leaves the flame small.",
       },
       {
-        id: "campfire", name: "Campfire", small: true,
+        id: "campfire", name: "Campfire", fav: "campfire-small",
         idea: "The literal campfire: two crossed logs under a soft, two-tongued flame with a warm glow.",
         note: "16 px: clearly a campfire, but close to the campfire emoji, so not very ownable.",
       },
@@ -185,47 +388,7 @@
       },
     ];
     const lit = { id: "lit-approx", name: "Lit (approximate, for contrast)", idea: "A rough hand-drawn approximation of Lit's faceted, geometric flame. Not the real logo; it is here only so the concepts can be checked against it.", noMono: true };
-
-    const sizes = [16, 32, 64, 180];
-    const themes = [["theme-light", "Light"], ["theme-dark", "Dark"]];
-    const src = (file) => `concepts/${file}.svg`;
-
-    const monoCache = new Map();
-    const loadMono = (id) => {
-      if (!monoCache.has(id)) monoCache.set(id, fetch(src(`${id}-mono`)).then((r) => r.text()));
-      return monoCache.get(id);
-    };
-
-    const fig = (inner, label) => `<figure>${inner}<figcaption class="label">${label}</figcaption></figure>`;
-    const img = (file, size) => `<img src="${src(file)}" width="${size}" height="${size}" alt="">`;
-    const mono = (id, size, extra = "") => `<span class="mono ${extra}" data-mono="${id}" style="--s:${size}px"></span>`;
-
-    function panel(c, [theme, title]) {
-      const favicon = c.small ? `${c.id}-small` : c.id;
-      return `
-        <div class="panel ${theme}">
-          <h3>${title}</h3>
-          <div class="row">
-            ${sizes.map((s) => fig(img(c.id, s), `${s} px`)).join("")}
-            ${fig(`<canvas class="zoom" data-src="${src(favicon)}" width="16" height="16"></canvas>`, "16 px, ×4")}
-          </div>
-          ${c.small ? `<div class="row">${[16, 32, 64].map((s) => fig(img(`${c.id}-small`, s), `small ${s} px`)).join("")}</div>` : ""}
-          <div class="hero-mark">${img(c.id, 320)}</div>
-          ${c.noMono ? "" : `
-          <div class="row">
-            ${sizes.map((s) => fig(mono(c.id, s), `mono ${s} px`)).join("")}
-            ${fig(mono(c.id, 64, "accent"), "mono, accent")}
-          </div>
-          <div class="lockups">
-            <div class="lockup">${img(c.id, 32)}<span class="wordmark">Firelight</span></div>
-            <div class="lockup">${mono(c.id, 32)}<span class="wordmark">Firelight</span></div>
-          </div>`}
-          <div class="tabbar">
-            <div class="tab active">${img(favicon, 16)}<span>Firelight: Web Components for F#</span><span class="close">✕</span></div>
-            <div class="tab">${img("lit-approx", 16)}<span>Lit</span><span class="close">✕</span></div>
-          </div>
-        </div>`;
-    }
+    for (const c of [...concepts, lit]) c.dir = "concepts";
 
     document.getElementById("glance-panels").innerHTML = themes
       .map(([theme, title]) => `
@@ -233,35 +396,35 @@
           <h3>${title}</h3>
           <div class="glance">
             ${[...concepts, lit].map((c) => {
-              const fav = c.small ? `${c.id}-small` : c.id;
+              const fav = c.fav ?? c.id;
               return `
                 <span class="name">${c.id === "lit-approx" ? "Lit (approx.)" : c.name}</span>
-                ${img(fav, 16)}${img(fav, 24)}${img(c.id, 32)}
-                ${c.noMono ? "<span></span>" : mono(c.id, 24)}
-                ${c.noMono ? "<span></span>" : `<div class="lockup">${img(c.id, 32)}<span class="wordmark">Firelight</span></div>`}`;
+                ${img(c.dir, fav, 16)}${img(c.dir, fav, 24)}${img(c.dir, c.id, 32)}
+                ${c.noMono ? "<span></span>" : inline(c.dir, `${c.id}-mono`, 24)}
+                ${c.noMono ? "<span></span>" : `<div class="lockup">${img(c.dir, c.id, 32)}<span class="wordmark">Firelight</span></div>`}`;
             }).join("")}
           </div>
         </div>`)
       .join("");
 
-    const root = document.getElementById("concepts");
-    root.innerHTML = [...concepts, lit]
+    document.getElementById("concepts").innerHTML = [...concepts, lit]
       .map((c) => `
         <section class="concept" id="${c.id}">
           <h2>${c.name}</h2>
           <p class="idea">${c.idea}</p>
           ${c.note ? `<p class="idea"><strong>Verdict.</strong> ${c.note}</p>` : ""}
-          <div class="themes">${themes.map((t) => panel(c, t)).join("")}</div>
+          <div class="themes">${themes.map((t) => panel(c, t, [16, 32, 64, 180])).join("")}</div>
         </section>`)
       .join("");
 
-    // Inline the one-colour marks so currentColor follows each panel's theme.
-    for (const el of document.querySelectorAll("[data-mono]")) {
-      loadMono(el.dataset.mono).then((svg) => {
-        el.innerHTML = svg;
+    // ---------------------------------------------------------------- Shared rendering
+    for (const el of document.querySelectorAll("[data-svg]")) {
+      loadSvg(el.dataset.svg).then((text) => {
+        const n = ++copies;
+        el.innerHTML = text.replace(/(id="|url\(#)([\w-]+)/g, `$1$2-c${n}`);
         const s = el.querySelector("svg");
-        s.setAttribute("width", el.style.getPropertyValue("--s"));
-        s.setAttribute("height", el.style.getPropertyValue("--s"));
+        s.setAttribute("width", el.dataset.w);
+        s.setAttribute("height", el.dataset.h);
       });
     }
 
