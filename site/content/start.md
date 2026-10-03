@@ -204,6 +204,7 @@ This compiles `App.fs` and bundles the app into `dist/`: static files you can ho
 
 ## Where next
 
+- The [Templates guide](/guides/templates/): the F# side of the `html` you've been writing.
 - [Firelight](/packages/firelight/), the core package, and the [other packages](/#packages): Elmish,
   context, signals, routing and more, each with a live example.
 - The [demos](/#demos): a todo app, a Kanban board and [client-side routing](/client-side-routing/).
