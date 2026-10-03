@@ -88,8 +88,11 @@ let rec private renderDocument
         for app in apps do
             let! html, demos = renderDocument host site app
 
+            // The app's <main> element, as 404.html's own: not for search (data-pagefind-body).
             let main =
-                html.Substring(html.IndexOf "<main>", html.LastIndexOf "</main>" + 7 - html.IndexOf "<main>")
+                let start = html.IndexOf "<main"
+                let content = html.IndexOf(">", start) + 1
+                "<main>" + html.Substring(content, html.LastIndexOf "</main>" + 7 - content)
 
             fallbacks <-
                 fallbacks
@@ -207,7 +210,7 @@ let sitemap (host: Host) (otherRoutes: string[]) =
         Array.append
             otherRoutes
             (Pages.load host.root
-             |> Array.filter (fun p -> p.Source <> Pages.notFoundSource)
+             |> Array.filter (fun p -> p.Source <> Pages.notFoundSource && not p.Meta.Unlisted)
              |> Array.map _.Route)
         |> Array.distinct
         |> Array.sort

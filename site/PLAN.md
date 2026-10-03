@@ -276,6 +276,14 @@ Order: guides → `/why/` → From Lit → cookbook. Review the prose. The check
    text files. Follow-up: the "Using Firelight with coding agents" page.
 5. **Search** with Pagefind, run over `dist/` after the build. The search box is a small Firelight
    component.
+   Done, as a page: `npm run build` runs Pagefind over `dist/` (`build:search`), indexing `<main>`
+   (`data-pagefind-body`) without the table of contents, pager, page list and demos. A search box
+   in the header would ship Lit to every page: `<fl-search>`'s own module is 2.0 kB gzipped, but
+   with Lit, hydration support and the F# runtime it needs 24.1 kB, against 0 for pages without
+   demos today. So the header has a plain "Search" link to `/search/` (`content/search.md`,
+   `unlisted: true`), where `<fl-search>` loads Pagefind's JavaScript with the first search;
+   `?q=` searches on arrival and the address keeps the query. No `/` shortcut: it would need
+   script on every page.
 6. Mobile navigation (CSS first).
 
 ## Launch: 0.3.0

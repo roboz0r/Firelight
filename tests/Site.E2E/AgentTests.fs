@@ -20,8 +20,7 @@ let private get (path: string) =
         return int response.StatusCode, body
     }
 
-let private markdownPages =
-    pages |> List.filter (fun p -> not (isDemoApp p) && p.File <> "404.html")
+let private markdownPages = pages |> List.filter (isUnlisted >> not)
 
 // Lines outside fenced code blocks.
 let private prose (markdown: string) =

@@ -122,6 +122,7 @@ let header (``base``: string) =
     <a class="brand" href={``base``}>{headerMark}Firelight</a>
     <nav>
       <a href="{``base``}#examples">Examples</a>{sectionLinks}
+      <a href={withBase ``base`` "/search/"}>Search</a>
       <a href="https://github.com/roboz0r/Firelight">GitHub</a>
     </nav>
   </header>"""
@@ -257,7 +258,7 @@ let private toc (headings: Heading list) =
         )
 
     LitSsr.html
-        $"""<nav class="toc" aria-label="On this page">
+        $"""<nav class="toc" aria-label="On this page" data-pagefind-ignore>
       <p>On this page</p>
       <ul>{items}</ul>
     </nav>"""
@@ -300,7 +301,7 @@ let private pager (m: Model) =
 
         Some(
             LitSsr.html
-                $"""<nav class="pager" aria-label="Previous and next pages">
+                $"""<nav class="pager" aria-label="Previous and next pages" data-pagefind-ignore>
       {link "prev" "Previous" previous}
       {link "next" "Next" next}
     </nav>"""
@@ -383,17 +384,25 @@ let page (m: Model) =
                 Title = title
                 Description = meta.Description
                 Route =
-                    if m.Page.Source = notFoundSource then
+                    if m.Page.Source = notFoundSource || meta.Unlisted then
                         None
                     else
                         Some m.Page.Route
             }
 
+    // Pagefind (npm run build:search) indexes only <main> on these pages, without the navigation
+    // in it and the demos (`data-pagefind-ignore`).
+    let searchable =
+        if m.Page.Source = notFoundSource || meta.Unlisted then
+            box Lit.nothing
+        else
+            box ""
+
     // The page as Markdown (Agents), for agents and anything else that reads text. The href has
     // the base path already, which Vite would add again in dev: vite-ignore keeps it as it is (and
     // Vite removes the attribute).
     let markdownVersion =
-        if m.Page.Source = notFoundSource then
+        if m.Page.Source = notFoundSource || meta.Unlisted then
             None
         else
             let href = withBase m.Base ("/" + m.Page.Route + "index.md")
@@ -419,7 +428,7 @@ let page (m: Model) =
                 )
 
             LitSsr.html
-                $"""<nav class="package-nav" aria-label={section.Name}>
+                $"""<nav class="package-nav" aria-label={section.Name} data-pagefind-ignore>
       <h2>{heading}</h2>
       <ul>{items}
       </ul>
@@ -441,7 +450,7 @@ let page (m: Model) =
 </head>
 <body>
   {header m.Base}
-  <main>
+  <main data-pagefind-body={searchable}>
     {if meta.Home then hero m else intro m}
     {optional toc}
     {LitSsr.markup m.Content}

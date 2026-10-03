@@ -98,6 +98,9 @@ type Frontmatter =
         /// The homepage (`layout: home`): the heading, lead and links become the hero, and the
         /// page is in no section.
         Home: bool
+        /// A page that is only linked to, such as the search page: in no section, the sitemap,
+        /// search or the Markdown for agents, and marked noindex.
+        Unlisted: bool
     }
 
 type Page =
@@ -148,8 +151,10 @@ let private frontmatter (source: string) (yaml: string) =
         | Some "home" -> true
         | Some layout -> fail $"unknown layout '{layout}' (the only one is 'home')."
 
-    // The not-found page and the homepage are in no section.
-    let sectionless = source = notFoundSource || home
+    let unlisted = optional "unlisted" |> Option.defaultValue false
+
+    // The not-found page, the homepage and unlisted pages are in no section.
+    let sectionless = source = notFoundSource || home || unlisted
 
     {
         Title = text "title" |> Option.defaultWith (fun () -> fail "frontmatter needs 'title'.")
@@ -182,6 +187,7 @@ let private frontmatter (source: string) (yaml: string) =
         Toc = optional "toc" |> Option.defaultValue false
         Spa = optional "spa" |> Option.defaultValue false
         Home = home
+        Unlisted = unlisted
     }
 
 /// `content/packages/firelight.md` is served at `packages/firelight/`; an `index.md` at its folder;

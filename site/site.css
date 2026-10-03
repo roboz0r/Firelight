@@ -214,3 +214,6 @@ section > p { max-width: 48rem; }
 .route-result { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1.5rem; margin: 0; }
 .route-result dt { color: var(--muted); }
 .route-result dd { margin: 0; }
+
+/* The search page (content/search.md): <fl-search> in a plain box rather than a demo box. */
+.demo.search { display: block; padding: 0; border: 0; background: none; }

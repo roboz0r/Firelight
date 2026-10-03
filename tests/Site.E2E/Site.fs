@@ -65,9 +65,12 @@ let sitemapPages =
     else
         None
 
-/// Deployed pages that a sitemap leaves out: the not-found page and the demo apps.
-let private isUnlisted (page: Page) =
-    page.File = "404.html" || page.File.StartsWith "demos/"
+/// Deployed pages that a sitemap leaves out: the not-found page, the demo apps, and pages marked
+/// noindex (`unlisted: true`, such as the search page).
+let isUnlisted (page: Page) =
+    page.File = "404.html"
+    || page.File.StartsWith "demos/"
+    || File.ReadAllText(Path.Combine(Server.distDir, page.File)).Contains "<meta name=\"robots\" content=\"noindex\">"
 
 /// The pages to check: the sitemap's, when there is one, otherwise every HTML file; plus the
 /// not-found page and the demo apps either way.

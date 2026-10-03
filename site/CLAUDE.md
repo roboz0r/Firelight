@@ -27,6 +27,7 @@ eyebrow: { text: Firelight.Router, href: /packages/router/ }  # link above the h
 toc: true                      # h2/h3 table of contents
 spa: true                      # 404.html serves it under its route (page scripts don't run there)
 layout: home                   # the homepage: title, lead and links (as buttons) become the hero
+unlisted: true                 # only linked to (the search page): no section, sitemap, search or .md
 ---
 ```
 
@@ -60,6 +61,12 @@ Every page is also published as Markdown, at `<page>/index.md`, with `llms.txt` 
 `llms-full.txt` (every page) at the root, for coding agents (`Renderer/Agents.fs`). Containers
 become plain Markdown there; a new kind of container needs a Markdown form in `Agents.fs` too.
 Page scripts are left out.
+
+## Search
+
+`npm run build` ends with Pagefind (`build:search`), which indexes each page's `<main>` except its
+navigation and demos (`data-pagefind-ignore`). The header links to `/search/` (`content/search.md`,
+`Components/Search.fs`). In dev, search says it's available in the built site.
 
 ## Prerender-safe components
 

@@ -15,6 +15,7 @@
     <!-- Each file registers its own custom element; the HTML pages load them as module scripts.
          Snippets are independent modules, so the glob's alphabetical order doesn't matter, and a
          new page's snippet needs no edit here. -->
+    <Compile Include="Components/Search.fs" />
     <Compile Include="Snippets/**/*.fs" />
     <Compile Include="Routing/RouteExplorer.fs" />
   </ItemGroup>

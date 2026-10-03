@@ -312,7 +312,7 @@ let private liveDemo (settings: Settings) (page: Collected) (c: Container) (file
             $"<!--firelight-verbatim:{page.Verbatim.Count - 1}-->"
 
     let demoClass = String.Join(" ", "demo" :: classes)
-    $"<div class=\"{demoClass}\">\n{demo}\n</div>"
+    $"<div class=\"{demoClass}\" data-pagefind-ignore>\n{demo}\n</div>"
 
 /// `::: example <file.fs> [.class ...] [ssr=false]`, with the demo's HTML as the body: the source
 /// file next to the live demo. Its module is loaded on the page and, unless `ssr=false`, its

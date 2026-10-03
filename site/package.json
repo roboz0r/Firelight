@@ -10,8 +10,9 @@
     "build:renderer": "dotnet fable ./Renderer -o ./build/Renderer",
     "build:site": "npm run build:renderer && dotnet fable ./ -o ./build/ --run vite build",
     "build:demos": "node ./build-demos.mjs",
+    "build:search": "pagefind --site dist",
     "check:template": "node ./check-template.mjs",
-    "build": "npm run clean && npm run check:template && npm run build:demos && npm run build:site",
+    "build": "npm run clean && npm run check:template && npm run build:demos && npm run build:site && npm run build:search",
     "preview": "vite preview"
   },
   "license": "MIT",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@lit-labs/ssr": "4.1.0",
     "markdown-it": "14.3.2",
+    "pagefind": "1.5.2",
     "parse5": "7.3.0",
     "rimraf": "^6.0.1",
     "vite": "8.3.1",
