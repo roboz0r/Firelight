@@ -114,14 +114,36 @@ function markdownPages() {
     async generateBundle() {
       this.emitFile({ type: "asset", fileName: "sitemap.xml", source: await sitemap() });
     },
+    // The internal link check, over every page as built: any link to a page, #anchor or file that
+    // doesn't exist fails the build, with the file and line it came from.
+    async writeBundle(options, bundle) {
+      const renderer = await load(rendererUrl);
+      const sources = new Map(renderer.pages(root).map((p) => [p.output, p.source]));
+      const built = Object.values(bundle)
+        .filter((file) => file.type === "asset" && file.fileName.endsWith(".html"))
+        .map((file) => ({ output: file.fileName, source: sources.get(file.fileName) ?? file.fileName, html: String(file.source) }));
+      const { errors, warnings } = renderer.checkLinks(host(), true, ["public", options.dir], built);
+      for (const warning of warnings) this.warn(warning);
+      if (errors.length) this.error(`Broken internal links:\n  ${errors.join("\n  ")}`);
+    },
     configureServer(devServer) {
       server = devServer;
       server.watcher.add(resolve(root, "content"));
       server.watcher.on("all", (_, file) => {
         if (/[\\/]content[\\/].*\.md$|[\\/]build[\\/]Renderer[\\/].*\.js$/.test(file)) reloadSoon();
       });
+      // In dev, the link check only warns, and covers the page being served: other pages are
+      // targets, but their anchors aren't known until they're rendered.
+      const checkLinks = async (page, html) => {
+        const renderer = await load(rendererUrl);
+        const targets = [{ output: "index.html", source: "index.html", html: null }, ...renderer.pages(root).map((p) => ({ ...p, html: null }))];
+        const built = targets.map((t) => (t.output === page.output ? { ...t, html } : t));
+        const { errors, warnings } = renderer.checkLinks(host(), false, ["public"], built);
+        for (const problem of [...errors, ...warnings]) server.config.logger.warn(`[links] ${problem}`, { timestamp: true });
+      };
       const send = async (res, page, req, status = 200) => {
         const html = await server.transformIndexHtml("/" + page.output, await render(page.source), req.originalUrl);
+        await checkLinks(page, html);
         res.statusCode = status;
         res.setHeader("Content-Type", "text/html");
         res.end(html);
@@ -158,19 +180,20 @@ function markdownPages() {
             const { pages } = await load(rendererUrl);
             const notFound = pages(root).find((p) => p.output === "404.html");
             if (!notFound) return next();
-            await send(res, notFound, req, 404);
+            await send(res, notFound, req, missingPageStatus(req, pages(root)));
           } catch (e) {
             next(e);
           }
         });
     },
     configurePreviewServer(previewServer) {
-      const notFound = resolve(previewServer.config.root, previewServer.config.build.outDir, "404.html");
       const outDir = resolve(previewServer.config.root, previewServer.config.build.outDir);
+      const notFound = resolve(outDir, "404.html");
       return () =>
-        previewServer.middlewares.use((req, res, next) => {
+        previewServer.middlewares.use(async (req, res, next) => {
           if (!wantsMissingPage(req, outDir) || !existsSync(notFound)) return next();
-          res.statusCode = 404;
+          const { pages } = await import(fileUrl(rendererUrl));
+          res.statusCode = missingPageStatus(req, pages(root));
           res.setHeader("Content-Type", "text/html");
           res.end(readFileSync(notFound));
         });
@@ -178,17 +201,28 @@ function markdownPages() {
   };
 }
 
-// A page request (GET, accepting HTML) that Vite's middlewares didn't resolve to an .html file in
-// `dir`. Vite has already taken the base path off `req.url` at this point.
+// GitHub Pages answers every address it has no file for with 404.html and status 404, including a
+// single-page app's deep links (which 404.html then shows). Locally those deep links get 200, so
+// the browser checks (Site.E2E) can take any 404 as a broken link. `req.url` is without the base.
+function missingPageStatus(req, pages) {
+  const path = req.url.split("?")[0];
+  return pages.some((p) => p.spa && path.startsWith("/" + p.route)) ? 200 : 404;
+}
+
+// A request for a page (GET, an address with no extension or .html, and an Accept header that
+// allows HTML, as Vite's own HTML fallback decides) that Vite's middlewares didn't resolve to an
+// .html file in `dir`. Vite has already taken the base path off `req.url` at this point.
 function wantsMissingPage(req, dir) {
   if (req.method !== "GET" && req.method !== "HEAD") return false;
-  if (!(req.headers.accept ?? "").includes("text/html")) return false;
+  const accept = req.headers.accept ?? "";
+  if (accept && !accept.includes("text/html") && !accept.includes("*/*")) return false;
   let path;
   try {
     path = decodeURIComponent(req.url.split("?")[0]);
   } catch {
     return true;
   }
+  if (!accept.includes("text/html") && extname(path) && !path.endsWith(".html")) return false;
   return !(path.endsWith(".html") && existsSync(resolve(dir, "." + path)));
 }
 

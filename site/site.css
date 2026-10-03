@@ -186,6 +186,7 @@ section > p { max-width: 48rem; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   text-decoration: none;
+  color: var(--fg);
   font-weight: 600;
 }
 .pager a:hover { border-color: var(--accent); }

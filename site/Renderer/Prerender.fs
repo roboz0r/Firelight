@@ -32,6 +32,8 @@ let pages (root: string) =
         {|
             source = page.Source
             output = page.Output
+            route = page.Route
+            spa = page.Meta.Spa
         |}
     )
 
@@ -232,3 +234,8 @@ let sitemap (host: Host) (otherRoutes: string[]) =
     + "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"
     + urls
     + "</urlset>\n"
+
+/// Checks the internal links on `pages` (see Links.check). The build passes every page with its
+/// HTML; dev passes the page being served with its HTML and the rest as link targets only.
+let checkLinks (host: Host) (strict: bool) (fileDirs: string[]) (pages: Links.Built[]) =
+    Links.check host.root host.``base`` strict fileDirs pages

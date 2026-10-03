@@ -11,6 +11,7 @@
     <Compile Include="LitSsr.fs" />
     <Compile Include="Markdown.fs" />
     <Compile Include="Pages.fs" />
+    <Compile Include="Links.fs" />
     <Compile Include="Layout.fs" />
     <Compile Include="Prerender.fs" />
   </ItemGroup>
