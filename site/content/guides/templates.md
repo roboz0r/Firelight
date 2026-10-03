@@ -44,6 +44,21 @@ a hole becomes text or an attribute value, so a `<script>` tag in someone's name
 For the same reason you can't build a template with `+` or `sprintf`: `html` only accepts an
 interpolated string.
 
+Lit doesn't parse the markup itself. The first time a template renders, Lit joins its fixed text
+with a marker in place of each hole and hands the result to the browser's own HTML parser, through
+a `<template>` element. Lit clones the parsed DOM wherever the template renders, and the markers
+tell it which nodes and attributes each hole updates. So a hole only works where the parser leaves
+a marker Lit can find:
+
+| A hole can go | A hole can't go |
+|---|---|
+| Between tags, as child content | In a tag name or an attribute name (see [Static values](#static-values)) |
+| In an attribute value, whole or in part | Inside an HTML comment: it isn't updated |
+| In an element's opening tag, as an element directive | Inside a `<template>` element's content: Lit throws in development builds |
+| Inside `<title>`, `<style>` or `<script>` (for a component's styles, prefer `css`) | Inside a `<textarea>` or a `contenteditable` element: typing breaks Lit's markers. Bind `.value` or `.innerText` instead |
+
+Where a hole goes also decides what it sets, which the next section covers.
+
 A hole takes any F# expression: a property, a function call, an `if`, another template. Triple
 quotes let the HTML use `"` around attribute values.
 
@@ -214,8 +229,8 @@ as text in an ordinary hole.
 
 ## Static values
 
-Holes can't go everywhere. Lit parses a template's fixed text as HTML once, so a tag name or an
-attribute name has to be part of that text. When one really must vary, such as the heading level
+Because the browser parses a template's fixed text, a tag name or an attribute name has to be part
+of that text, not a hole. When one really must vary, such as the heading level
 of a card that appears at different depths, use `StaticHTML`:
 
 ```fsharp
