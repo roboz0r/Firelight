@@ -304,6 +304,11 @@ type Lit with
     /// </summary>
     /// <remarks>
     /// After rendering, the `Ref`'s `value` property will be set to the element, where it can be accessed in post-render lifecycle like `updated`.
+    ///
+    /// With <c>open type Firelight.Lit</c>, this <c>ref</c> hides F#'s <c>ref</c> function for reference cells:
+    /// write <c>Operators.ref 0</c> for one of those. The name stays Lit's on purpose: under any other name,
+    /// <c>{ref field}</c> written from Lit's docs would compile to an F# reference cell, which Lit ignores
+    /// in an element binding without an error.
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#ref"/>
     [<Import("ref", "lit/directives/ref.js")>]
@@ -316,6 +321,11 @@ type Lit with
     /// If a ref callback is rendered to a different element position or is removed in a subsequent render, it will first be
     /// called with `undefined`, followed by another call with the new element it was rendered to (if any). Note that in a
     /// `LitElement`, the callback will be called bound to the host element automatically.
+    ///
+    /// With <c>open type Firelight.Lit</c>, this <c>ref</c> hides F#'s <c>ref</c> function for reference cells:
+    /// write <c>Operators.ref 0</c> for one of those. The name stays Lit's on purpose: under any other name,
+    /// <c>{ref field}</c> written from Lit's docs would compile to an F# reference cell, which Lit ignores
+    /// in an element binding without an error.
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#ref"/>
     [<Import("ref", "lit/directives/ref.js")>]

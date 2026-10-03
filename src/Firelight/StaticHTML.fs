@@ -31,19 +31,27 @@ open StaticHTML
 type StaticHTML =
 
     [<Import("html", "lit/static-html.js")>]
-    static member inline private htmlInner(strs: string[], [<ParamArray>] args: obj[]) : TemplateResult = nativeOnly
+    static member inline private htmlInner(strs: string[], [<ParamArray>] args: obj[]) : HTMLTemplateResult = nativeOnly
 
     [<Import("literal", "lit/static-html.js")>]
     static member inline private literalInner(strs: string[], [<ParamArray>] args: obj[]) : StaticValue = nativeOnly
 
     [<Import("svg", "lit/static-html.js")>]
-    static member inline private svgInner(strs: string[], [<ParamArray>] args: obj[]) : TemplateResult = nativeOnly
+    static member inline private svgInner(strs: string[], [<ParamArray>] args: obj[]) : SVGTemplateResult = nativeOnly
+
+    [<Import("mathml", "lit/static-html.js")>]
+    static member inline private mathmlInner(strs: string[], [<ParamArray>] args: obj[]) : MathMLTemplateResult =
+        nativeOnly
 
     /// <summary>
     /// Interprets a template literal as an HTML template that can efficiently render to and update a container.
     /// </summary>
+    /// <remarks>
+    /// Lit's <c>html</c> with support for static values. It calls Lit's core <c>html</c>, so the result is an
+    /// <c>HTMLTemplateResult</c> like <c>Lit.html</c>'s, though Lit's TypeScript types call it a <c>TemplateResult</c>.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/static-html/#html"/>
-    static member inline html(fmt: FormattableString) : TemplateResult =
+    static member inline html(fmt: FormattableString) : HTMLTemplateResult =
         StaticHTML.htmlInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
@@ -63,9 +71,24 @@ type StaticHTML =
     /// <summary>
     /// Interprets a template literal as an SVG fragment that can efficiently render to and update a container.
     /// </summary>
+    /// <remarks>
+    /// Lit's <c>svg</c> with support for static values. It calls Lit's core <c>svg</c>, so the result is an
+    /// <c>SVGTemplateResult</c>.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/static-html/#svg"/>
-    static member inline svg(fmt: FormattableString) : TemplateResult =
+    static member inline svg(fmt: FormattableString) : SVGTemplateResult =
         StaticHTML.svgInner (fmt.GetStrings(), fmt.GetArguments())
+
+    /// <summary>
+    /// Interprets a template literal as a MathML fragment that can efficiently render to and update a container.
+    /// </summary>
+    /// <remarks>
+    /// Lit's <c>mathml</c> with support for static values. It calls Lit's core <c>mathml</c>, so the result is a
+    /// <c>MathMLTemplateResult</c>.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/api/static-html/#mathml"/>
+    static member inline mathml(fmt: FormattableString) : MathMLTemplateResult =
+        StaticHTML.mathmlInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
     /// Wraps a string so that it behaves like part of the static template strings instead of a dynamic value.

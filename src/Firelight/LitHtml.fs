@@ -54,33 +54,57 @@ type RenderOptions
     /// <seealso href="https://lit.dev/docs/api/LitElement/#RenderOptions.isConnected"/>
     member val isConnected: bool option = nativeOnly with get, set
 
+/// <summary>
+/// Anything Lit can render as the content of an element: a template, <c>nothing</c> or a
+/// <c>Renderable</c> value. The return type of <c>LitElement.render</c>.
+/// </summary>
+/// <seealso href="https://lit.dev/docs/components/rendering/#renderable-values"/>
 [<AllowNullLiteral>]
 type ChildRenderable = interface end
-
-/// <summary>
-/// A sentinel value that signals a ChildPart to fully clear its content.
-/// </summary>
-/// <seealso href="https://lit.dev/docs/api/templates/#nothing"/>
-type nothing =
-    inherit ChildRenderable
-    inherit symbol
-
-/// <summary>
-/// A sentinel value that signals a ChildPart to fully clear its content.
-/// </summary>
-/// <seealso href="https://lit.dev/docs/api/custom-directives/#noChange"/>
-type noChange =
-    inherit ChildRenderable
-    inherit symbol
 
 /// The return type of the template tag functions.
 [<AllowNullLiteral>]
 type TemplateResult =
     inherit ChildRenderable
 
+/// The result of <c>html</c>: an HTML template.
 [<AllowNullLiteral>]
 type HTMLTemplateResult =
     inherit TemplateResult
+
+/// The result of <c>svg</c>: an SVG fragment.
+[<AllowNullLiteral>]
+type SVGTemplateResult =
+    inherit TemplateResult
+
+/// The result of <c>mathml</c>: a MathML fragment.
+[<AllowNullLiteral>]
+type MathMLTemplateResult =
+    inherit TemplateResult
+
+/// <summary>
+/// A sentinel value that signals a ChildPart to fully clear its content.
+/// </summary>
+/// <remarks>
+/// Lit accepts <c>nothing</c> wherever it accepts a template, so <c>nothing</c> is a subtype of each
+/// template result type, and <c>if c then html $"..." else nothing</c> needs no annotation. F# takes
+/// the type of an <c>if</c> or <c>match</c> from its first branch, so put a template first, or annotate
+/// the result as <c>ChildRenderable</c> when <c>nothing</c> comes first.
+/// </remarks>
+/// <seealso href="https://lit.dev/docs/api/templates/#nothing"/>
+type nothing =
+    inherit HTMLTemplateResult
+    inherit SVGTemplateResult
+    inherit MathMLTemplateResult
+    inherit symbol
+
+/// <summary>
+/// A sentinel value that signals a ChildPart to retain its content from the previous render.
+/// </summary>
+/// <seealso href="https://lit.dev/docs/api/custom-directives/#noChange"/>
+type noChange =
+    inherit ChildRenderable
+    inherit symbol
 
 /// <summary>
 /// Anything that Lit can render as the child of an HTML element
@@ -103,14 +127,6 @@ type Renderable =
     | RenderableNoChange of noChange
 
     interface ChildRenderable
-
-[<AllowNullLiteral>]
-type SVGTemplateResult =
-    inherit TemplateResult
-
-[<AllowNullLiteral>]
-type MathMLTemplateResult =
-    inherit TemplateResult
 
 [<AllowNullLiteral>]
 type Disconnectable = interface end

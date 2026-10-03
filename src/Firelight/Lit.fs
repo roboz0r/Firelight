@@ -182,6 +182,11 @@ type Lit =
     /// <summary>
     /// A sentinel value that signals a ChildPart to fully clear its content.
     /// </summary>
+    /// <remarks>
+    /// Its type is a subtype of <c>HTMLTemplateResult</c>, <c>SVGTemplateResult</c> and <c>MathMLTemplateResult</c>,
+    /// so <c>if c then html $"..." else nothing</c> needs no annotation. When <c>nothing</c> is the first branch,
+    /// annotate the result as <c>ChildRenderable</c>. In an attribute binding, <c>nothing</c> removes the attribute.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/templates/#nothing"/>
     [<Import("nothing", "lit")>]
     static member inline nothing: nothing = nativeOnly
