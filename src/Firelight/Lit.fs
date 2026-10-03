@@ -6,6 +6,7 @@ open Browser.Types
 open Fable.Core
 open Fable.Core.JsInterop
 open System.Collections.Generic
+open System.ComponentModel
 
 // LitElement should inherit HTMLElement but HTMLElement
 // is still implemented as interface in Fable.Browser
@@ -119,6 +120,48 @@ type LitEventListener<'TEvent when 'TEvent :> Event>
             with get (): bool = nativeOnly
             and set (v: bool): unit = nativeOnly
 
+/// <summary>
+/// Checks made by the template tags. Public only because inline members call it; not for direct use.
+/// </summary>
+[<EditorBrowsable(EditorBrowsableState.Never)>]
+module TemplateChecks =
+    /// <summary>
+    /// Throws when a hole in <c>fmt</c> has a format specifier or alignment, such as <c>{price:N2}</c>.
+    /// The template tags pass Lit each hole's value, so the format would be dropped without a word.
+    /// <c>html</c>, <c>svg</c>, <c>mathml</c> and <c>css</c> call this in DEBUG builds.
+    /// </summary>
+    /// <param name="tag">The tag's name, for the message.</param>
+    /// <param name="fmt">The interpolated string passed to the tag.</param>
+    let noFormatSpecifiers (tag: string) (fmt: FormattableString) : unit =
+        // Fable compiles an interpolated string with a format in any hole to an object with `fmts`,
+        // one entry per hole ("" for none); without one, `fmts` is undefined.
+        let formats: string[] = fmt?fmts
+
+        if not (isNull formats) then
+            match formats |> Array.tryFindIndex (fun f -> f <> "") with
+            | Some i ->
+                let before = fmt.GetStrings().[i]
+
+                let before =
+                    if before.Length > 40 then
+                        "..." + before.Substring(before.Length - 40)
+                    else
+                        before
+
+                failwith (
+                    tag
+                    + ": the hole after \""
+                    + before
+                    + "\" has the format \""
+                    + formats.[i]
+                    + "\", which Lit ignores: it gets the value unformatted. "
+                    + (if tag = "css" then
+                           "css only takes css values and numbers, so pass the number itself, or format it "
+                           + "and wrap the trusted text: {unsafeCSS (price.ToString \"N2\")}."
+                       else
+                           "Format the value in F# instead, such as {price.ToString \"N2\"}.")
+                )
+            | None -> ()
 
 [<Erase>]
 type Lit =
@@ -138,16 +181,29 @@ type Lit =
     /// <summary>
     /// Interprets a template literal as an SVG fragment that can efficiently render to and update a container.
     /// </summary>
+    /// <remarks>
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/templates/#svg"/>
     static member inline svg(fmt: FormattableString) : SVGTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "svg" fmt
+#endif
         Lit.svgInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
     /// Interprets a template literal as an HTML template that can efficiently render to and update a container.
     /// </summary>
+    /// <remarks>
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
+    /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/templates/#html"/>
-    // static member inline html(fmt: FormattableString) : HTMLTemplateResult = transform Lit.htmlInner fmt
     static member inline html(fmt: FormattableString) : HTMLTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "html" fmt
+#endif
         Lit.htmlInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
@@ -156,15 +212,30 @@ type Lit =
     /// <remarks>
     /// For security reasons, only literal string values and number may be used in embedded expressions.
     /// To incorporate non-literal values `unsafeCSS` may be used inside an expression.
+    ///
+    /// A format specifier or alignment in a hole, such as <c>{size:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Pass the number itself, or format trusted text and wrap it:
+    /// <c>{unsafeCSS (size.ToString "N2")}</c>.
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/styles/#css"/>
     static member inline css(fmt: FormattableString) : CSSResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "css" fmt
+#endif
         Lit.cssInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
     /// Interprets a template literal as MathML fragment that can efficiently render to and update a container.
     /// </summary>
+    /// <remarks>
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/api/templates/#mathml"/>
     static member inline mathml(fmt: FormattableString) : MathMLTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "mathml" fmt
+#endif
         Lit.mathmlInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>

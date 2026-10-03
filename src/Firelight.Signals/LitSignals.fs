@@ -55,12 +55,30 @@ type LitSignals =
     static member inline private svgInner(strings: string[], [<ParamArray>] values: obj[]) : SVGTemplateResult =
         nativeOnly
 
+    /// <summary>
     /// HTML template tag that automatically applies watch to interpolated signals.
+    /// </summary>
+    /// <remarks>
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
+    /// </remarks>
     static member inline html(fmt: FormattableString) : HTMLTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "LitSignals.html" fmt
+#endif
         LitSignals.htmlInner (fmt.GetStrings(), fmt.GetArguments())
 
+    /// <summary>
     /// SVG template tag that automatically applies watch to interpolated signals.
+    /// </summary>
+    /// <remarks>
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
+    /// </remarks>
     static member inline svg(fmt: FormattableString) : SVGTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "LitSignals.svg" fmt
+#endif
         LitSignals.svgInner (fmt.GetStrings(), fmt.GetArguments())
 
     [<Import("SignalWatcher", "@lit-labs/signals")>]

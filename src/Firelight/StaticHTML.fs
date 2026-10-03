@@ -49,9 +49,15 @@ type StaticHTML =
     /// <remarks>
     /// Lit's <c>html</c> with support for static values. It calls Lit's core <c>html</c>, so the result is an
     /// <c>HTMLTemplateResult</c> like <c>Lit.html</c>'s, though Lit's TypeScript types call it a <c>TemplateResult</c>.
+    ///
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/static-html/#html"/>
     static member inline html(fmt: FormattableString) : HTMLTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "StaticHTML.html" fmt
+#endif
         StaticHTML.htmlInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
@@ -74,9 +80,15 @@ type StaticHTML =
     /// <remarks>
     /// Lit's <c>svg</c> with support for static values. It calls Lit's core <c>svg</c>, so the result is an
     /// <c>SVGTemplateResult</c>.
+    ///
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/static-html/#svg"/>
     static member inline svg(fmt: FormattableString) : SVGTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "StaticHTML.svg" fmt
+#endif
         StaticHTML.svgInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
@@ -85,9 +97,15 @@ type StaticHTML =
     /// <remarks>
     /// Lit's <c>mathml</c> with support for static values. It calls Lit's core <c>mathml</c>, so the result is a
     /// <c>MathMLTemplateResult</c>.
+    ///
+    /// A format specifier or alignment in a hole, such as <c>{price:N2}</c>, has no effect: Lit gets the value
+    /// itself. DEBUG builds throw instead. Format the value in F#: <c>{price.ToString "N2"}</c>.
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/api/static-html/#mathml"/>
     static member inline mathml(fmt: FormattableString) : MathMLTemplateResult =
+#if DEBUG
+        TemplateChecks.noFormatSpecifiers "StaticHTML.mathml" fmt
+#endif
         StaticHTML.mathmlInner (fmt.GetStrings(), fmt.GetArguments())
 
     /// <summary>
