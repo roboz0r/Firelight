@@ -171,7 +171,7 @@ type Lit with
     /// Renders a string as HTML rather than text.
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#unsafehtml"/>
-    [<Import("unsafeHTML ", "lit/directives/unsafe-html.js")>]
+    [<Import("unsafeHTML", "lit/directives/unsafe-html.js")>]
     static member inline unsafeHTML(html: string) : DirectiveResult = nativeOnly
 
     /// <summary>

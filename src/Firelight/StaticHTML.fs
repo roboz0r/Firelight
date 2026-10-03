@@ -77,7 +77,7 @@ type StaticHTML =
     /// as it will be directly parsed into HTML. Do not pass user input to this function without sanitizing it.
     /// Static values can be changed, but they will cause a complete re-render since they effectively create a new template.
     /// </remarks>
-    [<Import("unsafeStatic ", "lit/static-html.js")>]
+    [<Import("unsafeStatic", "lit/static-html.js")>]
     static member inline unsafeStatic(value: string) : StaticValue = nativeOnly
 
     /// <summary>
