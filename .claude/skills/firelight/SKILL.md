@@ -6,7 +6,7 @@ trigger: When the user asks to build, modify, or architect UI using Firelight, L
 
 # Firelight Development Guide
 
-Firelight provides F# bindings for [Lit](https://lit.dev/) 3.x web components via [Fable](https://fable.io/). It is organized as three NuGet packages:
+Firelight provides F# bindings for [Lit](https://lit.dev/) 3.x web components via [Fable](https://fable.io/). It is organized as NuGet packages; start with `Firelight` and add others as needed:
 
 | Package | Purpose |
 |---|---|
@@ -14,8 +14,15 @@ Firelight provides F# bindings for [Lit](https://lit.dev/) 3.x web components vi
 | **Firelight.Context** | `@lit/context` bindings: `ContextProvider`, `ContextConsumer` |
 | **Firelight.Elmish** | Elmish integration: `ElmishController`, `DevTools` |
 | **Firelight.Router** | Client-side routing via the URL Pattern API: `Router`, `RouterController` |
+| **Firelight.Signals** | `@lit-labs/signals`: `LitSignals`, signal-aware `html` |
+| **Firelight.Task** | `@lit/task`: `LitTask` for async data |
+| **Firelight.Motion** | `@lit-labs/motion`: the `animate` directive |
+| **Firelight.Observers** | `@lit-labs/observers`: resize, intersection and mutation controllers |
+| **Firelight.Virtualizer** | `@lit-labs/virtualizer`: long lists |
 
-NPM peer dependencies: `lit` (3.x), `@lit/context` (1.x), `urlpattern-polyfill` (10.x, for `Firelight.Router`).
+NPM peer dependencies: `lit` (3.x), `@lit/context` (1.x), `urlpattern-polyfill` (10.x, for `Firelight.Router`); each Lit Labs package for its binding.
+
+`dotnet new firelight -n MyApp` (from the `Firelight.Templates` package) creates a Vite app with one component.
 
 All F# code compiles to JavaScript via Fable. The output runs in the browser as standard Web Components.
 
@@ -62,7 +69,7 @@ Use a Component when the UI:
 
 ### Template
 
-A plain function returning `HTMLTemplateResult`. Stateless, no lifecycle, no shadow DOM.
+A plain function returning `HTMLTemplateResult` (or `nothing`). Stateless, no lifecycle, no shadow DOM.
 
 ```fsharp
 let todoItem (item: TodoItem) (dispatch: TodoMsg -> unit) =
@@ -83,6 +90,19 @@ override this.render() =
         {_state.Items |> List.map (fun item -> todoItem item this.Dispatch)}
     </ul>"""
 ```
+
+Conditional templates need no annotation when the template branch comes first, since `nothing` is a subtype of `HTMLTemplateResult`:
+
+```fsharp
+let errorBanner (error: string option) =
+    match error with
+    | Some message -> html $"""<p class="error">{message}</p>"""
+    | None -> nothing
+```
+
+F# takes an `if`/`match` type from its first branch, so with `nothing` first, annotate the result as `ChildRenderable` (the interface of everything Lit can render) or reorder the branches.
+
+A template can't add attributes to an element: in an opening tag (`<input {x}>`) Lit accepts only an element directive such as `ref`. Pass each attribute a helper sets as a parameter instead of a template fragment.
 
 Use a Template when the UI:
 - Is a pure view of data passed as arguments
@@ -586,14 +606,23 @@ All accessed via `open type Firelight.Lit`:
 | Directive | Purpose | Example |
 |---|---|---|
 | `classMap` | Dynamic CSS classes | `classMap (ClassInfo.create ["active", isActive; "hidden", isHidden])` — **each key must be a single class name, no spaces** |
-| `styleMap` | Dynamic inline styles | `styleMap (StyleInfo.create ["color", color; "font-size", size])` |
+| `styleMap` | Dynamic inline styles; `None` removes one | `styleMap (StyleInfo.create ["color", Some color; "font-size", Some size])` |
 | `repeat` | Keyed list rendering | `repeat (items, (fun item _ -> item.Id), fun item i -> renderItem item i)` |
-| `ifDefined` | Conditional attribute | `ifDefined (someOption)` |
-| `cache` | Cache template DOM | `cache (Some templateResult)` |
-| `keyed` | Force re-render on key change | `keyed (Some key, Some value)` |
-| `guard` | Re-render only on dependency change | `guard (deps, fun () -> expensiveRender())` |
+| `ifDefined` | Leave out an attribute when `None` | `href={ifDefined maybeUrl}` |
+| `live` | Compare with the element's live value | `.value={live text}` |
+| `cache` | Keep the DOM of templates you switch between | `cache (if tab = 0 then home () else settings ())` |
+| `keyed` | Replace the DOM when a key changes | `keyed (user.Id, profile user)` |
+| `guard` | Re-render only on dependency change | `guard ([\| rows; sortColumn \|], fun () -> table rows sortColumn)` |
+| `until` | Placeholder until a promise resolves | `until (loadProfile id, html $"<p>Loading…</p>")` |
 | `ref` / `createRef` | DOM element reference | `{ref myRef}` in template, `createRef<HTMLInputElement>()` |
 | `join` | Interleave items with separator | `join (items, html $"<hr/>")` |
+| `when'`, `choose`, `map`, `range` | Lit's helpers (`when` is an F# keyword) | Prefer `if`, `match`, `List.map` and `[ 0 .. n - 1 ]` in F# |
+
+Directives take plain values: no `Some(box ...)`. `guard`'s dependencies are an `obj[]`, so `[| rows; sortColumn |]` may mix types. `choose` and `keyed` compare keys with JavaScript `===`: use strings or numbers, not F# unions or records.
+
+`open type Firelight.Lit` hides FSharp.Core's `ref` (Lit's `ref` directive keeps its name). For a reference cell, write `Operators.ref 0`.
+
+A format specifier in a hole, such as `{price:N2}`, is never applied: Lit gets the value itself. Debug builds (`dotnet fable watch`, `-c Debug`) throw; format in F# instead: `{price.ToString "N2"}`.
 
 ### classMap — single class names only
 
@@ -624,9 +653,9 @@ html $"""<div class={classes ["bg-slate-50 rounded-xl p-3", true; "ring-2 ring-b
 Lit distinguishes between attribute and property bindings in templates:
 
 - **`value={x}` (no dot)** — Binds to the HTML **attribute**. Always converted to a **string**. Represents the element's *initial* state. Lit only sets it when the value changes between renders, but the browser treats attributes as initial values — user edits to form inputs are not overwritten.
-- **`.value={x}` (with dot)** — Binds to the JavaScript DOM **property**. Can pass **any data type** (objects, arrays, numbers, booleans) and controls the element's *live, current* state. **On every re-render, Lit writes to the DOM property, overwriting any user input.**
+- **`.value={x}` (with dot)** — Binds to the JavaScript DOM **property**. Can pass **any data type** (objects, arrays, numbers, booleans) and controls the element's *live, current* state. Lit sets it when `x` differs from the value it last rendered, overwriting what the user typed then.
 
-For form inputs where the user types text, prefer `value={x}` (attribute) for the initial value and read the live value from a `ref` on save. Use `.value={x}` (property) only when you need to programmatically control the input's current state on every render.
+For form inputs where the user types text, either bind `.value={text}` and update `text` from the `@input` handler (controlled), or bind `value={x}` (attribute) for the initial value and read the live value from a `ref` on save. If the state can still hold the value Lit last rendered while the user has typed something else (e.g. a Clear that resets to the same value), use `.value={live text}`: `live` compares with the element's current value instead.
 
 ### Ref usage
 
@@ -663,8 +692,8 @@ Compose CSS result groups:
 
 ```fsharp
 cssResultGroup {
-    css $":host { display: block; }"
-    css $".item { padding: 1rem; }"
+    css $$":host { display: block; }"
+    css $$".item { padding: 1rem; }"
 }
 ```
 
@@ -781,12 +810,16 @@ Lit leaves the canvas DOM node untouched between renders (the template hasn't ch
 
 ## Architecture Rules
 
-### No SSR
+### Server-side rendering: Lit SSR in Node only
 
-Firelight is client-side SPA only. Do not attempt server-side rendering. Reasons:
-- Lit SSR requires Node.js; F# backends use .NET
-- Elmish `Program.runWith` assumes client-side execution
-- The entire Fable/Elmish ecosystem is designed for CSR
+Firelight components are Lit components, so Lit SSR (`@lit-labs/ssr`, in Node) can prerender them, for example at build time: the Firelight docs site prerenders its demos that way (`site/Renderer/`, and "Prerender-safe components" in `site/CLAUDE.md`). A .NET server can't render them. For an app, client-side rendering is the default; prerender only when a page needs it.
+
+To prerender a component:
+- register it with `defineElement`, which uses the global `customElements` (Lit SSR's DOM shim provides one; there is no `window`);
+- touch `window`, `document` and other browser APIs only in `connectedCallback`, `firstUpdated`, `updated` or event handlers, never at module load, in the constructor, `willUpdate` or `render`;
+- render the same thing first in the browser as on the server, and load `@lit-labs/ssr-client/lit-element-hydrate-support.js` before Lit, or the component renders twice.
+
+An `ElmishController` starts its loop in the constructor, so the initial model renders on the server, and `init`'s commands run there too: keep browser APIs out of them.
 
 ### App Shell Pattern for Fast Load
 

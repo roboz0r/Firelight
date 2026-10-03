@@ -37,12 +37,11 @@ type Basket() =
             | [] -> html $"<p>The basket is empty.</p>"
             | fruits -> html $"<ul>{fruits |> List.mapi (itemView this.Remove)}</ul>"
 
-        // `nothing` isn't a template, so the annotation gives both branches a common type.
-        let emptyButton: ChildRenderable =
-            if this.fruits.IsEmpty then
-                nothing
-            else
+        let emptyButton =
+            if not this.fruits.IsEmpty then
                 html $"""<button @click={fun _ -> this.fruits <- []}>Empty the basket</button>"""
+            else
+                nothing
 
         html
             $"""

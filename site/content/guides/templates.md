@@ -132,10 +132,8 @@ functions already do the job, and a template is a value like any other.
 <my-basket></my-basket>
 :::
 
-Each branch of the `match` returns a template, so it type-checks as usual. `nothing` is different.
-It's Lit's marker for "render nothing here", its type isn't a template, and so
-`if empty then nothing else html $"..."` doesn't compile. Annotating the result as
-`ChildRenderable`, the type of anything Lit can render, gives both branches a common type.
+Each branch of the `match` returns a template. `nothing` is Lit's marker for "render nothing
+here", and it fits wherever a template does, so `emptyButton` needs no type annotation.
 
 A hole renders any F# list, array or `seq`, so `List.map` is all a list needs. A list expression
 such as `[ for fruit in fruits -> html $"<li>{fruit}</li>" ]` works too.
@@ -171,17 +169,18 @@ use. These are the ones you'll reach for most:
 | `styleMap` | Set inline styles; `None` removes one | `style={styleMap (StyleInfo.create [ "width", Some "40%" ])}` |
 | `ref` | Reach the rendered element | `<input {ref field}>` with `let field = createRef<HTMLInputElement> ()` |
 | `ifDefined` | Leave out an attribute when its value is `None` | `href={ifDefined link}` |
-| `live` | Compare with the element's current value, not the last one rendered | `.value={live (Some(box text))}` |
+| `live` | Compare with the element's current value, not the last one rendered | `.value={live text}` |
 | `repeat` | Key a list, so elements move with their items | [Keyed lists](#keyed-lists-with-repeat) |
-| `keyed` | Replace an element, rather than update it, when a key changes | `keyed (Some(box user.Id), Some(box (profile user)))` |
-| `guard` | Skip re-rendering until a dependency changes | `guard ([\| Some(box rows) \|], fun () -> Some(box (table rows)))` |
-| `cache` | Keep the DOM of templates you switch between, such as tabs | `cache (Some(tab :> TemplateResult))` |
+| `keyed` | Replace an element, rather than update it, when a key changes | `keyed (user.Id, profile user)` |
+| `guard` | Skip re-rendering until a dependency changes | `guard ([\| rows; sortColumn \|], fun () -> table rows sortColumn)` |
+| `cache` | Keep the DOM of templates you switch between, such as tabs | `cache (tabView tab)` |
 | `unsafeHTML` | Render a trusted string as HTML | `unsafeHTML trustedHtml` |
 
-`live`, `keyed` and `guard` take `obj option` arguments in Firelight, hence the `Some(box ...)`;
-`cache` takes a `TemplateResult option`. Firelight also binds `join`, `until`, `asyncAppend`, `asyncReplace`,
-`templateContent` and `unsafeSVG`. For data that loads asynchronously,
-[Firelight.Task](/packages/task/) is usually a better fit than `until`.
+Firelight also binds `join`, `until`, `asyncAppend`, `asyncReplace`, `templateContent` and
+`unsafeSVG`, and Lit's `when`, `choose`, `map` and `range`, with `when` as `when'` because `when`
+is an F# keyword. In F#, `if`, `match`, `List.map` and `[ 0 .. n - 1 ]` do the same jobs as those
+four and read better. For data that loads asynchronously, [Firelight.Task](/packages/task/) is
+usually a better fit than `until`.
 
 This volume control uses the three most common: `classMap` stripes the bar when it's loud,
 `styleMap` sets its width, and `ref` lets Reset put the focus back on the slider.
@@ -257,7 +256,8 @@ let card (level: Level) (title: string) (body: string) =
 ```
 
 `StaticHTML.html` is the `html` from `lit/static-html.js`; the plain `html` doesn't accept static
-values. Call it by its full name, since `open type StaticHTML` would hide Lit's `html`.
+values. It returns an `HTMLTemplateResult`, as `html` does, so the two mix freely. Call it by its
+full name, since `open type StaticHTML` would hide Lit's `html`.
 
 Static values are part of the template, so each different value makes a separate template. When
 the value changes, Lit throws away the old DOM and builds new DOM, rather than updating it. With
@@ -277,8 +277,13 @@ cause:
 | `html """<p>Hi</p>"""` | The type 'string' is not compatible with the type 'System.FormattableString' | `html $"""<p>Hi</p>"""` |
 | `css $"""p { margin: 0; }"""` | Unexpected symbol ';' in expression, or another parse error | `css $$"""p { margin: 0; }"""` |
 | `html $"""<p style="width: 50%">"""` | Invalid interpolated string. Bad format specifier | `50%%` in `$"""`. In `$$"""`, `%` is plain text |
-| `if empty then nothing else html $"..."` | The type 'nothing' is not compatible with type 'HTMLTemplateResult' | Annotate the result as `ChildRenderable` |
+| `if empty then nothing else html $"..."` | All branches of an 'if' expression must return values implicitly convertible to the type of the first branch, which here is 'nothing' | The template first: `if not empty then html $"..." else nothing` |
 | `ref 0` | No overloads match for method 'ref' | `Operators.ref 0`: Lit's `ref` hides F#'s |
+
+F# gives an `if` or `match` the type of its first branch, and `nothing` fits where a template does
+but not the other way round. When `nothing` has to come first, as in a `match` whose first case is
+the empty list, annotate the result as `ChildRenderable`, the interface of everything Lit can
+render.
 
 Others compile, because a hole's type is `obj` and it accepts any value:
 
@@ -286,7 +291,7 @@ Others compile, because a hole's type is `obj` and it accepts any value:
 |---|---|---|
 | `@click={this.Save()}` | `Save` runs on every render, and clicking does nothing | `@click={fun _ -> this.Save()}` |
 | `@click={fun (e: KeyboardEvent) -> ...}` | The handler gets a click event, and `e.key` is `undefined` | The event's real type |
-| `{price:N2}` | The format is dropped: Lit gets the number as it is | `{price.ToString "N2"}` |
+| `{price:N2}` | Debug builds, such as `npm run dev`, throw. Release builds drop the format | `{price.ToString "N2"}` |
 | `{name}` in `$$"""` | Shows the text `{name}` | `{{name}}` |
 | `title={maybeTitle}` with an option | `None` leaves an empty `title` attribute | `title={ifDefined maybeTitle}` |
 | `this.items.Add item`, on a `ResizeArray` | No re-render | An F# list and `this.items <- this.items @ [ item ]` |

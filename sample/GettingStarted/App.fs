@@ -14,28 +14,28 @@ type ComponentsDemo() =
     static member styles = [| Components.styles |]
 
     override _.render() =
-        let noProps = html $" "
+        let clicked (label: string) = fun _ -> console.log $"{label} clicked"
 
         html
             $"""
         <div style="display:flex; flex-direction:column; gap:1.25rem;">
             <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
-                {Button.button "" Button.Variant.Default Button.Size.Default (html $"Default") noProps}
-                {Button.button "" Button.Variant.Destructive Button.Size.Default (html $"Destructive") noProps}
-                {Button.button "" Button.Variant.Outline Button.Size.Default (html $"Outline") noProps}
-                {Button.button "" Button.Variant.Secondary Button.Size.Default (html $"Secondary") noProps}
-                {Button.button "" Button.Variant.Ghost Button.Size.Default (html $"Ghost") noProps}
-                {Button.button "" Button.Variant.Link Button.Size.Default (html $"Link") noProps}
+                {Button.button "" Button.Variant.Default Button.Size.Default "Default" (clicked "Default")}
+                {Button.button "" Button.Variant.Destructive Button.Size.Default "Destructive" (clicked "Destructive")}
+                {Button.button "" Button.Variant.Outline Button.Size.Default "Outline" (clicked "Outline")}
+                {Button.button "" Button.Variant.Secondary Button.Size.Default "Secondary" (clicked "Secondary")}
+                {Button.button "" Button.Variant.Ghost Button.Size.Default "Ghost" (clicked "Ghost")}
+                {Button.button "" Button.Variant.Link Button.Size.Default "Link" (clicked "Link")}
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
-                {Button.button "" Button.Variant.Default Button.Size.Small (html $"Small") noProps}
-                {Button.button "" Button.Variant.Default Button.Size.Default (html $"Default") noProps}
-                {Button.button "" Button.Variant.Default Button.Size.Large (html $"Large") noProps}
+                {Button.button "" Button.Variant.Default Button.Size.Small "Small" (clicked "Small")}
+                {Button.button "" Button.Variant.Default Button.Size.Default "Default" (clicked "Default")}
+                {Button.button "" Button.Variant.Default Button.Size.Large "Large" (clicked "Large")}
             </div>
             <div style="max-width:20rem;">
-                {Input.input "" "text" (html $"placeholder=\"Email address\"")}
+                {Input.input "" "email" "Email address" false}
                 <div style="height:0.5rem;"></div>
-                {Input.input "" "password" (html $"placeholder=\"Password\" disabled")}
+                {Input.input "" "password" "Password" true}
             </div>
         </div>"""
 

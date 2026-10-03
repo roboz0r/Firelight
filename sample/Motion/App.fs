@@ -202,7 +202,7 @@ type MotionShowcase() as this =
         let position = min 100.0 (max 0.0 spring.currentValue)
         let positionText = position.ToString("0") + "%"
 
-        let notice: ChildRenderable =
+        let notice =
             if noticeVisible then
                 html
                     $"""

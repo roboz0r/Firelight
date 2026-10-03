@@ -1,5 +1,6 @@
 namespace GettingStarted
 
+open Browser.Types
 open Firelight
 open type Firelight.Lit
 
@@ -92,9 +93,14 @@ module Components =
         /// Renders an <input> element styled with the companion .input class.
         /// extraClasses — additional CSS classes (space-separated).
         /// inputType    — HTML input type (e.g. "text", "email", "password").
-        /// props        — additional Lit attribute/property bindings as a template fragment.
-        let input (extraClasses: string) (inputType: string) props =
-            html $"""<input class="input {extraClasses}" type="{inputType}" {props} />"""
+        /// placeholder  — placeholder text.
+        /// disabled     — whether the input is disabled.
+        ///
+        /// Each attribute a caller sets is a parameter. A template can't add attributes to an element:
+        /// in an opening tag, Lit accepts only an element directive such as `ref`.
+        let input (extraClasses: string) (inputType: string) (placeholder: string) (disabled: bool) =
+            html
+                $"""<input class="input {extraClasses}" type={inputType} placeholder={placeholder} ?disabled={disabled} />"""
 
     module Button =
 
@@ -134,8 +140,8 @@ module Components =
         /// extraClasses — additional CSS classes (space-separated).
         /// variant      — visual style.
         /// size         — sizing preset.
-        /// content      — inner content as a template fragment.
-        /// props        — additional Lit attribute/property bindings as a template fragment.
-        let button (extraClasses: string) (variant: Variant) (size: Size) content props =
+        /// content      — inner content: text or a template.
+        /// onClick      — the click handler.
+        let button (extraClasses: string) (variant: Variant) (size: Size) (content: obj) (onClick: MouseEvent -> unit) =
             html
-                $"""<button class="btn {Variant.toClass variant} {Size.toClass size} {extraClasses}" {props}>{content}</button>"""
+                $"""<button class="btn {Variant.toClass variant} {Size.toClass size} {extraClasses}" @click={onClick}>{content}</button>"""
