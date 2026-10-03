@@ -195,6 +195,12 @@ type ReactiveElement() =
     /// Node or ShadowRoot into which element DOM should be rendered. Defaults to an open shadowRoot.
     member _.renderRoot: U2<HTMLElement, ShadowRoot> = nativeOnly
 
+    /// Dispatches an event from this element, e.g. `this.dispatchEvent (Event.customEvent ("changed", value))`.
+    /// Returns false if a listener called preventDefault on a cancelable event.
+    /// (The element is an HTMLElement at runtime; Fable.Browser models HTMLElement as an interface,
+    /// so it can't be inherited here.)
+    member _.dispatchEvent(event: Event) : bool = nativeOnly
+
     static member shadowRootOptions: ShadowRootInit = nativeOnly
 
     // Styles

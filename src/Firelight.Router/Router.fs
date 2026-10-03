@@ -197,15 +197,18 @@ module EventHandlers =
                                         $"Router: Could not find target for hash link '{hrefRaw}'"
                                     )
                         else
-                            ev.preventDefault ()
-                            let location = window.location
                             let href = a.href
 
-                            if href = location.href then
-                                ()
-                            else
-                                history.pushState (null, "", href)
-                                href |> router.Match |> dispatch
+                            // Only handle links this router has a route for. Anything else (another page
+                            // on the same site, a server-rendered URL) is left to the browser to navigate.
+                            match router.TryMatch href with
+                            | None -> ()
+                            | Some route ->
+                                ev.preventDefault ()
+
+                                if href <> window.location.href then
+                                    history.pushState (null, "", href)
+                                    dispatch route
                 | None -> ()
 
 [<AutoOpen>]

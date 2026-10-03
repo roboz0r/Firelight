@@ -506,7 +506,7 @@ let router =
 `RouterController` is a `ReactiveController` that:
 - Initializes `route` from the current URL on construction
 - Listens for `popstate` events (browser back/forward)
-- Intercepts internal link clicks, calls `history.pushState`, and updates the route
+- Intercepts clicks on same-origin links that match one of its routes, calls `history.pushState`, and updates the route. Links it has no route for (other pages on the same site) navigate normally
 - Handles hash links (`#section`) with smooth scrolling, piercing shadow DOM boundaries
 - Cleans up event listeners on disconnect
 
@@ -573,7 +573,7 @@ importPolyfill ()
 ### Key behaviors
 
 - The `Router.Match` method always returns a value (falls back to the `notFound` route). Use `Router.TryMatch` for `Option<'Route>`
-- Internal link detection skips: links with `target`, `download`, `rel="external"`, different origins, `mailto:`, `javascript:`, and `tel:` URLs
+- Internal link detection skips: links with `target`, `download`, `rel="external"`, different origins, `mailto:`, `javascript:`, and `tel:` URLs, and links that no route matches (`Router.TryMatch` returns `None`)
 - Hash links trigger smooth scrolling and `history.replaceState` (no route change)
 - `RouterController` calls `host.requestUpdate()` after route changes, integrating with Lit's batched rendering
 
