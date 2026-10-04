@@ -102,6 +102,8 @@ only), shipped as declarative shadow DOM and hydrated in the browser. To prerend
 - reach `window`, `document` and other browser APIs in `connectedCallback`, `firstUpdated`,
   `updated` or event handlers, so module load, constructor, `willUpdate` and `render` stay pure;
 - render the same thing first in the browser as on the server.
+- render `nothing`, not `""` or `None`, in a text hole that starts empty and fills in later: hydration
+  writes the later value into Lit's marker comment, where it never shows (see `/guides/prerendering/`).
 
 Otherwise mark the demo `ssr=false` (Router, Virtualizer and Task are). Check both: with JavaScript
 off the demo shows its initial state, and with it on the demo appears once, not twice.

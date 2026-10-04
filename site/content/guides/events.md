@@ -19,8 +19,7 @@ A button raises `click`, and a text box raises `input`. A component can raise `c
 `addEventListener` in JavaScript. Nothing about the component's F# types leaks into the page.
 
 This guide covers events on one component and its parent. How larger apps pass data between
-components is the subject of the component communication guide.
-<!-- Link /guides/communication/ here once that page exists: the build fails on a missing page. -->
+components is the subject of the [component communication guide](/guides/communication/).
 
 ## Listen with @event
 

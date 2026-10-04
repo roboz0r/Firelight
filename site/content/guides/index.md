@@ -8,6 +8,12 @@ lead: One topic at a time, with live examples. Each guide covers what Firelight 
 
 - [Templates](/guides/templates/): plain HTML in F# interpolated strings, with bindings,
   conditionals, lists, directives and static values.
+- [Properties and attributes](/guides/properties/): reactive properties, attributes, change
+  detection with F# values, reflection and internal state.
+- [Events](/guides/events/): listen with typed handlers, raise custom events with typed details,
+  and how far events travel through shadow DOM.
+- [Styling](/guides/styling/): scoped styles, theming with custom properties, parts, shared
+  styles and the safe way to pass values from F#.
 - [Lifecycle](/guides/lifecycle/): connecting, updating and cleaning up, and which lifecycle
   method to override for what.
 - [Controllers](/guides/controllers/): state and lifecycle that any component can reuse.

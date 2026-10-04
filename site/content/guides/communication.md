@@ -86,7 +86,7 @@ ancestor and any listener added from outside, and the child stays usable from pl
 events for components that others will use, and callbacks only inside a component you own.
 
 For event names, `detail` types, listener options and listening outside templates, see the
-Events guide. <!-- link: /guides/events/ -->
+[Events guide](/guides/events/).
 
 ## Components far apart
 

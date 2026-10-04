@@ -154,7 +154,7 @@ let dialog (onHide: Element -> unit) =
     </wa-dialog>"""
 ```
 
-The Events guide covers handlers in full. <!-- link: /guides/events/ -->
+The [Events guide](/guides/events/) covers handlers in full.
 
 ## Styling
 
