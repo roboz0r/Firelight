@@ -50,7 +50,18 @@ type LitElement() =
     // Rendering
     // https://lit.dev/docs/api/LitElement/#LitElement/rendering
 
-    member _.createRenderRoot: unit -> U2<Element, ShadowRoot> = nativeOnly
+    /// <summary>
+    /// Creates the node the component renders into: by default an open shadow root, with the element's
+    /// styles. Lit calls it once, when the element first connects.
+    /// </summary>
+    /// <remarks>
+    /// Override it to render elsewhere: return the element itself (<c>this</c>) for light DOM, as
+    /// <c>LightDomElement</c> does, or a shadow root made with other options. It returns an <c>obj</c>, Lit's
+    /// <c>HTMLElement | DocumentFragment</c>, as F# can't express that union over this class.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/components/shadow-dom/#implementing-createrenderroot"/>
+    abstract member createRenderRoot: unit -> obj
+    default _.createRenderRoot() : obj = nativeOnly
 
     /// <summary>
     /// Invoked on each update to perform rendering tasks. This method
@@ -89,7 +100,7 @@ type LitElement() =
 type LightDomElement() =
     inherit LitElement()
 
-    member this.createRenderRoot() : obj = this
+    override this.createRenderRoot() : obj = this
 
 type LitEventHandler<'TEvent when 'TEvent :> Event> = delegate of ev: 'TEvent -> unit
 

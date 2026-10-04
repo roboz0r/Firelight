@@ -116,6 +116,8 @@ type LitVirtualizer<'T>() =
 type Virtualizer =
     /// Apply viewport virtualization to the parent of this child expression.
     [<Import("virtualize", "@lit-labs/virtualizer/virtualize.js")>]
+    /// It virtualizes the element it's in, so it can't be returned from render on its own, where its parent
+    /// would be the shadow root: put it inside an element, <c>&lt;div&gt;{virtualize ...}&lt;/div&gt;</c>.
     static member inline virtualize(config: VirtualizeConfig<'T>) : DirectiveResult = nativeOnly
 
     /// Create a flow layout specifier, for example with horizontal direction.

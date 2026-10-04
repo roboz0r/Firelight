@@ -70,7 +70,7 @@ type Toaster() =
             let! _ = this.updateComplete |> Async.AwaitPromise
 
             match next with
-            | Some toast -> (this.shadowRoot.querySelector ($"#dismiss-{toast.Id}") :?> HTMLElement).focus ()
+            | Some toast -> this.query<HTMLElement> $"#dismiss-{toast.Id}" |> Option.iter _.focus()
             | None -> cameFrom |> Option.iter (fun el -> el.focus ())
         }
         |> Async.StartImmediate

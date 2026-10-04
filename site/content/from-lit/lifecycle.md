@@ -254,8 +254,8 @@ type FieldList() =
     member val private count = 1 with get, set
 
     member private this.FocusLast() =
-        let all = this.shadowRoot.querySelectorAll "input"
-        (all.[all.length - 1] :?> HTMLElement).focus ()
+        let all = this.queryAll<HTMLInputElement> "input"
+        all.[all.Length - 1].focus ()
 
     member private this.Add() =
         this.count <- this.count + 1
@@ -293,7 +293,9 @@ defineElement<FieldList> "field-list"
 | `firstUpdated(changed)` | `override this.firstUpdated(changed)` |
 | `updated(changed)` | `override this.updated(changed)` |
 | `getUpdateComplete()` | `override this.getUpdateComplete()` |
-| `scheduleUpdate()` | `override this.scheduleUpdate()`, returning `unit` (see below) |
+| `scheduleUpdate()` | `override this.scheduleUpdate()`, returning an `obj` (see below) |
+| `performUpdate()`, with `super.performUpdate()` | `override this.performUpdate()`, with `base.performUpdate ()` |
+| `createRenderRoot()` | `override this.createRenderRoot()`, returning an `obj`, such as `this`; or inherit [`LightDomElement`](/from-lit/styles/#rendering-without-shadow-dom) |
 | `requestUpdate()` | `this.requestUpdate ()` |
 | `updateComplete`, `hasUpdated`, `isUpdatePending` | The same names, as members |
 
@@ -303,12 +305,12 @@ defineElement<FieldList> "field-list"
   a method, and passes a new wrapper each time it's used. `removeEventListener` then can't find
   the listener you added, so the listener stays. Add it with `Ev.listen`, which returns its own
   remover, as `EscNotice` does.
-- **`performUpdate()` and `createRenderRoot()`.** These aren't overridable members in Firelight.
-  `LightDomElement` replaces `createRenderRoot` for you; see
-  [Styles](/from-lit/styles/#rendering-without-shadow-dom).
-- **Deferring an update.** In Lit, `scheduleUpdate` can return a promise, and the update waits
-  for it. Firelight binds it as returning `unit`, so an override that returns a promise doesn't
-  compile: `The type 'JS.Promise<unit>' is not compatible with type 'unit'`.
+- **`await super.scheduleUpdate()` in a deferred update.** `scheduleUpdate` returns an `obj`,
+  Lit's `void | Promise<unknown>`: return `box` of a promise to make `updateComplete` wait for it.
+  F# doesn't allow `base` inside a lambda ("'base' is being used. This is only allowed in the
+  direct implementation of members since they could escape their object scope"), so
+  call the base method through a member of your own, such as
+  `member this.ScheduleNow() = base.scheduleUpdate ()`, from the promise's callback.
 - **`PropertyValues<this>`.** The keys of `changed` are unchecked strings.
 - **`async` and `await`.** Use F# `async` with `Async.AwaitPromise`, or call
   `` updateComplete.``then`` `` directly.

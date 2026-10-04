@@ -24,6 +24,16 @@ type StyleInfo = interface end
 /// returns a DirectiveResult object that captures the arguments.
 type DirectiveResult = interface end
 
+/// <summary>
+/// The result of a directive Lit accepts as an element's content, such as <c>keyed</c>, <c>repeat</c> or
+/// <c>until</c>. It's a <c>ChildRenderable</c>, so <c>render</c> or a template function can return it.
+/// Directives that only work elsewhere, such as <c>ref</c>, <c>classMap</c> or <c>live</c>, return a plain
+/// <c>DirectiveResult</c>.
+/// </summary>
+type ChildDirectiveResult =
+    inherit DirectiveResult
+    inherit ChildRenderable
+
 type Ref<'T when 'T :> Element> =
     abstract value: 'T option
 
@@ -84,7 +94,7 @@ type Lit with
     [<Import("repeat", "lit/directives/repeat.js")>]
     static member inline repeat<'T, 'K, 'R when 'K: equality and 'R :> ChildRenderable>
         (items: seq<'T>, keyFn: KeyFn<'T, 'K>, template: RepeatTemplate<'T, 'R>)
-        : DirectiveResult =
+        : ChildDirectiveResult =
         nativeOnly
 
     /// <summary>
@@ -101,7 +111,7 @@ type Lit with
     [<Import("repeat", "lit/directives/repeat.js")>]
     static member inline repeat<'T, 'K, 'R when 'K: equality and 'R :> ChildRenderable>
         (items: seq<'T>, keyFn: 'T -> 'K, template: 'T -> 'R)
-        : DirectiveResult =
+        : ChildDirectiveResult =
         nativeOnly
 
     /// <summary>
@@ -244,7 +254,7 @@ type Lit with
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#cache"/>
     [<Import("cache", "lit/directives/cache.js")>]
-    static member inline cache(value: ChildRenderable) : DirectiveResult = nativeOnly
+    static member inline cache(value: ChildRenderable) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Associates a renderable value with a unique key. When the key changes, the previous DOM is removed and disposed before rendering the next value, even if the value—such as a template—is the same.
@@ -260,7 +270,7 @@ type Lit with
     /// <param name="value">What to render, usually a template.</param>
     /// <seealso href="https://lit.dev/docs/templates/directives/#keyed"/>
     [<Import("keyed", "lit/directives/keyed.js")>]
-    static member inline keyed(key: 'K, value: 'V) : DirectiveResult = nativeOnly
+    static member inline keyed(key: 'K, value: 'V) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Only re-evaluates the template when one of its dependencies changes, to optimize rendering performance by preventing unnecessary work.
@@ -280,7 +290,7 @@ type Lit with
     /// A function that returns the value to render when the dependencies change.
     /// </param>
     [<Import("guard", "lit/directives/guard.js")>]
-    static member inline guard(dependencies: obj[], valueFn: unit -> 'T) : DirectiveResult = nativeOnly
+    static member inline guard(dependencies: obj[], valueFn: unit -> 'T) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Sets an attribute or property if it differs from the live DOM value rather than the last-rendered value.
@@ -298,21 +308,21 @@ type Lit with
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#templatecontent"/>
     [<Import("templateContent", "lit/directives/template-content.js")>]
-    static member inline templateContent(templateElement: HTMLTemplateElement) : DirectiveResult = nativeOnly
+    static member inline templateContent(templateElement: HTMLTemplateElement) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Renders a string as HTML rather than text.
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#unsafehtml"/>
     [<Import("unsafeHTML", "lit/directives/unsafe-html.js")>]
-    static member inline unsafeHTML(html: string) : DirectiveResult = nativeOnly
+    static member inline unsafeHTML(html: string) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Renders a string as SVG rather than text.
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#unsafesvg"/>
     [<Import("unsafeSVG", "lit/directives/unsafe-svg.js")>]
-    static member inline unsafeSVG(svg: string) : DirectiveResult = nativeOnly
+    static member inline unsafeSVG(svg: string) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Creates a reference cell that can be used to access an element in the DOM.
@@ -365,7 +375,7 @@ type Lit with
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
     [<Import("until", "lit/directives/until.js")>]
-    static member inline until(promise: Promise<'T>) : DirectiveResult = nativeOnly
+    static member inline until(promise: Promise<'T>) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Renders <c>placeholder</c> until <c>promise</c> resolves, then what it resolves to.
@@ -373,7 +383,7 @@ type Lit with
     /// <example><c>until (loadProfile id, html $"&lt;p&gt;Loading…&lt;/p&gt;")</c></example>
     /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
     [<Import("until", "lit/directives/until.js")>]
-    static member inline until(promise: Promise<'T>, placeholder: 'U) : DirectiveResult = nativeOnly
+    static member inline until(promise: Promise<'T>, placeholder: 'U) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Renders the highest-priority of <c>values</c> available so far. The first has the highest priority. A
@@ -385,21 +395,21 @@ type Lit with
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#until"/>
     [<Import("until", "lit/directives/until.js")>]
-    static member inline until([<ParamArray>] values: obj[]) : DirectiveResult = nativeOnly
+    static member inline until([<ParamArray>] values: obj[]) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Appends values from an `AsyncIterable` into the DOM as they are yielded.
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#asyncappend"/>
     [<Import("asyncAppend", "lit/directives/async-append.js")>]
-    static member inline asyncAppend(iterable: AsyncIterable<ChildRenderable>) : DirectiveResult = nativeOnly
+    static member inline asyncAppend(iterable: AsyncIterable<ChildRenderable>) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Appends values from an `AsyncIterable` into the DOM as they are yielded.
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#asyncappend"/>
     [<Import("asyncAppend", "lit/directives/async-append.js")>]
-    static member inline asyncAppend(iterable: AsyncIterable<'T>, mapper: 'T -> ChildRenderable) : DirectiveResult =
+    static member inline asyncAppend(iterable: AsyncIterable<'T>, mapper: 'T -> ChildRenderable) : ChildDirectiveResult =
         nativeOnly
 
     /// <summary>
@@ -409,7 +419,7 @@ type Lit with
     [<Import("asyncAppend", "lit/directives/async-append.js")>]
     static member inline asyncAppend
         (iterable: AsyncIterable<'T>, mapper: 'T -> int -> ChildRenderable)
-        : DirectiveResult =
+        : ChildDirectiveResult =
         nativeOnly
 
     /// <summary>
@@ -417,14 +427,14 @@ type Lit with
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#asyncreplace"/>
     [<Import("asyncReplace", "lit/directives/async-replace.js")>]
-    static member inline asyncReplace(iterable: AsyncIterable<ChildRenderable>) : DirectiveResult = nativeOnly
+    static member inline asyncReplace(iterable: AsyncIterable<ChildRenderable>) : ChildDirectiveResult = nativeOnly
 
     /// <summary>
     /// Renders the latest value from an `AsyncIterable` into the DOM as it is yielded.
     /// </summary>
     /// <seealso href="https://lit.dev/docs/templates/directives/#asyncreplace"/>
     [<Import("asyncReplace", "lit/directives/async-replace.js")>]
-    static member inline asyncReplace(iterable: AsyncIterable<'T>, mapper: 'T -> ChildRenderable) : DirectiveResult =
+    static member inline asyncReplace(iterable: AsyncIterable<'T>, mapper: 'T -> ChildRenderable) : ChildDirectiveResult =
         nativeOnly
 
     /// <summary>
@@ -434,5 +444,5 @@ type Lit with
     [<Import("asyncReplace", "lit/directives/async-replace.js")>]
     static member inline asyncReplace
         (iterable: AsyncIterable<'T>, mapper: 'T -> int -> ChildRenderable)
-        : DirectiveResult =
+        : ChildDirectiveResult =
         nativeOnly

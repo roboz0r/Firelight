@@ -56,10 +56,7 @@ type ReorderList() =
 
         async {
             let! _ = this.updateComplete |> Async.AwaitPromise
-            let target = this.shadowRoot.querySelector ($"#{button}-{step.Id}") :?> HTMLElement
-
-            if not (isNull target) then
-                target.focus ()
+            this.query<HTMLElement> $"#{button}-{step.Id}" |> Option.iter _.focus()
         }
         |> Async.StartImmediate
 

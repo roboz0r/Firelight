@@ -391,12 +391,34 @@ type ReactiveElement() =
 
     member _.hasUpdated: bool = nativeOnly
     member _.isUpdatePending: bool = nativeOnly
-    member _.performUpdate() : JS.Promise<obj> option = nativeOnly
+    /// <summary>
+    /// Runs the update now: <c>willUpdate</c>, <c>update</c> (which renders), <c>firstUpdated</c> and <c>updated</c>.
+    /// Lit calls it from <c>scheduleUpdate</c>.
+    /// </summary>
+    /// <remarks>
+    /// Override it to wrap an update, and call <c>base.performUpdate ()</c>. To change when updates run,
+    /// override <c>scheduleUpdate</c> instead.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#performupdate"/>
+    abstract member performUpdate: unit -> unit
+    default _.performUpdate() : unit = nativeOnly
     member _.requestUpdate(_name: string, _oldValue: obj, ?options: PropertyDeclaration) : unit = nativeOnly
     member _.requestUpdate() : unit = nativeOnly
 
-    abstract member scheduleUpdate: unit -> unit
-    default _.scheduleUpdate() : unit = nativeOnly
+    /// <summary>
+    /// Schedules the pending update. Lit calls it once per batch of changes, and by default it calls
+    /// <c>performUpdate</c> at once.
+    /// </summary>
+    /// <remarks>
+    /// Override it to change when the update runs: call <c>base.scheduleUpdate ()</c> later, and return a
+    /// promise that resolves after it, which <c>updateComplete</c> waits for. Return
+    /// <c>base.scheduleUpdate ()</c> itself to keep the default. The result is an <c>obj</c> because Lit's is
+    /// <c>void | Promise&lt;unknown&gt;</c>: box a promise, as in
+    /// <c>box (promise.``then`` (fun _ -&gt; this.ScheduleNow ()))</c>.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/components/lifecycle/#scheduleupdate"/>
+    abstract member scheduleUpdate: unit -> obj
+    default _.scheduleUpdate() : obj = nativeOnly
 
     /// <summary>
     /// Called to determine whether an update cycle is required.
@@ -479,6 +501,30 @@ module ReactiveElementExtensions =
         /// <c>this</c>.
         /// </remarks>
         member inline this.element: HTMLElement = unbox<HTMLElement> this
+
+        /// <summary>
+        /// The first element in the component's render root (its shadow root, or the element itself for a
+        /// <c>LightDomElement</c>) that matches <c>selector</c>, as Lit's <c>@query</c> decorator finds it:
+        /// <c>this.query&lt;HTMLInputElement&gt; "input"</c>. <c>None</c> when nothing matches.
+        /// </summary>
+        /// <remarks>
+        /// The render root exists once the component has connected, and holds the template after the first
+        /// update: call it in <c>firstUpdated</c>, <c>updated</c>, an event handler, or after <c>updateComplete</c>.
+        /// The element type is unchecked, like a <c>:?&gt;</c> cast to an interface. A <c>ref</c> is the
+        /// alternative that needs no selector.
+        /// </remarks>
+        /// <seealso href="https://lit.dev/docs/components/shadow-dom/#query"/>
+        member inline this.query<'E when 'E :> Element>(selector: string) : 'E option =
+            Fable.Core.JsInterop.emitJsExpr (this, selector) "$0.renderRoot.querySelector($1)"
+
+        /// <summary>
+        /// Every element in the component's render root that matches <c>selector</c>, as Lit's <c>@queryAll</c>
+        /// decorator finds them: <c>this.queryAll&lt;HTMLInputElement&gt; "input"</c>.
+        /// </summary>
+        /// <remarks>Call it once the component has rendered, as <c>query</c>. The element type is unchecked.</remarks>
+        /// <seealso href="https://lit.dev/docs/components/shadow-dom/#query-all"/>
+        member inline this.queryAll<'E when 'E :> Element>(selector: string) : 'E[] =
+            Fable.Core.JsInterop.emitJsExpr (this, selector) "Array.from($0.renderRoot.querySelectorAll($1))"
 
         /// <summary>
         /// The element's <c>ElementInternals</c>, for a form-associated component or ARIA defaults. Call it once,

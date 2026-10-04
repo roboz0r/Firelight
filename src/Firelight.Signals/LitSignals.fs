@@ -42,10 +42,10 @@ type LitSignals =
 
     /// Subscribe a single template part to a signal without requesting a full element update.
     [<Import("watch", "@lit-labs/signals")>]
-    static member inline watch(value: SignalState<'T>) : DirectiveResult = nativeOnly
+    static member inline watch(value: SignalState<'T>) : ChildDirectiveResult = nativeOnly
 
     [<Import("watch", "@lit-labs/signals")>]
-    static member inline watch(value: SignalComputed<'T>) : DirectiveResult = nativeOnly
+    static member inline watch(value: SignalComputed<'T>) : ChildDirectiveResult = nativeOnly
 
     [<Import("html", "@lit-labs/signals")>]
     static member inline private htmlInner(strings: string[], [<ParamArray>] values: obj[]) : HTMLTemplateResult =

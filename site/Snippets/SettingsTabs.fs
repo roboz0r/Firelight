@@ -46,7 +46,7 @@ type SettingsTabs() =
         if moveFocus then
             async {
                 let! _ = this.updateComplete |> Async.AwaitPromise
-                (this.shadowRoot.querySelector ("#tab-" + id) :?> HTMLElement).focus ()
+                this.query<HTMLElement> ("#tab-" + id) |> Option.iter _.focus()
             }
             |> Async.StartImmediate
 

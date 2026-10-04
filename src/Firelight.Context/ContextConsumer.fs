@@ -26,11 +26,14 @@ open ContextConsumer
 ///
 /// It will also call the dispose method given by the provider when the
 /// host element is disconnected.
+///
+/// The host is the component, a <c>ReactiveElement</c> such as any <c>LitElement</c>: pass <c>jsThis</c>, or
+/// the F# <c>this</c> with <c>as this</c> on the type. Lit needs an element, to dispatch its requests from.
 /// </summary>
 [<AllowNullLiteral>]
 [<Import("ContextConsumer", "@lit/context")>]
 type ContextConsumer<'C, 'ValueType, 'HostElement
-    when 'C :> Context<'ValueType> and 'HostElement :> ReactiveControllerHost and 'HostElement :> LitElement> // TODO: This should be HTMLElement
+    when 'C :> Context<'ValueType> and 'HostElement :> ReactiveElement>
     (host: 'HostElement, options: Options<'C, 'ValueType>) =
     member val host: 'HostElement = nativeOnly with get, set
     member val value: 'ValueType option = nativeOnly with get, set

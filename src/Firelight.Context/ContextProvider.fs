@@ -26,8 +26,6 @@ type ContextProviderEventStatic =
     [<EmitConstructor>]
     abstract Create: context: 'C -> ContextProviderEvent<'C, 'ValueType>
 
-type ReactiveElementHost = interface end
-
 /// <summary>
 /// A ReactiveController which adds context provider behavior to a
 /// custom element.
@@ -36,14 +34,12 @@ type ReactiveElementHost = interface end
 /// the host is connected to the DOM and registers the received callbacks
 /// against its observable Context implementation.
 ///
-/// The controller may also be attached to any HTML element in which case it's
-/// up to the user to call hostConnected() when attached to the DOM. This is
-/// done automatically for any custom elements implementing
-/// ReactiveControllerHost.
+/// The host is the component, a <c>ReactiveElement</c> such as any <c>LitElement</c>: pass <c>jsThis</c>, or
+/// the F# <c>this</c> with <c>as this</c> on the type. Lit needs an element, to listen for requests on.
 /// </summary>
 [<AllowNullLiteral>]
 [<Import("ContextProvider", "@lit/context")>]
-type ContextProvider<'T, 'ValueType, 'HostElement when 'T :> Context<'ValueType> and 'HostElement :> ReactiveElementHost>
+type ContextProvider<'T, 'ValueType, 'HostElement when 'T :> Context<'ValueType> and 'HostElement :> ReactiveElement>
     (host: 'HostElement, options: Options<'T, 'ValueType>) =
     inherit ValueNotifier<'ValueType>(?defaultValue = options.initialValue)
     member _.host: 'HostElement = nativeOnly

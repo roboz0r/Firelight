@@ -256,6 +256,33 @@ the last render. If the user has typed into a box but your state still holds the
 rendered, rendering it again sets nothing, and the typing stays. `live` compares with what the box
 holds now.
 
+A directive that fills an element's content, such as `keyed`, `cache`, `repeat`, `guard` or
+`until`, returns a `ChildDirectiveResult`, a kind of `ChildRenderable`. So `render`, or a template
+function, can return one without a template around it:
+
+```fsharp
+open Fable.Core
+open Firelight
+open type Firelight.Lit
+
+type Profile = { Id: int; Name: string }
+
+[<AttachMembers>]
+type ProfileEditor() =
+    inherit LitElement()
+
+    member val profile: Profile option = None with get, set
+
+    override this.render() =
+        match this.profile with
+        | None -> nothing
+        // A new id gets a new input, so nothing typed for the last profile carries over.
+        | Some p -> keyed (p.Id, html $"""<input aria-label="Name" value={p.Name}>""")
+```
+
+The directives that only work inside a tag, `ref`, `classMap`, `styleMap` and `live`, return a
+plain `DirectiveResult`, which `render` doesn't accept.
+
 ### unsafeHTML
 
 Some HTML arrives as a string, such as Markdown converted to HTML at build time. `unsafeHTML`

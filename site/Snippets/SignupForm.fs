@@ -75,8 +75,7 @@ type SignupForm() =
 
             async {
                 let! _ = this.updateComplete |> Async.AwaitPromise
-                let input = this.shadowRoot.querySelector ("#" + firstId) :?> HTMLInputElement
-                input.focus ()
+                this.query<HTMLInputElement> ("#" + firstId) |> Option.iter _.focus()
             }
             |> Async.StartImmediate
 

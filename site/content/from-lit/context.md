@@ -126,9 +126,7 @@ defineElement<RunDistance> "run-distance"
 
 The F# context's type lists `Context<Units>` and `symbol`, which `createContext<Units>` does for
 TypeScript. Both classes take the element as their host, here as `jsThis`, the JavaScript `this`
-of the object being constructed. `ContextConsumer` also accepts the F# `this` (with `as this` on
-the type). `ContextProvider` doesn't: the compiler says "The type 'UnitsProvider' is not
-compatible with the type 'ReactiveElementHost'".
+of the object being constructed. They also accept the F# `this`, with `as this` on the type.
 
 The provider here doesn't show the value itself, so it doesn't call `this.requestUpdate()`. A
 provider that does show it needs to, as `setValue` only updates the consumers.
@@ -151,8 +149,6 @@ Lit code that already uses the controllers translates line by line:
 - **`@provide` and `@consume`.** F# has no decorators; use the controllers.
 - **`createContext<T>(key)`.** The value type comes from an interface you declare, which inherits
   `Context<'T>` and `symbol`.
-- **`this` as the provider's host.** Pass `jsThis`. `ContextProvider` requires a host type that
-  `LitElement` doesn't implement, so the F# `this` doesn't compile there.
 
 The [Firelight.Context](/packages/context/) page has live examples, including a `ContextRoot`, and the
 [Todo demo](/demos/todo/) shares its Elmish state and `dispatch` through context.

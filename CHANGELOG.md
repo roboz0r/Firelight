@@ -128,6 +128,24 @@ each break is listed under Changed with how to migrate.
   no such directive for it; this one is Lit's `ref` with one callback per controller.
 - `repeat (items, keyFn, template)` also takes functions of the item alone, so a method fits:
   `repeat (people, (fun p -> p.Id), this.PersonView)`.
+- `ChildDirectiveResult`, a `DirectiveResult` that is also a `ChildRenderable`. The directives Lit
+  accepts as an element's content return it: `repeat`, `keyed`, `cache`, `guard`, `until`,
+  `asyncAppend`, `asyncReplace`, `unsafeHTML`, `unsafeSVG`, `templateContent` and Firelight.Signals'
+  `watch`. So `render` can return one directly:
+
+  ```fsharp
+  // 0.2
+  | Some p -> html $"{keyed (p.Id, profile p)}"
+  // 0.3
+  | Some p -> keyed (p.Id, profile p)
+  ```
+
+  `ref`, `classMap`, `styleMap`, `live` and Motion's `animate` still return a plain
+  `DirectiveResult`, as does `virtualize`, which needs an element around it to virtualize.
+- `this.query<'E> selector` and `this.queryAll<'E> selector`, as Lit's `@query` and `@queryAll`:
+  the first match in the render root as an option, and every match as an array. `renderRoot` is a
+  `U2`, so querying it needed a match or `shadowRoot`.
+- `performUpdate` and `createRenderRoot` can be overridden (see Changed for `scheduleUpdate`).
 - `Event.customEvent` also works after `open Browser`, whose `Event` value hid it ("The type
   'EventType' does not define the field, constructor or member 'customEvent'").
 - `until (promise)` and `until (promise, placeholder)` overloads.
@@ -230,6 +248,33 @@ Breaking changes, with how to migrate:
   choosing, and a lambda returning an `HTMLTemplateResult` no longer matched a delegate returning
   `ChildRenderable`. Calls with lambdas, and `ItemTemplate(fun item index -> ...)`, compile as
   before.
+- **`scheduleUpdate` returns an `obj`**, Lit's `void | Promise<unknown>`, so an override can defer
+  the update by returning a promise. It returned `unit`. An override returns
+  `base.scheduleUpdate ()`, or a boxed promise:
+
+  ```fsharp
+  // 0.2
+  override this.scheduleUpdate() = log "update"; base.scheduleUpdate ()
+  // 0.3: the same compiles; to defer until the next frame:
+  member this.ScheduleNow() = base.scheduleUpdate ()
+  override this.scheduleUpdate() =
+      let frame = JS.Constructors.Promise.Create(fun resolve _ -> window.requestAnimationFrame resolve |> ignore)
+      // In then, so an error in the update rejects updateComplete rather than escaping the frame.
+      box (frame.``then`` (fun _ -> this.ScheduleNow ()))
+  ```
+
+  An override that ends in something other than `base.scheduleUpdate ()` needs `box ()`.
+- **`performUpdate` returns `unit`** and is overridable. It was typed as returning a
+  `JS.Promise<obj> option`, which Lit 3 never returns.
+- **`createRenderRoot` is an abstract member of `LitElement` returning `obj`**, so an override is
+  `override this.createRenderRoot() = this`. It was a read-only property typed as a function, which
+  a subclass could only shadow with `member`, as `LightDomElement` did; such a `member` now gets a
+  "hides the abstract member" warning: make it `override`.
+- **Firelight.Context: `ContextProvider` and `ContextConsumer` take any `ReactiveElement` host**,
+  such as a `LitElement`, so both accept the F# `this` (with `as this`) as well as `jsThis`.
+  `ContextProvider` required the `ReactiveElementHost` marker interface, which `LitElement` doesn't
+  implement, and `ContextConsumer` a `LitElement`. The marker is removed: delete
+  `interface ReactiveElementHost` from your components.
 - **`until` takes promises and values directly.** The `ParamArray` of
   `U2<Promise<ChildRenderable>, ChildRenderable>` is now `until (promise)`,
   `until (promise, placeholder)`, or `until (values: obj[])` for more than one promise:

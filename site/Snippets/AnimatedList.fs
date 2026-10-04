@@ -74,7 +74,7 @@ type AnimatedList() as this =
 
             async {
                 let! _ = this.updateComplete |> Async.AwaitPromise
-                (this.shadowRoot.querySelector next :?> HTMLElement).focus ()
+                this.query<HTMLElement> next |> Option.iter _.focus()
             }
             |> Async.StartImmediate
 

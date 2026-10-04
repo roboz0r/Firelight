@@ -217,7 +217,11 @@ override this.render() =
 `LitElement` is an `HTMLElement` in the browser but not to F# (Fable's `HTMLElement` is an interface). Use `this.element` (a cast compiling to `this`) for the host's own DOM members: `this.element.addEventListener`, `this.element.tabIndex`, `this.element.hasAttribute "open"`. `this.attachInternals ()` returns Firelight's `ElementInternals` (form value, validity, ARIA role/states); call it once in the constructor. A form-associated element also declares `static member formAssociated = true`, and form callbacks such as `formResetCallback` are plain members (with `[<AttachMembers>]`).
 
 ### 7. Lifecycle (optional)
-Available overrides: `connectedCallback()`, `disconnectedCallback()`, `firstUpdated(changedProperties)`, `updated(changedProperties)`, `willUpdate(changedProperties)`.
+Available overrides: `connectedCallback()`, `disconnectedCallback()`, `firstUpdated(changedProperties)`, `updated(changedProperties)`, `willUpdate(changedProperties)`, `shouldUpdate`, `update`, `performUpdate()`, `scheduleUpdate()` (returns `obj`: box a promise to defer the update; call `base.scheduleUpdate ()` from a helper member, since F# forbids `base` in lambdas) and `createRenderRoot()` (returns `obj`; `this` for light DOM, or inherit `LightDomElement`).
+
+`render` may return a directive that works in child position directly (`keyed`, `repeat`, `cache`, `guard`, `until`, `unsafeHTML`...): they return `ChildDirectiveResult`, a `ChildRenderable`. Element/attribute directives (`ref`, `classMap`, `styleMap`, `live`) return plain `DirectiveResult`.
+
+Query the render root with `this.query<HTMLInputElement> "input"` (an option, like `@query`) and `this.queryAll<HTMLLIElement> "li"` (an array), after the first render.
 
 ---
 
@@ -848,7 +852,7 @@ type ThreeScene() as this =
         html $"""<canvas id="gl-canvas" style="width:100%; height:100%;"></canvas>"""
 
     override _.firstUpdated(_) =
-        let canvas = this.renderRoot.querySelector("#gl-canvas")
+        let canvas = this.query<HTMLCanvasElement> "#gl-canvas"   // an option; renderRoot is a U2
         // Initialize Three.js with the canvas...
         // Start the render loop...
 

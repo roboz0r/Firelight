@@ -20,7 +20,8 @@ toc: true
 | `@property(options)` | An entry in `static member properties`, and a `member val` ([Components](/from-lit/components/#reactive-properties)) |
 | `@state()` | `PropertyDeclaration<'T>(state = true)` ([Components](/from-lit/components/#internal-state)) |
 | `@query('input')` | A `ref` to the element |
-| `@queryAll('li')` | `this.shadowRoot.querySelectorAll "li"` |
+| `@query('input')`, by selector | `this.query<HTMLInputElement> "input"`, an option |
+| `@queryAll('li')` | `this.queryAll<HTMLLIElement> "li"`, an array |
 | `@queryAsync('input')` | Wait for `this.updateComplete`, then query |
 | `@queryAssignedElements()` | The slot's `assignedElements()` |
 | `@queryAssignedNodes()` | The slot's `assignedNodes()` |
@@ -75,9 +76,10 @@ defineElement<SearchBox> "search-box"
 ```
 :::
 
-To query by selector instead, as `@query` does, call `this.shadowRoot.querySelector` in an event
-handler or after an update. `renderRoot` is typed as a union of an element and a shadow root, so
-`shadowRoot` is the easier one to call from F#.
+To query by selector instead, as `@query` does, call `this.query<HTMLInputElement> "input"` in an
+event handler or after an update. It searches the render root, as the decorator does, and returns
+`None` when nothing matches. `this.queryAll` returns every match, as an array. The element type is
+yours to get right: nothing checks it.
 
 ## @queryAssignedElements
 

@@ -63,6 +63,3 @@ type MyContextApp() =
         <button @click={fun _ -> this.Click()}>Click me</button>
         <slot></slot>
     </div>"""
-
-    // Implement the ReactiveElementHost marker so this element can host a ContextProvider.
-    interface ReactiveElementHost
