@@ -23,8 +23,8 @@ toc: true
 | `@query('input')`, by selector | `this.query<HTMLInputElement> "input"`, an option |
 | `@queryAll('li')` | `this.queryAll<HTMLLIElement> "li"`, an array |
 | `@queryAsync('input')` | Wait for `this.updateComplete`, then query |
-| `@queryAssignedElements()` | The slot's `assignedElements()` |
-| `@queryAssignedNodes()` | The slot's `assignedNodes()` |
+| `@queryAssignedElements()` | `slot.assignedElements ()`, the slot from `Ev.slot` or `this.query` |
+| `@queryAssignedNodes()` | `slot.assignedNodes ()` |
 | `@eventOptions({ passive: true })` | `LitEventListener(handler, passive = true)` |
 | `@provide`, `@consume` | `ContextProvider`, `ContextConsumer` ([Context](/from-lit/context/)) |
 
@@ -83,8 +83,9 @@ yours to get right: nothing checks it.
 
 ## @queryAssignedElements
 
-[Fable](https://fable.io/)'s browser bindings have no `HTMLSlotElement` type, so the call to `assignedElements` is
-dynamic, with `?`.
+Firelight binds `HTMLSlotElement`, which [Fable](https://fable.io/)'s browser bindings lack.
+`Ev.slot` hands the handler the `<slot>` that `@slotchange` is bound on, so it can call
+`assignedElements` there, when the count changes.
 
 ::: compare
 ```ts
@@ -108,8 +109,6 @@ export class ItemCount extends LitElement {
 ```
 ```fsharp
 open Fable.Core
-open Fable.Core.JsInterop
-open Browser.Types
 open Firelight
 open type Firelight.Lit
 
@@ -125,24 +124,53 @@ type ItemCount() =
 
     member val private count = 0 with get, set
 
-    member private this.Recount(e: Event) =
-        let items: Element[] = e.target?assignedElements ()
-        this.count <- items.Length
-
     override this.render() =
-        let recount e = this.Recount e
+        let recount (slot: HTMLSlotElement) =
+            this.count <- slot.assignedElements().Length
 
         html $"""
         <p>{this.count} items</p>
-        <slot @slotchange={recount}></slot>"""
+        <slot @slotchange={Ev.slot recount}></slot>"""
 
 defineElement<ItemCount> "item-count"
 ```
 :::
 
-`e.target` is the slot here. The other options, such as `slot` and `selector`, become arguments
-or filters: `assignedElements` takes `{ flatten: true }` as in JavaScript, and
-`Array.filter` replaces `selector`.
+`Ev.slot` passes the listener's `currentTarget`, so bind it on the `<slot>` itself: `slotchange`
+bubbles, and on a parent element `Ev.slot` would pass the parent.
+
+Outside a `slotchange` handler, find the slot with `this.query<HTMLSlotElement>`, as the
+decorator's `slot` option does. Its other options become an argument and a filter:
+`assignedElements (flatten = true)` for `{ flatten: true }`, and `Array.filter` with `matches`
+for `selector`:
+
+```fsharp
+open Fable.Core
+open Browser.Types
+open Firelight
+open type Firelight.Lit
+
+[<AttachMembers>]
+type ActionBar() =
+    inherit LitElement()
+
+    // @queryAssignedElements({ slot: 'actions', selector: 'button', flatten: true })
+    member this.buttons: Element[] =
+        match this.query<HTMLSlotElement> "slot[name=actions]" with
+        | Some slot ->
+            slot.assignedElements (flatten = true)
+            |> Array.filter (fun e -> e.matches "button")
+        | None -> [||]
+
+    override _.render() =
+        html $"""<slot name="actions"></slot>"""
+
+defineElement<ActionBar> "action-bar"
+```
+
+A component that forwards its own slot, `<action-bar><slot slot="actions"></slot></action-bar>`,
+assigns that `<slot>` to `actions`; `flatten = true` replaces it with the elements assigned to
+it. `assignedNodes` takes the same argument, and includes text nodes.
 
 ## @eventOptions
 
@@ -223,5 +251,3 @@ TypeScript: it isn't checked when it runs.
   cache, and follows the element if a render replaces it.
 - **`@queryAsync`.** There is no member that returns a promise of the element. Wait for
   `this.updateComplete`, then read the ref or query.
-- **`HTMLSlotElement`.** Not in Fable's browser bindings, so `assignedElements`,
-  `assignedNodes` and `assign` are dynamic calls.

@@ -381,10 +381,41 @@ let private slotCards =
                 (fun opened first ->
                     task {
                         let second = opened.Page.Locator("my-slot-card").Nth(1)
+                        // `hidden` set on a footer that is still there: ToBeHidden alone would also pass
+                        // for a footer that had gone, with nothing left to show.
+                        let footerHidden (card: ILocator) =
+                            Expect(card.Locator("footer")).ToHaveAttributeAsync("hidden", "")
+
+                        let addButton (card: ILocator) (name: string) =
+                            card.EvaluateAsync(
+                                "(card, name) => { const b = document.createElement('button'); b.slot = 'footer'; b.textContent = name; card.append(b); }",
+                                name
+                            )
+                            :> Task
+
+                        let removeFooter (card: ILocator) =
+                            card.EvaluateAsync("card => card.querySelectorAll('[slot=footer]').forEach(b => b.remove())") :> Task
+
                         do! Expect(first.Locator("footer")).ToBeVisibleAsync()
                         do! Expect(first.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Open"))).ToBeVisibleAsync()
-                        do! Expect(second.Locator("footer")).ToBeHiddenAsync()
+                        do! footerHidden second
                         do! Expect(second.Locator("header")).ToHaveTextAsync("Untitled")
+
+                        // The first card's footer showed through firstUpdated's this.query<HTMLSlotElement>
+                        // (a prerendered card gets no slotchange for what the page put in it). Adding and
+                        // removing footer content goes through @slotchange, Ev.slot and assignedElements,
+                        // twice, so the slot still reports changes after the footer has been hidden.
+                        for name in [ "Added"; "Added again" ] do
+                            do! addButton second name
+                            do! Expect(second.Locator("footer")).ToBeVisibleAsync()
+                            do! Expect(second.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = name))).ToBeVisibleAsync()
+                            do! removeFooter second
+                            do! footerHidden second
+
+                        do! removeFooter first
+                        do! footerHidden first
+                        do! addButton first "Back"
+                        do! Expect(first.Locator("footer")).ToBeVisibleAsync()
                         noProblems opened
                     }
                 )

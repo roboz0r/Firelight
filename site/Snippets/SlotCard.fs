@@ -1,21 +1,13 @@
 module Snippets.SlotCard
 
 open Fable.Core
-open Browser.Types
 open Firelight
 open type Firelight.Lit
-
-/// The part of <slot> this module uses. Fable's browser bindings don't have it.
-type HTMLSlotElement =
-    inherit HTMLElement
-    abstract assignedElements: unit -> Element[]
 
 /// A card with a heading, a body and an optional footer, all supplied by the page.
 [<AttachMembers>]
 type SlotCard() =
     inherit LitElement()
-
-    let footer = createRef<HTMLSlotElement> ()
 
     static member properties =
         PropertyDeclarations.create [ "hasFooter", PropertyDeclaration<bool>(state = true) ]
@@ -35,14 +27,16 @@ type SlotCard() =
 
     member val hasFooter = false with get, set
 
-    member this.CheckFooter() =
-        footer.value
-        |> Option.iter (fun slot -> this.hasFooter <- slot.assignedElements().Length > 0)
+    member this.CheckFooter(slot: HTMLSlotElement) =
+        this.hasFooter <- slot.assignedElements().Length > 0
 
     // slotchange reports changes. Check once the first update is done, too: in a prerendered
     // card, the page's elements were in their slots before this code ran.
     override this.firstUpdated _ =
-        this.updateComplete.``then`` (fun _ -> this.CheckFooter()) |> ignore
+        this.updateComplete.``then`` (fun _ ->
+            this.query<HTMLSlotElement> "slot[name=footer]" |> Option.iter this.CheckFooter
+        )
+        |> ignore
 
     override this.render() =
         html
@@ -50,7 +44,7 @@ type SlotCard() =
         <header><slot name="heading">Untitled</slot></header>
         <div class="body"><slot></slot></div>
         <footer ?hidden={not this.hasFooter}>
-            <slot name="footer" {ref footer} @slotchange={fun _ -> this.CheckFooter()}></slot>
+            <slot name="footer" @slotchange={Ev.slot this.CheckFooter}></slot>
         </footer>"""
 
 defineElement<SlotCard> "my-slot-card"

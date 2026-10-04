@@ -223,6 +223,8 @@ Available overrides: `connectedCallback()`, `disconnectedCallback()`, `firstUpda
 
 Query the render root with `this.query<HTMLInputElement> "input"` (an option, like `@query`) and `this.queryAll<HTMLLIElement> "li"` (an array), after the first render.
 
+Slots: Fable.Browser.Dom has no `HTMLSlotElement`, so Firelight binds it (in `open Firelight`; don't declare your own or call `?assignedElements`). `slot.assignedElements ()`, `slot.assignedElements (flatten = true)`, `slot.assignedNodes ()`, `slot.assign (a, b)` (elements or text nodes, `U2` to mix them; manual slot assignment only), `slot.name`, and `el.assignedSlot` (an option) on elements and text nodes. Get the slot from `Ev.slot` in `@slotchange`, or `this.query<HTMLSlotElement> "slot[name=footer]"` (the `@queryAssignedElements({ slot: 'footer' })` equivalent).
+
 ---
 
 ## Event Handling
@@ -250,6 +252,7 @@ html $"""
 - `Ev.value` reads `value` from the element the binding is on (`currentTarget`): an `<input>`, `<select>` or `<textarea>`. `Ev.checked'` reads `checked` from a checkbox or radio `<input>`. Use them instead of `(e.target :?> HTMLInputElement).value`.
 - `Ev.mouse`, `pointer`, `keyboard`, `focus`, `input` (InputEvent), `wheel`, `drag`, `touch`, `submit`, `event` (any), and `Ev.custom<'T>` for a `CustomEvent<'T>` (`e.detail` is `'T option`).
 - `Ev.valueAs<'T>` reads `currentTarget.value` and unboxes it (no parsing), for components whose `value` isn't a string, e.g. a slider's number. A native `<input type="number">`'s `value` is still a string: use `Ev.value` and parse.
+- `Ev.slot` passes `currentTarget` as Firelight's `HTMLSlotElement`, for `@slotchange` bound on the `<slot>` itself: `<slot @slotchange={Ev.slot (fun slot -> this.count <- slot.assignedElements().Length)}></slot>`.
 - Nothing checks the function against the event name: `@click={Ev.keyboard ...}` compiles. Pick the matching one.
 
 ### LitEventListener with options

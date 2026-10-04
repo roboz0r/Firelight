@@ -49,6 +49,21 @@ each break is listed under Changed with how to migrate.
 
 - `Ev.valueAs<'T>`, for an element whose `value` property isn't a string, such as a slider
   component's number: it unboxes `currentTarget.value`, and parses nothing.
+- `HTMLSlotElement`, which Fable.Browser.Dom doesn't have: `name`, `assignedNodes`,
+  `assignedElements` (both with an optional `flatten`) and `assign`, which takes elements and text
+  nodes, as the DOM does; plus `assignedSlot` on elements and text nodes. It's in the `Firelight` namespace, so it doesn't clash with
+  `open Browser.Types`. `Ev.slot` passes a `@slotchange` handler the slot it's bound on, and
+  `this.query<HTMLSlotElement>` finds one by selector. Slot code no longer needs a dynamic call or
+  a type of its own:
+
+  ```fsharp
+  // 0.2
+  @slotchange={fun (e: Event) -> this.count <- (e.target?assignedElements () : Element[]).Length}
+  // 0.3
+  @slotchange={Ev.slot (fun slot -> this.count <- slot.assignedElements().Length)}
+  ```
+
+  `slot.assignedElements (flatten = true)` compiles to `slot.assignedElements({ flatten: true })`.
 - Lit's `when`, `choose`, `map` and `range` directives. `when` is an F# keyword, so it's `when'`:
 
   ```fsharp

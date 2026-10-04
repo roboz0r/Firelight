@@ -11,8 +11,9 @@ open Fable.Core.JsInterop
 /// A hole's type is <c>obj</c>, so in <c>@keydown={fun e -> ...}</c> F# can't infer the type of <c>e</c>, and an
 /// annotation is needed. These functions supply it: <c>@keydown={Ev.keyboard (fun e -> ... e.key ...)}</c>.
 /// Each event-typed function, from <c>Ev.event</c> to <c>Ev.custom</c>, is <c>inline</c> and returns the handler
-/// it is given, so the JavaScript is just the lambda. <c>Ev.value</c> and <c>Ev.checked'</c> wrap your handler in
-/// one that reads the element's value first.
+/// it is given, so the JavaScript is just the lambda. <c>Ev.value</c>, <c>Ev.checked'</c> and <c>Ev.valueAs</c>
+/// wrap your handler in one that reads the element's value first, and <c>Ev.slot</c> in one that passes the
+/// <c>&lt;slot&gt;</c> itself.
 /// </para>
 /// <para>
 /// Nothing checks that the event name matches the type: <c>@click={Ev.keyboard (fun e -> ...)}</c> compiles,
@@ -158,6 +159,24 @@ module Ev =
     /// </example>
     let inline valueAs<'T> ([<InlineIfLambda>] handler: 'T -> unit) : Event -> unit =
         fun (e: Event) -> handler (unbox<'T> e.currentTarget?value)
+
+    /// <summary>
+    /// A handler that receives the <c>&lt;slot&gt;</c> the binding is on, for <c>@slotchange</c>, which fires when
+    /// the nodes assigned to the slot change: <c>@slotchange={Ev.slot (fun slot -&gt; ...)}</c>.
+    /// </summary>
+    /// <remarks>
+    /// It passes the event's <c>currentTarget</c>, the element Lit bound the listener to, as an
+    /// <see cref="T:Firelight.HTMLSlotElement"/>, so bind it on the <c>&lt;slot&gt;</c> itself. <c>slotchange</c>
+    /// bubbles, so on a parent element <c>currentTarget</c> is the parent, not a slot. Nothing checks the bound
+    /// event's name or the element; see <see cref="T:Firelight.Ev"/>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// html $"""&lt;slot @slotchange={Ev.slot (fun slot -&gt; this.count &lt;- slot.assignedElements().Length)}&gt;&lt;/slot&gt;"""
+    /// </code>
+    /// </example>
+    let inline slot ([<InlineIfLambda>] handler: HTMLSlotElement -> unit) : Event -> unit =
+        fun (e: Event) -> handler (e.currentTarget :?> HTMLSlotElement)
 
     /// <summary>
     /// Adds <c>handler</c> as a listener for <c>eventName</c> on <c>target</c>, and returns a function that

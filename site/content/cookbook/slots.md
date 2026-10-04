@@ -43,8 +43,10 @@ page picks the elements, such as which heading level fits where the card sits.
   no event reports them. So `firstUpdated` also checks once, after the first update. `?hidden`
   hides the footer, border and all, while it's empty.
 
-[Fable](https://fable.io/)'s browser bindings have no `HTMLSlotElement`, so the module declares the
-one member it uses, and types the [ref](/guides/templates/#directives) with it.
+`CheckFooter` takes the slot as an `HTMLSlotElement`, which Firelight binds because
+[Fable](https://fable.io/)'s browser bindings don't. `Ev.slot` hands it the `<slot>` that
+`@slotchange` is bound on, and `this.query<HTMLSlotElement> "slot[name=footer]"` finds the same
+slot in `firstUpdated`.
 
 The cards are [prerendered](/guides/prerendering/), and the page's elements are already in the
 page, so the first card shows its heading and body before any JavaScript runs. Its footer appears

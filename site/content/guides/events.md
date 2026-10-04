@@ -58,11 +58,14 @@ the [Templates guide](/guides/templates/#typed-event-handlers) shows: in
 | `Ev.value` | The field's `value`, a string | `input` or `change` on the field |
 | `Ev.checked'` | Whether the box is checked | `change` on the checkbox |
 | `Ev.valueAs<'T>` | The element's `value`, unboxed as a `'T` | A component whose `value` isn't a string |
+| `Ev.slot` | The `<slot>`, an `HTMLSlotElement` | `slotchange` on the slot |
 
 `Ev.value` and `Ev.checked'` read the element the listener is on, so bind them on the field itself,
 not on a `<form>` around it. `Ev.valueAs<'T>` is for components whose `value` property holds
 something other than a string, such as a slider's number: it unboxes the value and parses nothing.
 A native `<input type="number">`'s `value` is still a string, so use `Ev.value` there and parse it.
+`Ev.slot` also reads the element the listener is on, so bind it on the `<slot>`; the
+[slots recipe](/cookbook/slots/) uses it.
 Nothing checks the function against the event's name; see [Typed details](#typed-details).
 
 A few members of the event are worth knowing in any handler:

@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Globals.fs" />
     <Compile Include="Browser.fs" />
+    <Compile Include="Slot.fs" />
     <Compile Include="Ev.fs" />
     <Compile Include="ReactiveController.fs" />
     <Compile Include="CSSTag.fs" />
