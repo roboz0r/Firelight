@@ -123,6 +123,43 @@ element and calls the newest function, so a handler always sees the current valu
 options such as `passive` or `once`, bind a `LitEventListener(handler, passive = true)` instead of
 a function.
 
+### Typed event handlers
+
+A hole's type is `obj`, so F# can't tell what `e` is in `@keydown={fun e -> ...}`, and you would
+annotate it: `fun (e: KeyboardEvent) -> ...`. The `Ev` module gives the type instead.
+`Ev.keyboard (fun e -> ...)` makes `e` a `KeyboardEvent`, with completion for `e.key`. It returns
+the handler it's given, so the JavaScript is just the lambda.
+
+```fsharp
+open Firelight
+open type Firelight.Lit
+
+let search (query: string) (setQuery: string -> unit) =
+    html
+        $"""
+    <input type="search" .value={query}
+        @input={Ev.value setQuery}
+        @keydown={Ev.keyboard (fun e -> if e.key = "Escape" then setQuery "")}>"""
+```
+
+`Ev.value` hands your function the field's new `value`, and `Ev.checked'` a checkbox's `checked`
+(with a quote, as `checked` is reserved in F#). Both read the element the binding is on, so they
+replace the `(e.target :?> HTMLInputElement).value` downcast for an `<input>`, `<select>` or
+`<textarea>`. There are also `Ev.mouse`, `Ev.pointer`, `Ev.focus`, `Ev.input`, `Ev.wheel`,
+`Ev.drag`, `Ev.touch`, `Ev.submit`, and `Ev.event` for any other event.
+
+`Ev.custom<'T>` types a `CustomEvent` whose `detail` is a `'T`, such as one a component raises with
+`Event.customEvent`. Its `detail` is a `'T option`. Here a text box raises `tag-added` when you
+press Enter, and the list adds the tag:
+
+::: example Snippets/TemplateEvents.fs
+<my-tag-list></my-tag-list>
+:::
+
+Nothing checks that the function matches the event: `@click={Ev.keyboard (fun e -> ...)}`
+compiles, because the event's name is fixed text that only Lit reads. Nor does anything check that a
+custom event's `detail` is the type you name.
+
 ## Conditionals and lists
 
 Templates have no syntax of their own for conditions or loops. `if`, `match` and the list

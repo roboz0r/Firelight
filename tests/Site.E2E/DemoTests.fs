@@ -106,6 +106,30 @@ let private tutorial =
                 )
     }
 
+// The Templates guide's typed handlers: Ev.value and Ev.keyboard in <my-tag-input>, and
+// Ev.custom<string> in <my-tag-list>, which hears the input's tag-added event.
+let private typedEvents =
+    testTask "typed event handlers: Enter in the tag box adds the typed tag to the list" {
+        let page = pageWith "my-tag-list"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let list = opened.Page.Locator("my-tag-list").First
+                        let input = list.Locator("my-tag-input input")
+                        do! Expect(list.Locator("li")).ToHaveTextAsync([| "fsharp"; "lit" |])
+                        do! input.FillAsync("elmish")
+                        do! input.PressAsync("Enter")
+                        do! Expect(list.Locator("li")).ToHaveTextAsync([| "fsharp"; "lit"; "elmish" |])
+                        do! Expect(input).ToHaveValueAsync("")
+                        noProblems opened
+                    }
+                )
+    }
+
 let private routing =
     let renders (opened: Browser.OpenPage) (address: string) (description: string) =
         task {
@@ -178,4 +202,4 @@ let private routing =
         }
     ]
 
-let all = testList "Demos" [ counter; rating; tutorial; routing ]
+let all = testList "Demos" [ counter; rating; tutorial; typedEvents; routing ]
