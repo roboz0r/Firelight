@@ -122,7 +122,10 @@ let private withViewport (width: int) (scheme: ColorScheme) (path: string) (f: I
 
         try
             let! (tab: IPage) = context.NewPageAsync()
-            let! _ = tab.GotoAsync(Server.url path, PageGotoOptions(WaitUntil = WaitUntilState.NetworkIdle))
+
+            let! _ =
+                tab.GotoAsync(Server.url path, PageGotoOptions(WaitUntil = WaitUntilState.NetworkIdle))
+
             return! f tab
         finally
             context.CloseAsync().GetAwaiter().GetResult()
@@ -145,13 +148,16 @@ let private staysOnTop (scheme: ColorScheme) (page: Page) =
                 (fun tab ->
                     task {
                         let! s = scrollAndMeasure tab scrollBy
-                        let where = $"{page.Path} at {wide} px ({schemeName scheme}), scrolled {s.ScrollY} px"
+
+                        let where =
+                            $"{page.Path} at {wide} px ({schemeName scheme}), scrolled {s.ScrollY} px"
 
                         if s.ScrollY < float scrollBy - 1.0 then
                             failtest $"{where}: the page didn't scroll {scrollBy} px."
 
                         if page = templates.Value && s.Padded then
-                            failtest $"{page.Path} is no longer {scrollBy} px longer than the window; pick a longer page."
+                            failtest
+                                $"{page.Path} is no longer {scrollBy} px longer than the window; pick a longer page."
 
                         if abs s.Bar.Top > 0.5 then
                             failtest
@@ -228,8 +234,7 @@ let private demoUnderHeader =
                             failtest
                                 $"{page.Path}: the <{tag}> demo is under {overlapping.Length} header links, so this checks nothing."
 
-                        let covered =
-                            overlapping |> Array.filter (fun l -> not l.OnTop) |> Array.map _.Text
+                        let covered = overlapping |> Array.filter (fun l -> not l.OnTop) |> Array.map _.Text
 
                         if covered.Length > 0 then
                             failtest
@@ -256,6 +261,56 @@ let private scrollsAway (page: Page) =
                         if s.Bar.Bottom > 0.0 then
                             failtest
                                 $"{page.Path} at {narrow} px, scrolled {s.ScrollY} px: the header is still on screen ({s.Bar.Top} to {s.Bar.Bottom} px). It is sticky only on wide screens."
+                    }
+                )
+    }
+
+/// The narrowest width with a sticky header: just above the breakpoint in site.css (58rem = 928px).
+let private narrowestSticky = 929
+
+/// At the narrowest sticky width the header links still fit on one row beside the logo, so the
+/// sticky header is no taller than --header-height (which the anchor offset assumes). A new header
+/// link that makes them wrap fails this: raise the breakpoint in site.css and here.
+let private oneRowWhenSticky =
+    testTask $"at {narrowestSticky} px the sticky header's links fit on one row" {
+        do!
+            withViewport
+                narrowestSticky
+                ColorScheme.Light
+                templates.Value.Path
+                (fun tab ->
+                    task {
+                        let! s = scrollAndMeasure tab scrollBy
+
+                        let! headerHeight =
+                            tab.EvaluateAsync<float>(
+                                "() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) * parseFloat(getComputedStyle(document.documentElement).fontSize)"
+                            )
+
+                        if s.Bar.Top <> 0.0 then
+                            failtest
+                                $"At {narrowestSticky} px the header isn't sticky (its top is at {s.Bar.Top} px after scrolling). Is the breakpoint in site.css still 58rem?"
+
+                        let rows =
+                            s.Links
+                            |> Array.filter (fun l -> l.Text <> "Firelight") // the logo, beside the nav
+                            |> Array.map (fun l -> Math.Round l.Top)
+                            |> Array.distinct
+
+                        if s.ScrollY < float scrollBy - 1.0 then
+                            failtest $"At {narrowestSticky} px the page didn't scroll {scrollBy} px."
+
+                        let navLinks = s.Links |> Array.filter (fun l -> l.Text <> "Firelight")
+
+                        if
+                            navLinks.Length < 2
+                            || navLinks |> Array.exists (fun l -> l.Right - l.Left <= 0.0 || not l.OnTop)
+                        then
+                            failtest $"At {narrowestSticky} px the header's nav links are missing, empty or covered."
+
+                        if rows.Length <> 1 || s.Bar.Bottom - s.Bar.Top > headerHeight + 1.0 then
+                            failtest
+                                $"At {narrowestSticky} px the header links wrap onto {rows.Length} rows and the header is {s.Bar.Bottom - s.Bar.Top} px tall, over --header-height ({headerHeight} px). Raise the header breakpoint in site.css and narrowestSticky here."
                     }
                 )
     }
@@ -442,14 +497,14 @@ let all () =
     // homepage (layout: home) and the not-found page.
     let withHeader = pages |> List.filter (isDemoApp >> not)
 
-    let layouts =
-        [ templates.Value; pageAt "index.html"; pageAt "404.html" ]
+    let layouts = [ templates.Value; pageAt "index.html"; pageAt "404.html" ]
 
     testList "Header" [
         testList "sticky" [
             yield! withHeader |> List.map (staysOnTop ColorScheme.Light)
             yield! layouts |> List.map (staysOnTop ColorScheme.Dark)
             demoUnderHeader
+            oneRowWhenSticky
         ]
         testList "narrow" (layouts |> List.map scrollsAway)
         testList "anchors" [ hashOnLoad; tocClicks; routerHashLink; hashOnLoadNarrow ]
