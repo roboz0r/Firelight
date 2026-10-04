@@ -5,7 +5,7 @@ description: "Client-side routing for Lit components on the browser's URL Patter
 section: packages
 order: 40
 summary: Client-side routing on the URL Pattern API, with routes as an F# union
-lead: Client-side routing on the browser's URL Pattern API, with your routes as an F# union.
+lead: Type-safe client-side routing powered by the browser's URL Pattern API, with routes modelled as an F# union.
 nuget: Firelight.Router
 links:
   - text: "MDN: URL Pattern API"
@@ -16,16 +16,16 @@ links:
 
 ## Why use it
 
-In a single-page app the address should still say where the user is, so links can be shared,
-a reload lands in the same place and the back button works. Firelight.Router matches the address
-against URL patterns and turns the match into a value of your own route type, so rendering a page
-is a `match`, and the compiler tells you when a route isn't handled.
+Firelight.Router parses browser URLs into your own F# discriminated union. This turns page routing
+into a strongly typed pattern match, and helps the compiler ensure every route is handled.
 
-`RouterController` keeps a component in step with the address. It handles clicks on
-links that match one of its routes, the browser's back and forward buttons, and smooth scrolling
-to `#hash` links. Links it has no route for navigate normally. It's built on the
-standard [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API),
-with a polyfill for browsers that don't have it yet, rather than on `@lit-labs/router`.
+`RouterController` keeps your component synchronized with the browser location. It intercepts
+clicks on matching links, manages back and forward history, and handles smooth scrolling for
+`#hash` anchors. Unmatched links fall back to standard browser navigation.
+
+Firelight.Router builds directly on the web standard
+[URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API) (polyfilled
+for browsers that don't yet support it natively).
 
 ## Example
 
