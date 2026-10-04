@@ -405,5 +405,29 @@ let private propertyTypes =
                 )
     }
 
+// The stopwatch controller inherits ReactiveControllerBase: it only ticks (re-renders its host
+// without a click) if Lit's call to hostConnected reaches its override.
+let private stopwatch =
+    testTask "a ReactiveControllerBase controller's overrides run: the stopwatch ticks on its own" {
+        let page = pageWith "my-stopwatch"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let watch = opened.Page.Locator("my-stopwatch").First
+                        let time = watch.Locator(".time")
+                        do! Expect(time).ToHaveTextAsync("0.0 s")
+                        do! watch.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Start")).ClickAsync()
+                        do! Expect(time).Not.ToHaveTextAsync(Regex "^0\\.0 s$")
+                        let! first = time.TextContentAsync()
+                        do! Expect(time).Not.ToHaveTextAsync(first)
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves; propertyTypes ]
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves; propertyTypes; stopwatch ]

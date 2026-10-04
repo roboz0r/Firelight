@@ -236,7 +236,8 @@ components you prerender.
 ## Values from F#: unsafeCSS {#unsafecss}
 
 A hole in `css` takes only another `css` value or a number. That keeps arbitrary text out of a
-stylesheet: a string in a hole throws when that `css` runs. For text you trust, such as a
+stylesheet: a string in a hole throws when that `css` runs, and in a Debug build the message
+names the hole. For text you trust, such as a
 colour from your build's configuration, `unsafeCSS` turns a string into CSS:
 
 ```fsharp
@@ -300,7 +301,7 @@ The rest compile, because `styles` is an ordinary static member and a `css` hole
 |---|---|---|
 | `static member style` | No styles, and no error | `static member styles` |
 | `static member styles = ":host { ... }"` | Throws: Failed to set the 'adoptedStyleSheets' property on 'ShadowRoot' | `css $$""":host { ... }"""` |
-| `{{color}}` in `styles`, with a string | Throws "Value passed to 'css' function must be a 'css' function result", and the element is never defined | `unsafeCSS` for trusted text, or a custom property |
+| `{{color}}` in `styles`, with a string | Throws "Value passed to 'css' function must be a 'css' function result" (in Debug, "css: the hole after … holds the string …"), and the element is never defined | `unsafeCSS` for trusted text, or a custom property |
 | `:host { display: block; }` alone | `hidden` no longer hides the element | Add `:host([hidden]) { display: none; }` |
 | Page CSS such as `my-card h3 { }` | Matches nothing inside | A custom property or a part |
 | A `<link>` to the app's CSS in `index.html` | Styles the page, not the components | A constructed sheet, as in [Share styles](#share-styles-between-components) |

@@ -85,6 +85,31 @@ each break is listed under Changed with how to migrate.
 - `Globals.String`, `Globals.Object` and `Globals.Array`, beside `Boolean` and `Number`, for
   ``` ``type`` = jsConstructor<Globals.Array> ```. `open System` hides all five behind System's
   types, so qualify them with `Globals.`.
+- `ReactiveControllerBase`, a base class for controllers whose four callbacks do nothing until
+  overridden, so a controller overrides only what it needs. The `ReactiveController` interface
+  stays, for classes that inherit something else:
+
+  ```fsharp
+  // 0.2
+  type Clock(host: ReactiveControllerHost) as this =
+      do host.addController this
+      interface ReactiveController with
+          member _.hostConnected() = start ()
+          member _.hostDisconnected() = stop ()
+          member _.hostUpdate() = ()
+          member _.hostUpdated() = ()
+  // 0.3
+  type Clock(host: ReactiveControllerHost) as this =
+      inherit ReactiveControllerBase()
+      do host.addController this
+      override _.hostConnected() = start ()
+      override _.hostDisconnected() = stop ()
+  ```
+
+- In Debug builds, `css` throws when a hole holds anything but a `css` value or a number, naming
+  the hole: `css: the hole after ":host { color: " holds the string "red"`. Lit throws for such a
+  value in every build, but its message doesn't say which hole.
+- `isServer` (Lit's), `true` under Lit SSR in Node and `false` in a browser.
 - `until (promise)` and `until (promise, placeholder)` overloads.
 - `StaticHTML.mathml`.
 - `loadPolyfill ()` in Firelight.Router: loads `urlpattern-polyfill` when `URLPattern` isn't

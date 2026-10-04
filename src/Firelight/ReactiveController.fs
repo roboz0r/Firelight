@@ -71,3 +71,42 @@ type ReactiveControllerHost =
     /// without triggering another update.
     /// </returns>
     abstract member updateComplete: JS.Promise<bool> with get
+
+/// <summary>
+/// A reactive controller whose four callbacks do nothing until you override them, so a controller
+/// overrides only the ones it needs. It implements <c>ReactiveController</c>.
+/// </summary>
+/// <remarks>
+/// It doesn't register itself: call <c>host.addController this</c> in your constructor, after your fields.
+/// <c>addController</c> on a host that's already connected calls <c>hostConnected</c> at once, and from the
+/// base constructor that would run before your class had set its fields.
+/// </remarks>
+/// <example>
+/// <code>
+/// type Ticker(host: ReactiveControllerHost) as this =
+///     inherit ReactiveControllerBase()
+///     do host.addController this
+///     override _.hostConnected() = ...
+///     override _.hostDisconnected() = ...
+/// </code>
+/// </example>
+[<AbstractClass>]
+type ReactiveControllerBase() =
+    /// <summary>Called when the host joins a document, in its <c>connectedCallback</c>. Does nothing unless overridden.</summary>
+    abstract hostConnected: unit -> unit
+    default _.hostConnected() = ()
+    /// <summary>Called when the host leaves the document, in its <c>disconnectedCallback</c>. Does nothing unless overridden.</summary>
+    abstract hostDisconnected: unit -> unit
+    default _.hostDisconnected() = ()
+    /// <summary>Called at each host update, before the host renders. Not called on the server. Does nothing unless overridden.</summary>
+    abstract hostUpdate: unit -> unit
+    default _.hostUpdate() = ()
+    /// <summary>Called at each host update, after the host has rendered. Not called on the server. Does nothing unless overridden.</summary>
+    abstract hostUpdated: unit -> unit
+    default _.hostUpdated() = ()
+
+    interface ReactiveController with
+        member this.hostConnected() = this.hostConnected ()
+        member this.hostDisconnected() = this.hostDisconnected ()
+        member this.hostUpdate() = this.hostUpdate ()
+        member this.hostUpdated() = this.hostUpdated ()

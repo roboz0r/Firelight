@@ -495,31 +495,31 @@ let currentState = stateConsumer.value
 
 ## Reactive Controllers
 
-Controllers share stateful logic across components without inheritance. Implement `ReactiveController` and attach to a host.
+Controllers share stateful logic across components without inheriting from them. Inherit `ReactiveControllerBase` (all four callbacks default to no-ops; override the ones you need), register with the host in the constructor after the fields, and create the controller once in a component `let`. (Implementing the `ReactiveController` interface directly also works, but then every member needs a body.)
 
 ```fsharp
 type ClockController(host: ClockHost) as this =
+    inherit ReactiveControllerBase()
+
     let mutable nonce = 1
     let mutable value = DateTime.Now
-    do host.addController this
+    do host.addController this   // not in the base: hostConnected may run at once
 
     member _.Value = value
 
-    interface ReactiveController with
-        member _.hostConnected() =
-            let i = nonce
-            async {
-                while i = nonce do
-                    do! Async.Sleep host.TickRate
-                    value <- DateTime.Now
-                    host.requestUpdate ()
-            } |> Async.StartImmediate
-        member _.hostDisconnected() = nonce <- nonce + 1
-        member _.hostUpdate() = ()
-        member _.hostUpdated() = ()
+    override _.hostConnected() =
+        let i = nonce
+        async {
+            while i = nonce do
+                do! Async.Sleep host.TickRate
+                value <- DateTime.Now
+                host.requestUpdate ()
+        } |> Async.StartImmediate
+
+    override _.hostDisconnected() = nonce <- nonce + 1
 ```
 
-The nonce pattern ensures the async loop stops cleanly when the host disconnects.
+The nonce pattern ensures the async loop stops cleanly when the host disconnects. For `window`/`document` listeners in a controller, use `Ev.listen` in `hostConnected` and call its remover in `hostDisconnected`.
 
 ---
 
@@ -660,6 +660,8 @@ All accessed via `open type Firelight.Lit`:
 Directives take plain values: no `Some(box ...)`. `guard`'s dependencies are an `obj[]`, so `[| rows; sortColumn |]` may mix types. `choose` and `keyed` compare keys with JavaScript `===`: use strings or numbers, not F# unions or records.
 
 `open type Firelight.Lit` hides FSharp.Core's `ref` (Lit's `ref` directive keeps its name). For a reference cell, write `Operators.ref 0`.
+
+A `css` hole takes only another `css` value or a number; for text use `unsafeCSS` (trusted text only). Debug builds throw naming the hole when a string or anything else is put there (Lit throws in every build, less clearly).
 
 A format specifier in a hole, such as `{price:N2}`, is never applied: Lit gets the value itself. Debug builds (`dotnet fable watch`, `-c Debug`) throw; format in F# instead: `{price.ToString "N2"}`.
 
@@ -855,7 +857,7 @@ Firelight components are Lit components, so Lit SSR (`@lit-labs/ssr`, in Node) c
 
 To prerender a component:
 - register it with `defineElement`, which uses the global `customElements` (Lit SSR's DOM shim provides one; there is no `window`);
-- touch `window`, `document` and other browser APIs only in `connectedCallback`, `firstUpdated`, `updated` or event handlers, never at module load, in the constructor, `willUpdate` or `render`;
+- touch `window`, `document` and other browser APIs only in `connectedCallback`, `firstUpdated`, `updated` or event handlers, never at module load, in the constructor, `willUpdate` or `render` (or guard them with `isServer`, from `open type Firelight.Lit`, which is `true` under Lit SSR);
 - render the same thing first in the browser as on the server, and load `@lit-labs/ssr-client/lit-element-hydrate-support.js` before Lit, or the component renders twice.
 
 An `ElmishController` starts its loop in the constructor, so the initial model renders on the server, and `init`'s commands run there too: keep browser APIs out of them.

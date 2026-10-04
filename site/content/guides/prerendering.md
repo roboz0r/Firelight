@@ -81,7 +81,9 @@ started there.
 - Register with `defineElement`. It uses the global `customElements`, which exists in Node.
 - Use `window`, `document` and other browser APIs only in `connectedCallback`, `firstUpdated`,
   `updated`, event handlers and controllers' `hostConnected` and later methods. Module-level code,
-  the constructor, `willUpdate` and `render` run in Node.
+  the constructor, `willUpdate` and `render` run in Node. Where code that runs in both places must
+  differ, test Lit's `isServer` (from `open type Firelight.Lit`): it's `true` in Node and `false`
+  in the browser. Keep the first render the same either way.
 - Render the same first in the browser as at build time. State that only the browser knows, such
   as the window's size or a saved preference, changes after the first update, as above.
 - Do first-time work in `willUpdate` under `not this.hasUpdated`, not only when `changed` lists a

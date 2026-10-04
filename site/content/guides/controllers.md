@@ -19,9 +19,9 @@ needs.
 
 ## Writing a controller
 
-A controller is a class that implements `ReactiveController` and registers itself with its host,
-the component, when it's created. The interface has four methods, one for each point in the
-host's lifecycle:
+A controller is a class that inherits `ReactiveControllerBase` and registers itself with its host,
+the component, when it's created. It overrides the methods it needs, of four, one for each point
+in the host's lifecycle:
 
 | Method | Called | Runs on the server |
 |---|---|---|
@@ -31,8 +31,10 @@ host's lifecycle:
 | `hostUpdated` | At each update, after the host has rendered | No |
 
 An update that the host's `shouldUpdate` skips calls neither of the last two. Lit's interface makes
-all four optional, but F# needs every interface member, so write `()` for the ones you don't use.
-The host is a `ReactiveControllerHost`, which every `LitElement` is. It has `addController`,
+all four optional. `ReactiveControllerBase` gives each one a body that does nothing, so you
+override only the ones you use. It implements Firelight's `ReactiveController` interface, which a
+class can also implement directly; then F# needs all four members, with `()` for the ones you
+don't use. That's the way for a class that already inherits something else. The host is a `ReactiveControllerHost`, which every `LitElement` is. It has `addController`,
 `requestUpdate` and `updateComplete`, which is all most controllers need.
 
 `addController` on a host that's already on a page calls `hostConnected` straight away, so set up
@@ -51,7 +53,10 @@ then stop the stopwatch: the countdown carries on, as each component has its own
 How the parts fit:
 
 - `as this` names the controller in its own constructor, so `do host.addController this` can
-  register it. From then on, Lit calls its methods with the host's.
+  register it. From then on, Lit calls its methods with the host's. The base class doesn't
+  register the controller for you: in its constructor, your fields aren't set yet.
+- It overrides `hostConnected` and `hostDisconnected`, and leaves the update methods to the base
+  class.
 - The component creates it in a `let` binding, once. The component needs `as this` too, to pass
   itself as the host.
 - `Start` and `Stop` change the controller's state and call `host.requestUpdate ()`, as a
@@ -82,6 +87,8 @@ let matchMedia (query: string) : MediaQueryList = jsNative
 
 /// Whether a CSS media query matches, such as "(prefers-color-scheme: dark)".
 type MediaQuery(host: ReactiveControllerHost, query: string) as this =
+    inherit ReactiveControllerBase()
+
     let mutable matches = false
     let mutable stopListening = ignore
 
@@ -89,21 +96,18 @@ type MediaQuery(host: ReactiveControllerHost, query: string) as this =
 
     member _.Matches = matches
 
-    interface ReactiveController with
-        member _.hostConnected() =
-            let list = matchMedia query
+    override _.hostConnected() =
+        let list = matchMedia query
 
-            let read () =
-                matches <- list.matches
-                host.requestUpdate ()
+        let read () =
+            matches <- list.matches
+            host.requestUpdate ()
 
-            stopListening <- Ev.listen list "change" (Ev.event (fun _ -> read ()))
-            // After the host's first update: see below.
-            host.updateComplete.``then`` (fun _ -> read ()) |> ignore
+        stopListening <- Ev.listen list "change" (Ev.event (fun _ -> read ()))
+        // After the host's first update: see below.
+        host.updateComplete.``then`` (fun _ -> read ()) |> ignore
 
-        member _.hostDisconnected() = stopListening ()
-        member _.hostUpdate() = ()
-        member _.hostUpdated() = ()
+    override _.hostDisconnected() = stopListening ()
 
 [<AttachMembers>]
 type ThemeNote() as this =
@@ -172,7 +176,8 @@ The compiler catches some controller mistakes:
 
 | You wrote | The compiler says | Write instead |
 |---|---|---|
-| Only `hostConnected` and `hostDisconnected` | No implementation was given for those members: 'abstract ReactiveController.hostUpdate: unit -> unit' … | `member _.hostUpdate() = ()` for each method you don't need |
+| `interface ReactiveController with` and only `hostConnected` and `hostDisconnected` | No implementation was given for those members: 'abstract ReactiveController.hostUpdate: unit -> unit' … | `inherit ReactiveControllerBase()` and `override` what you need, or `member _.hostUpdate() = ()` for each method you don't |
+| `member _.hostConnected() = ...` in a class that inherits `ReactiveControllerBase` | Warning: This new member hides the abstract member 'abstract ReactiveControllerBase.hostConnected: unit -> unit'. Rename the member or use 'override' instead | `override _.hostConnected() = ...` |
 | `do host.addController this`, or `Stopwatch(this)` in a component, without `as this` | The value or constructor 'this' is not defined | `type Stopwatch(host: ReactiveControllerHost) as this =` |
 
 Others compile:

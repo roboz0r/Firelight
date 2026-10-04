@@ -11,6 +11,8 @@ let private now () : float = jsNative
 /// Measures time while running. It re-renders its host every 100 ms, but only while the host is
 /// on the page: the time is worked out from the clock, so it stays right while nothing renders.
 type Stopwatch(host: ReactiveControllerHost) as this =
+    inherit ReactiveControllerBase()
+
     let mutable counted = 0.0 // ms, before the latest start
     let mutable startedAt: float option = None
     let mutable timer: int option = None
@@ -50,18 +52,15 @@ type Stopwatch(host: ReactiveControllerHost) as this =
         this.Stop()
         counted <- 0.0
 
-    interface ReactiveController with
-        member _.hostConnected() =
-            connected <- true
+    override _.hostConnected() =
+        connected <- true
 
-            if startedAt.IsSome then
-                startTicking ()
+        if startedAt.IsSome then
+            startTicking ()
 
-        member _.hostDisconnected() =
-            connected <- false
-            stopTicking ()
-        member _.hostUpdate() = ()
-        member _.hostUpdated() = ()
+    override _.hostDisconnected() =
+        connected <- false
+        stopTicking ()
 
 let private styles =
     css

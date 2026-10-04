@@ -12,27 +12,26 @@ type ClockHost =
 // A ReactiveController that ticks on an interval and requests a host update each tick.
 // The nonce pattern ensures the async loop stops cleanly when the host disconnects.
 type ClockController(host: ClockHost) as this =
+    inherit ReactiveControllerBase()
+
     let mutable nonce = 1
     let mutable value = DateTime.Now
     do host.addController this
 
     member _.Value = value
 
-    interface ReactiveController with
-        member _.hostConnected() =
-            let i = nonce
+    override _.hostConnected() =
+        let i = nonce
 
-            async {
-                while i = nonce do
-                    do! Async.Sleep host.TickRate
-                    value <- DateTime.Now
-                    host.requestUpdate ()
-            }
-            |> Async.StartImmediate
+        async {
+            while i = nonce do
+                do! Async.Sleep host.TickRate
+                value <- DateTime.Now
+                host.requestUpdate ()
+        }
+        |> Async.StartImmediate
 
-        member _.hostDisconnected() = nonce <- nonce + 1
-        member _.hostUpdate() = ()
-        member _.hostUpdated() = ()
+    override _.hostDisconnected() = nonce <- nonce + 1
 
 [<AttachMembers>]
 type ClockElement() as this =

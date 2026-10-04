@@ -75,6 +75,8 @@ open Firelight
 open type Firelight.Lit
 
 type WidthController(host: ReactiveControllerHost) as this =
+    inherit ReactiveControllerBase()
+
     let mutable width = 0.0
     let mutable stop = ignore
 
@@ -91,11 +93,8 @@ type WidthController(host: ReactiveControllerHost) as this =
         host.requestUpdate ()
         stop <- Ev.listen window "resize" onResize
 
-    interface ReactiveController with
-        member this.hostConnected() = this.Listen()
-        member _.hostDisconnected() = stop ()
-        member _.hostUpdate() = ()
-        member _.hostUpdated() = ()
+    override this.hostConnected() = this.Listen()
+    override _.hostDisconnected() = stop ()
 
 [<AttachMembers>]
 type WidthLabel() as this =
@@ -112,8 +111,9 @@ defineElement<WidthLabel> "width-label"
 ```
 :::
 
-The controller doesn't need `[<AttachMembers>]`: Lit calls only the interface's four members, and
-an F# interface implementation keeps their names. The listener is added with `Ev.listen` when the
+`ReactiveControllerBase` stands for `implements ReactiveController`: override the callbacks you
+need, and the others do nothing. The controller doesn't need `[<AttachMembers>]`: Lit calls only
+the four callbacks, which the base class implements under their own names. The listener is added with `Ev.listen` when the
 host connects, and its remover kept, as on [Lifecycle](/from-lit/lifecycle/#connecting-and-disconnecting).
 
 ## Mixins
@@ -191,8 +191,6 @@ class's, as it does in TypeScript.
 
 - **Mixins.** No class expressions and no multiple inheritance. Use a base class for one
   behaviour, controllers for several.
-- **Optional controller callbacks.** An F# interface implementation has every member; write
-  `()` for the ones you don't need.
 - **Lit's own mixins.** `SignalWatcher` is applied by `LitSignals.defineElement`; see
   [Signals](/from-lit/signals/).
 

@@ -125,6 +125,15 @@ type LitEventListener<'TEvent when 'TEvent :> Event>
 /// </summary>
 [<EditorBrowsable(EditorBrowsableState.Never)>]
 module TemplateChecks =
+    /// The last 40 characters of the text before hole <c>i</c>, to name the hole in a message.
+    let private textBefore (fmt: FormattableString) (i: int) =
+        let before = fmt.GetStrings().[i]
+
+        if before.Length > 40 then
+            "..." + before.Substring(before.Length - 40)
+        else
+            before
+
     /// <summary>
     /// Throws when a hole in <c>fmt</c> has a format specifier or alignment, such as <c>{price:N2}</c>.
     /// The template tags pass Lit each hole's value, so the format would be dropped without a word.
@@ -140,18 +149,10 @@ module TemplateChecks =
         if not (isNull formats) then
             match formats |> Array.tryFindIndex (fun f -> f <> "") with
             | Some i ->
-                let before = fmt.GetStrings().[i]
-
-                let before =
-                    if before.Length > 40 then
-                        "..." + before.Substring(before.Length - 40)
-                    else
-                        before
-
                 failwith (
                     tag
                     + ": the hole after \""
-                    + before
+                    + textBefore fmt i
                     + "\" has the format \""
                     + formats.[i]
                     + "\", which Lit ignores: it gets the value unformatted. "
@@ -162,6 +163,35 @@ module TemplateChecks =
                            "Format the value in F# instead, such as {price.ToString \"N2\"}.")
                 )
             | None -> ()
+
+    /// <summary>
+    /// Throws when a hole in a <c>css</c> template holds anything but a <c>css</c> value or a number, such as
+    /// a string. Lit throws too, but without naming the hole. <c>css</c> calls this in DEBUG builds.
+    /// </summary>
+    /// <param name="fmt">The interpolated string passed to <c>css</c>.</param>
+    let cssValues (fmt: FormattableString) : unit =
+        let values = fmt.GetArguments()
+
+        for i in 0 .. values.Length - 1 do
+            let value = values.[i]
+            let kind = jsTypeof value
+
+            let isCss = kind = "object" && not (isNull value) && value?``_$cssResult$`` = box true
+
+            if not (isCss || kind = "number") then
+                let what =
+                    if kind = "string" then "the string \"" + string value + "\""
+                    elif isNull value then "null"
+                    else "a value of JavaScript type " + kind
+
+                failwith (
+                    "css: the hole after \""
+                    + textBefore fmt i
+                    + "\" holds "
+                    + what
+                    + ". css only takes css values and numbers, and Lit throws for anything else. "
+                    + "Write the value as css, such as {css $\"red\"}, or wrap trusted text: {unsafeCSS text}."
+                )
 
 [<Erase>]
 type Lit =
@@ -210,8 +240,8 @@ type Lit =
     /// A template literal tag which can be used with LitElement's styles property to set element styles.
     /// </summary>
     /// <remarks>
-    /// For security reasons, only literal string values and number may be used in embedded expressions.
-    /// To incorporate non-literal values `unsafeCSS` may be used inside an expression.
+    /// For security reasons, a hole takes only another <c>css</c> value or a number. To put text in a hole,
+    /// wrap it in <c>unsafeCSS</c>, and only text you trust. DEBUG builds throw on any other value, naming the hole.
     ///
     /// A format specifier or alignment in a hole, such as <c>{size:N2}</c>, has no effect: Lit gets the value
     /// itself. DEBUG builds throw instead. Pass the number itself, or format trusted text and wrap it:
@@ -221,6 +251,7 @@ type Lit =
     static member inline css(fmt: FormattableString) : CSSResult =
 #if DEBUG
         TemplateChecks.noFormatSpecifiers "css" fmt
+        TemplateChecks.cssValues fmt
 #endif
         Lit.cssInner (fmt.GetStrings(), fmt.GetArguments())
 
@@ -383,6 +414,17 @@ type Lit =
 
     [<Import("getCompatibleStyle", "lit")>]
     static member inline getCompatibleStyle(style: CSSResultOrNative) : CSSResultOrNative = nativeOnly
+
+    /// <summary>
+    /// <c>true</c> when the code runs on a server, such as under Lit SSR in Node, and <c>false</c> in a browser.
+    /// </summary>
+    /// <remarks>
+    /// Lit sets it from the package's export conditions, so bundlers fold it to a constant and drop the other branch.
+    /// Use it to keep browser APIs out of code that also renders on the server.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/api/misc/#isServer"/>
+    [<Import("isServer", "lit")>]
+    static member inline isServer: bool = nativeOnly
 
     /// Whether the current browser supports `adoptedStyleSheets`.
     [<Import("supportsAdoptingStyleSheets", "lit")>]

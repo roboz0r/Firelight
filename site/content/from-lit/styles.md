@@ -401,6 +401,6 @@ and `supportsAdoptingStyleSheets`. For classes and inline styles that change wit
 
 | You wrote | What happens | Write instead |
 |---|---|---|
-| `css $$"""p { color: {{color}}; }"""` with a string | Lit throws: Value passed to 'css' function must be a 'css' function result | `{{unsafeCSS color}}`, for text you wrote |
+| `css $$"""p { color: {{color}}; }"""` with a string | Lit throws: Value passed to 'css' function must be a 'css' function result. Debug builds throw first, naming the hole: css: the hole after "p { color: " holds the string … | `{{unsafeCSS color}}`, for text you wrote |
 | `{color}` in `$$"""` | The stylesheet holds the text `{color}`, which the browser can't parse | `{{color}}` |
 | `static member styles` on a `LightDomElement` | No effect: there is no shadow root to adopt them | The page's stylesheet |
