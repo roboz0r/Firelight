@@ -1,0 +1,58 @@
+# Runs the samples' unit tests on pull requests that change the library or the samples:
+# Kanban.Tests (its update function, under .NET) and MultiPage.Tests (the route table: compiled by
+# Fable and run in Node, where URLPattern exists, then the rest under .NET).
+# Kanban's browser tests (Kanban.E2E) run in site.yml, against the site's build of the demo.
+# Restore is locked to the packages.lock.json files on CI (Directory.Build.props).
+
+name: Sample tests
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'sample/**'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - '.config/dotnet-tools.json'
+      - '.github/workflows/samples.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to the pull request supersedes the run in progress.
+concurrency:
+  group: samples-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sample/MultiPage.Tests/package-lock.json
+
+      - name: Kanban unit tests
+        run: dotnet run --project sample/Kanban.Tests/Kanban.Tests.fsproj
+
+      - name: MultiPage router tests in Node (Fable)
+        working-directory: sample/MultiPage.Tests
+        run: |
+          npm ci
+          npm test
+
+      - name: MultiPage tests under .NET
+        run: dotnet run --project sample/MultiPage.Tests/MultiPage.Tests.fsproj
