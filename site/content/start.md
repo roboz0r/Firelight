@@ -150,6 +150,14 @@ The message under the counter comes from plain JavaScript on this page. To do th
 </script>
 ```
 
+An F# component that renders the counter listens in its template, with an `@count-changed`
+binding. `Ev.custom<int>` tells F# that the event's `detail` is an `int`; it arrives as an
+`int option`, since an event may have none:
+
+```fsharp fragment
+html $"""<click-counter @count-changed={Ev.custom<int> (fun e -> this.heard <- e.detail)}></click-counter>"""
+```
+
 ## Style it
 
 A component's `styles` apply inside its shadow DOM, and only there. Its rules don't reach the rest

@@ -40,7 +40,7 @@ type VolumeControl() =
         <label>
             Volume
             <input type="range" min="0" max="100" {ref slider} .value={string this.level}
-                @input={fun (e: Event) -> this.level <- int (e.target :?> HTMLInputElement).value}>
+                @input={Ev.value (fun level -> this.level <- int level)}>
         </label>
         <div class="track"><div class="bar {classMap bar}" style={styleMap width}></div></div>
         <button @click={fun _ -> this.Reset()}>Reset</button>"""

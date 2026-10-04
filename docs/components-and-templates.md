@@ -186,11 +186,11 @@ static member properties =
 The child dispatches a `CustomEvent`; the parent listens with `@event-name`.
 
 ```fsharp
-// Child:
-this.dispatchEvent(CustomEvent.create "todo-completed" {| detail = {| id = _todoId |} |})
+// Child: Event.customEvent makes an event that bubbles out of the shadow root.
+this.dispatchEvent (Event.customEvent ("todo-completed", _todoId)) |> ignore
 
-// Parent render:
-html $"<todo-item @todo-completed={fun e -> this.Dispatch (Complete e.detail.id)}></todo-item>"
+// Parent render: Ev.custom<int> types the event; its detail is an int option.
+html $"""<todo-item @todo-completed={Ev.custom<int> (fun e -> e.detail |> Option.iter (Complete >> this.Dispatch))}></todo-item>"""
 ```
 
 ### Across the tree — context

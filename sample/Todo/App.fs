@@ -168,10 +168,11 @@ type TodoApp() as this =
             <input {ref inputRef}
                 class="flex-1 bg-surface border border-line rounded-xl px-4 py-3 text-ink placeholder-muted focus:outline-hidden focus:ring-2 focus:ring-accent focus:border-transparent transition-all text-sm"
                 type="text" placeholder="What needs doing?"
-                @input={fun _ ->
+                @input={Ev.value (fun text ->
                             match btnRef.value with
-                            | Some btn -> btn.disabled <- String.IsNullOrWhiteSpace(inputRef.value.Value.value)
-                            | None -> ()} />
+                            | Some btn -> btn.disabled <- String.IsNullOrWhiteSpace text
+                            | None -> ()
+                        )} />
             <button {ref btnRef}
                 class="px-6 py-3 bg-accent hover:bg-accent/90 active:bg-accent/80 border border-transparent disabled:bg-surface disabled:border-line disabled:text-muted disabled:cursor-not-allowed text-on-accent font-semibold rounded-xl transition-colors text-sm"
                 ?disabled={addDisabled}

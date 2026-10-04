@@ -146,8 +146,7 @@ type Search() =
             }
             |> Async.StartImmediate
 
-    member private this.OnInput(e: Event) =
-        let text = (e.target :?> HTMLInputElement).value
+    member private this.OnInput(text: string) =
         // The address keeps the search, so it can be shared or come back to.
         window.history.replaceState (null, "", addressWith text)
         this.Search text
@@ -184,7 +183,7 @@ type Search() =
             $"""
         <form role="search" @submit={fun (e: Event) -> e.preventDefault ()}>
             <label for="query">Search the docs</label>
-            <input id="query" type="search" autocomplete="off" autofocus .value={query} @input={fun e -> this.OnInput e}>
+            <input id="query" type="search" autocomplete="off" autofocus .value={query} @input={Ev.value this.OnInput}>
         </form>
         <p class="status" role="status">{status}</p>
         <ol>{hits}</ol>"""

@@ -2,7 +2,6 @@ module Kanban.Templates
 
 open Browser
 open Browser.Types
-open Fable.Core.JsInterop
 open Firelight
 open type Firelight.Lit
 open KanbanModel
@@ -126,15 +125,12 @@ let addCardFormTemplate (columnId: ColumnId) (dispatch: KanbanMsg -> unit) : HTM
         <input {ref inputRef}
             class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-400 focus:border-transparent"
             type="text" placeholder="Card title..."
-            @keydown={fun (e: Event) ->
-                          let key: string = e?key
-
-                          if key = "Enter" then
-                              match inputRef.value with
-                              | Some input when input.value.Trim() <> "" -> dispatch (AddCard(columnId, input.value.Trim()))
-                              | _ -> ()
-                          elif key = "Escape" then
-                              dispatch CancelEdit} />
+            @keydown={Ev.keyboard (fun e ->
+                          match e.key, inputRef.value with
+                          | "Enter", Some input when input.value.Trim() <> "" -> dispatch (AddCard(columnId, input.value.Trim()))
+                          | "Escape", _ -> dispatch CancelEdit
+                          | _ -> ()
+                      )} />
         <div class="flex gap-2">
             <button class="text-xs px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
                 @click={fun _ ->
@@ -274,15 +270,12 @@ let addColumnTemplate (editTarget: EditTarget) (dispatch: KanbanMsg -> unit) : H
             <input {ref inputRef}
                 class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                 type="text" placeholder="Column title..."
-                @keydown={fun (e: Event) ->
-                              let key: string = e?key
-
-                              if key = "Enter" then
-                                  match inputRef.value with
-                                  | Some input when input.value.Trim() <> "" -> dispatch (AddColumn(input.value.Trim()))
-                                  | _ -> ()
-                              elif key = "Escape" then
-                                  dispatch CancelEdit} />
+                @keydown={Ev.keyboard (fun e ->
+                              match e.key, inputRef.value with
+                              | "Enter", Some input when input.value.Trim() <> "" -> dispatch (AddColumn(input.value.Trim()))
+                              | "Escape", _ -> dispatch CancelEdit
+                              | _ -> ()
+                          )} />
             <div class="flex gap-2 mt-2">
                 <button class="text-xs px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
                     @click={fun _ ->

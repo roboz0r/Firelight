@@ -28,6 +28,20 @@ each break is listed under Changed with how to migrate.
   html $"""<ul>{map (range 3, fun i -> html $"<li>{i}</li>")}</ul>"""
   ```
 
+- The `Ev` module, for typed `@event` handlers. A hole is `obj`, so `fun e -> ...` needed its
+  type annotated; `Ev.keyboard`, `Ev.mouse`, `Ev.pointer`, `Ev.focus`, `Ev.input`, `Ev.wheel`,
+  `Ev.drag`, `Ev.touch`, `Ev.submit`, `Ev.event` and `Ev.custom<'T>` supply it and compile to the
+  lambda alone. `Ev.value` and `Ev.checked'` pass your handler the field's `value` or `checked`:
+
+  ```fsharp
+  // 0.2
+  html $"""<input @input={fun (e: Event) -> setName (e.target :?> HTMLInputElement).value}
+      @keydown={fun (e: KeyboardEvent) -> if e.key = "Enter" then save ()}>"""
+  // 0.3
+  html $"""<input @input={Ev.value setName} @keydown={Ev.keyboard (fun e -> if e.key = "Enter" then save ())}>"""
+  ```
+
+  Nothing checks the function against the event's name.
 - `until (promise)` and `until (promise, placeholder)` overloads.
 - `StaticHTML.mathml`.
 

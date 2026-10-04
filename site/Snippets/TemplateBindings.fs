@@ -1,7 +1,6 @@
 module Snippets.TemplateBindings
 
 open Fable.Core
-open Browser.Types
 open Firelight
 open type Firelight.Lit
 
@@ -28,7 +27,7 @@ type NameField() =
         <label>
             Name
             <input maxlength="20" .value={this.name}
-                @input={fun (e: Event) -> this.name <- (e.target :?> HTMLInputElement).value}>
+                @input={Ev.value (fun name -> this.name <- name)}>
         </label>
         <meter max="20" value={this.name.Length} aria-label="Characters used"></meter>
         <button ?disabled={this.name = ""} @click={fun _ -> this.name <- ""}>Clear</button>

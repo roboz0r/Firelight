@@ -130,6 +130,29 @@ let private typedEvents =
                 )
     }
 
+// The Templates guide's bindings: Ev.value sets the name as you type; Clear empties the box.
+let private nameField =
+    testTask "the name field greets what you type, and Clear empties it" {
+        let page = pageWith "my-name-field"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let field = opened.Page.Locator("my-name-field").First
+                        let input = field.Locator("input")
+                        do! input.FillAsync("Rob")
+                        do! Expect(field.Locator("p")).ToHaveTextAsync("Hello, Rob.")
+                        do! field.Locator("button").ClickAsync()
+                        do! Expect(input).ToHaveValueAsync("")
+                        do! Expect(field.Locator("p")).ToHaveTextAsync("Hello, whoever you are.")
+                        noProblems opened
+                    }
+                )
+    }
+
 let private routing =
     let renders (opened: Browser.OpenPage) (address: string) (description: string) =
         task {
@@ -202,4 +225,5 @@ let private routing =
         }
     ]
 
-let all = testList "Demos" [ counter; rating; tutorial; typedEvents; routing ]
+let all =
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; routing ]

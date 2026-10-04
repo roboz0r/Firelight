@@ -225,6 +225,22 @@ Use `@event-name={handler}` in templates:
 html $"""<button @click={fun _ -> count <- count + 1; this.requestUpdate()}>Click</button>"""
 ```
 
+### Typed handlers: the `Ev` module
+
+A hole is `obj`, so `fun e -> ...` in `@keydown={...}` can't infer `e`. `Ev` supplies the type (each is `inline` and returns the handler, so the JS is just the lambda):
+
+```fsharp
+html $"""
+<input .value={model.Text}
+    @input={Ev.value (fun text -> dispatch (SetText text))}
+    @keydown={Ev.keyboard (fun e -> if e.key = "Enter" then dispatch Save)}>
+<input type="checkbox" .checked={model.Done} @change={Ev.checked' (fun on -> dispatch (SetDone on))}>"""
+```
+
+- `Ev.value` reads `value` from the element the binding is on (`currentTarget`): an `<input>`, `<select>` or `<textarea>`. `Ev.checked'` reads `checked` from a checkbox or radio `<input>`. Use them instead of `(e.target :?> HTMLInputElement).value`.
+- `Ev.mouse`, `pointer`, `keyboard`, `focus`, `input` (InputEvent), `wheel`, `drag`, `touch`, `submit`, `event` (any), and `Ev.custom<'T>` for a `CustomEvent<'T>` (`e.detail` is `'T option`).
+- Nothing checks the function against the event name: `@click={Ev.keyboard ...}` compiles. Pick the matching one.
+
 ### LitEventListener with options
 
 ```fsharp
@@ -247,8 +263,8 @@ Firelight provides an inline helper `Event.customEvent` that sets `bubbles = tru
 this.dispatchEvent(Event.customEvent("todo-completed", _todoId))
 
 // Parent listens — detail is 'T option:
-html $"""<todo-item @todo-completed={fun (e: CustomEvent<int>) ->
-    e.detail |> Option.iter (fun id -> this.Dispatch (Complete id))}>
+html $"""<todo-item @todo-completed={Ev.custom<int> (fun e ->
+    e.detail |> Option.iter (fun id -> this.Dispatch (Complete id)))}>
 </todo-item>"""
 ```
 
@@ -390,8 +406,8 @@ this.dispatchEvent(Event.customEvent("card-deleted", detail = 42))
 
 // Parent listens:
 html $"""
-<my-card @card-deleted={fun (e: CustomEvent<int>) ->
-    e.detail |> Option.iter (fun id -> elmish.dispatch (DeleteCard id))}>
+<my-card @card-deleted={Ev.custom<int> (fun e ->
+    e.detail |> Option.iter (fun id -> elmish.dispatch (DeleteCard id)))}>
 </my-card>"""
 ```
 
@@ -757,7 +773,7 @@ html $"""
     <wa-dialog label="New Item" ?open={model.IsModalOpen}
         @wa-request-close={fun _ -> dispatch CloseModal}>
         <wa-input label="Title"
-            @wa-input={fun (e: CustomEvent) -> dispatch (UpdateTitle e.target?value)}>
+            @wa-input={Ev.value (fun title -> dispatch (UpdateTitle title))}>
         </wa-input>
         <wa-button slot="footer" variant="primary" @click={fun _ -> dispatch Save}>
             Save
