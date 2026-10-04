@@ -316,7 +316,6 @@ The compiler catches a few:
 | `this.dispatchEvent (Event.customEvent (...))` as a statement | The result of this expression has type 'bool' and is implicitly ignored (a warning) | `this.dispatch (...)`, or use the result |
 | `e.detail.Name` | The type 'Option<_>' does not define a field, constructor, or member named 'Name' | `e.detail \|> Option.iter (fun s -> ...)` |
 | `Event.customEvent` without `open Browser.Types` | The value, constructor, namespace or type 'customEvent' is not defined | `open Browser.Types` |
-| `Event.customEvent` with `open Browser` as well | The type 'EventType' does not define the field, constructor or member 'customEvent' | Drop `open Browser`, or write `Browser.Dom.window` where you need it |
 
 Most compile, because event names are strings and a hole accepts any value:
 

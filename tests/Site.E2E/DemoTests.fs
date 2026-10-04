@@ -471,5 +471,49 @@ let private routingNavigate =
                 )
     }
 
+// The task function returns initialState for an empty id: the task goes back to INITIAL, not ERROR.
+let private taskInitialState =
+    testTask "a task function that returns initialState puts the task back in its initial state" {
+        let page = pageWith "my-product-view"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let view = opened.Page.Locator("my-product-view")
+                        do! Expect(view.Locator("p")).ToHaveTextAsync("Product 1 is in stock")
+                        do! view.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Clear")).ClickAsync()
+                        do! Expect(view.Locator("p")).ToHaveTextAsync("Pick a product.")
+                        noProblems opened
+                    }
+                )
+    }
+
+// IntersectionController.target (): the marker in the scrolling box is observed, not the host.
+let private intersectionTarget =
+    testTask "IntersectionController.target observes the element it marks" {
+        let page = pageWith "my-scroll-marker"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let demo = opened.Page.Locator("my-scroll-marker")
+                        do! demo.ScrollIntoViewIfNeededAsync()
+                        let status = demo.GetByRole(AriaRole.Status)
+                        do! Expect(status).ToHaveTextAsync("The marker is out of view.")
+                        let! _ = demo.Locator(".box").EvaluateAsync("box => { box.scrollTop = box.scrollHeight; }")
+                        do! Expect(status).ToHaveTextAsync("The marker is in view.")
+                        let! _ = demo.Locator(".box").EvaluateAsync("box => { box.scrollTop = 0; }")
+                        do! Expect(status).ToHaveTextAsync("The marker is out of view.")
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves; propertyTypes; stopwatch; routingNavigate ]
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves; propertyTypes; stopwatch; routingNavigate; taskInitialState; intersectionTarget ]

@@ -46,10 +46,8 @@ then press Submit to see what the form would send. Reset puts the switch back.
 - `static member formAssociated = true` tells the browser the element takes part in forms. With
   `[<AttachMembers>]` it becomes a static property of the JavaScript class, where the browser looks
   for it when the element is defined.
-- `attachInternals` gives the element its `ElementInternals`, the object it reports to the form
-  through. Neither is in [Fable](https://fable.io/)'s browser bindings, so the module declares the three members it
-  uses and an `Emit` for the call, as [Using JavaScript libraries](/guides/js-libraries/#typed-bindings)
-  describes.
+- `this.attachInternals ()` gives the element its `ElementInternals`, the object it reports to the
+  form through. Call it once, in the constructor: the browser throws on a second call.
 - `setFormValue` sets what the form submits under the element's `name`, and `null` leaves it out,
   as for an unticked checkbox. `Report` calls it, and `Toggle` calls `Report` before it raises
   `change`, so a listener that reads the form sees the new value. `updated` calls it after every
@@ -63,9 +61,10 @@ then press Submit to see what the form would send. Reset puts the switch back.
 - The browser calls `formResetCallback` when the form is reset. It goes back to the `checked`
   attribute, which stays the default, as on a native checkbox.
 
-The awkward part is the host. To F#, `LitElement` isn't an `HTMLElement`, so calling the host's own
-DOM methods, such as `attachInternals`, `addEventListener` or `tabIndex`, needs
-`unbox<HTMLElement> this` first.
+To F#, `LitElement` isn't an `HTMLElement`, though it is one in the browser: [Fable](https://fable.io/)'s
+browser bindings declare `HTMLElement` as an interface, which a class can't inherit. `this.element`
+is the component as an `HTMLElement`, for the host's own DOM members, such as `addEventListener`,
+`hasAttribute` or `tabIndex`. It compiles to `this`.
 
 The role is set in the constructor, so the [prerendered](/guides/prerendering/) HTML has it too:
 Lit SSR copies the ARIA properties set on `ElementInternals` there into attributes.

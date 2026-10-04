@@ -8,6 +8,8 @@ open type Firelight.Lit
 
 /// Calls `run` when `key` is pressed anywhere on the page, unless the user is typing in a field.
 type KeyboardShortcut(host: ReactiveControllerHost, key: string, run: unit -> unit) as this =
+    inherit ReactiveControllerBase()
+
     let mutable stopListening = ignore
 
     do host.addController this
@@ -15,33 +17,28 @@ type KeyboardShortcut(host: ReactiveControllerHost, key: string, run: unit -> un
     /// Single-key shortcuts need an off switch (WCAG 2.1.4): bind this to a setting.
     member val Enabled = true with get, set
 
-    interface ReactiveController with
-        member _.hostConnected() =
-            let onKey (e: Event) =
-                let e = e :?> KeyboardEvent
-                // Where the key was pressed. Inside a shadow root, e.target is only the outermost host.
-                let origin = e.composedPath().[0] :?> HTMLElement
+    override _.hostConnected() =
+        let onKey (e: KeyboardEvent) =
+            // Where the key was pressed. Inside a shadow root, e.target is only the outermost host.
+            let origin = e.composedPath().[0] :?> HTMLElement
 
-                let typing =
-                    origin.isContentEditable
-                    || List.contains origin.tagName [ "INPUT"; "TEXTAREA"; "SELECT" ]
+            let typing =
+                origin.isContentEditable
+                || List.contains origin.tagName [ "INPUT"; "TEXTAREA"; "SELECT" ]
 
-                if
-                    this.Enabled
-                    && e.key = key
-                    && not e.repeat
-                    && not typing
-                    && not (e.ctrlKey || e.metaKey || e.altKey)
-                then
-                    e.preventDefault ()
-                    run ()
+            if
+                this.Enabled
+                && e.key = key
+                && not e.repeat
+                && not typing
+                && not (e.ctrlKey || e.metaKey || e.altKey)
+            then
+                e.preventDefault ()
+                run ()
 
-            document.addEventListener ("keydown", onKey)
-            stopListening <- fun () -> document.removeEventListener ("keydown", onKey)
+        stopListening <- Ev.listen document "keydown" onKey
 
-        member _.hostDisconnected() = stopListening ()
-        member _.hostUpdate() = ()
-        member _.hostUpdated() = ()
+    override _.hostDisconnected() = stopListening ()
 
 [<AttachMembers>]
 type ShortcutDemo() as this =

@@ -203,3 +203,41 @@ type PerformanceController<'T>(host: ReactiveControllerHost, config: Performance
         member _.hostDisconnected() : unit = nativeOnly
         member _.hostUpdate() : unit = nativeOnly
         member _.hostUpdated() : unit = nativeOnly
+
+/// Members Firelight adds to the Observers controllers.
+[<AutoOpen>]
+module ObserverControllerExtensions =
+    open Fable.Core.JsInterop
+
+    type IntersectionController<'T> with
+        /// <summary>
+        /// Observe an element from a Lit element-part expression, as <c>ResizeController.target</c> does:
+        /// <c>&lt;div {visible.target ()}&gt;</c> in a template. The element is observed while it's
+        /// rendered, and no longer once a render removes it.
+        /// </summary>
+        /// <remarks>
+        /// <c>@lit-labs/observers</c> has no such directive for <c>IntersectionController</c>; this is Lit's
+        /// <c>ref</c> with one callback per controller, so it marks one element: put it on a single element
+        /// per render. On two, Lit moves the ref from one to the other on every render, and the controller
+        /// observes only the last. For several elements, give each its own controller, or call <c>observe</c>.
+        /// Give the controller <c>target = null</c> so it doesn't also observe its host.
+        /// </remarks>
+        member this.target() : DirectiveResult =
+            // Read as obj: typed as a function, Fable would wrap the missing value in a lambda.
+            let existing: obj = this?__firelightTarget
+
+            let callback: Element option -> unit =
+                if isNull existing then
+                    let mutable current: Element option = None
+
+                    let callback (element: Element option) =
+                        current |> Option.iter this.unobserve
+                        current <- element
+                        element |> Option.iter this.observe
+
+                    this?__firelightTarget <- callback
+                    callback
+                else
+                    unbox existing
+
+            Lit.ref callback

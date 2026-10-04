@@ -95,7 +95,7 @@ type ReorderList() =
     override this.render() =
         html
             $"""
-        <ol aria-label="Morning routine">{repeat (this.steps, (fun s _ -> s.Id), (fun s i -> this.StepView s i))}</ol>
+        <ol aria-label="Morning routine">{repeat (this.steps, (fun s _ -> s.Id), this.StepView)}</ol>
         <p role="status">{if this.message <> "" then html $"{this.message}" else nothing}</p>"""
 
 defineElement<ReorderList> "my-reorder-list"

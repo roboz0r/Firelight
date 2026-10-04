@@ -199,8 +199,8 @@ Nothing checks that the event's `detail` is the type you name, in either languag
 ## Listening on the element itself
 
 The F# class has no `addEventListener`: [Fable](https://fable.io/)'s `HTMLElement` is an
-interface, which
-`LitElement` can't inherit. Cast `this` to reach it.
+interface, which `LitElement` can't inherit. `this.element` is the component as an
+`HTMLElement`, a cast that compiles to `this`.
 
 ::: compare
 ```ts
@@ -232,9 +232,8 @@ type ClickTotal() as this =
     inherit LitElement()
 
     do
-        let host = box this :?> HTMLElement
         let count _ = this.Count()
-        host.addEventListener ("click", count)
+        this.element.addEventListener ("click", count)
 
     static member properties =
         PropertyDeclarations.create [

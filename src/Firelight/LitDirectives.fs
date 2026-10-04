@@ -40,7 +40,12 @@ module StyleInfo =
     let inline create (styles: #seq<(string * string option)>) : StyleInfo = !!(createObj !!styles)
 
 type KeyFn<'T, 'K when 'K: equality> = delegate of item: 'T * index: int -> 'K
-type ItemTemplate<'T> = delegate of item: 'T * index: int -> ChildRenderable
+/// A template for each item of <c>repeat</c>, of the item and its index, returning any renderable type.
+/// F# converts a two-argument lambda to it.
+type RepeatTemplate<'T, 'R when 'R :> ChildRenderable> = delegate of item: 'T * index: int -> 'R
+
+/// A <c>repeat</c> template that returns a <c>ChildRenderable</c>: <c>ItemTemplate(fun item index -&gt; ...)</c>.
+type ItemTemplate<'T> = RepeatTemplate<'T, ChildRenderable>
 
 type Lit with
     /// <summary>
@@ -77,7 +82,26 @@ type Lit with
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/templates/directives/#repeat"/>
     [<Import("repeat", "lit/directives/repeat.js")>]
-    static member inline repeat(items: seq<'T>, keyFn: KeyFn<'T, 'K>, template: ItemTemplate<'T>) : DirectiveResult =
+    static member inline repeat<'T, 'K, 'R when 'K: equality and 'R :> ChildRenderable>
+        (items: seq<'T>, keyFn: KeyFn<'T, 'K>, template: RepeatTemplate<'T, 'R>)
+        : DirectiveResult =
+        nativeOnly
+
+    /// <summary>
+    /// Repeats a series of values generated from an iterable, keeping each item's DOM with its key: the same
+    /// as the overload with index, for functions of the item alone. A method fits here:
+    /// <c>repeat (people, (fun p -&gt; p.Id), this.PersonView)</c>.
+    /// </summary>
+    /// <remarks>
+    /// The other overload takes functions of the item and its index, <c>fun item index -&gt; ...</c>, which F#
+    /// converts to its delegates. A method taking the item and index as a tuple converts to neither; wrap it
+    /// in a lambda. Keys are compared with JavaScript's <c>===</c>: use a string or a number.
+    /// </remarks>
+    /// <seealso href="https://lit.dev/docs/templates/directives/#repeat"/>
+    [<Import("repeat", "lit/directives/repeat.js")>]
+    static member inline repeat<'T, 'K, 'R when 'K: equality and 'R :> ChildRenderable>
+        (items: seq<'T>, keyFn: 'T -> 'K, template: 'T -> 'R)
+        : DirectiveResult =
         nativeOnly
 
     /// <summary>

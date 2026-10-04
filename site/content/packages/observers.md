@@ -33,6 +33,24 @@ The panel picks its layout from its own width, not the window's. Drag its bottom
 <my-resize-panel></my-resize-panel>
 :::
 
+## Observe an element in the template
+
+A controller observes its host unless told otherwise. To observe an element the component renders,
+give the controller `target = null` and mark the element with a hole in its opening tag:
+`<div {controller.target ()}>`. The element is observed while it's rendered. Scroll the box until
+the marker shows:
+
+::: example Snippets/ScrollMarker.fs
+<my-scroll-marker></my-scroll-marker>
+:::
+
+`ResizeController.target` is Lit's own directive. `@lit-labs/observers` has none for
+`IntersectionController`, so Firelight's is Lit's `ref` with one callback per controller: it
+observes the element a render puts there, and stops observing one a render removes. That makes it
+one element per controller. Put `target ()` on two, and Lit moves the ref between them on every
+render, so only the last is observed, and the component renders again and again. For several
+elements, give each its own controller.
+
 ## Install
 
 ```sh

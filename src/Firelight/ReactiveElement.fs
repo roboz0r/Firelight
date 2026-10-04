@@ -181,6 +181,83 @@ module PropertyDeclarations =
     /// <seealso href="https://lit.dev/docs/components/properties/#property-options"/>
     let inline create (props: (string * PropertyDeclaration) seq) : 'TPropertyDeclarations = !!(createObj !!props)
 
+/// <summary>
+/// Which of a form control's validity problems <c>ElementInternals.setValidity</c> reports; leave out the ones that
+/// don't apply.
+/// </summary>
+/// <seealso href="https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals/setValidity"/>
+[<AllowNullLiteral>]
+[<Global>]
+type ValidityStateFlags
+    [<ParamObject; Emit("$0")>]
+    (
+        ?valueMissing: bool,
+        ?typeMismatch: bool,
+        ?patternMismatch: bool,
+        ?tooLong: bool,
+        ?tooShort: bool,
+        ?rangeUnderflow: bool,
+        ?rangeOverflow: bool,
+        ?stepMismatch: bool,
+        ?badInput: bool,
+        ?customError: bool
+    ) =
+    class
+    end
+
+/// <summary>
+/// What a custom element reports to its form and to assistive technology, from
+/// <c>this.attachInternals ()</c>: its value, its validity and its ARIA role and states.
+/// </summary>
+/// <remarks>
+/// A form-associated element also declares <c>static member formAssociated = true</c> (with
+/// <c>[&lt;AttachMembers&gt;]</c>). Only the most used ARIA properties are here; set others with <c>?</c>.
+/// </remarks>
+/// <seealso href="https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals"/>
+[<AllowNullLiteral>]
+type ElementInternals =
+    /// The form the element belongs to, if any.
+    abstract form: HTMLFormElement option
+    /// The labels that name the element.
+    abstract labels: NodeList
+    /// The element's shadow root, if it has one.
+    abstract shadowRoot: ShadowRoot option
+    /// <summary>Sets what the form submits under the element's <c>name</c>; <c>null</c> submits nothing.</summary>
+    abstract setFormValue: value: string -> unit
+    /// <summary>Sets what the form submits, and the state the browser restores with <c>formStateRestoreCallback</c>.</summary>
+    abstract setFormValue: value: string * state: string -> unit
+    /// <summary>
+    /// Marks the element invalid for the problems <c>flags</c> sets, with <c>message</c>; <c>anchor</c> is the
+    /// element the browser points at when it reports the problem. With no problem set,
+    /// <c>setValidity (ValidityStateFlags())</c>, the element is valid again.
+    /// </summary>
+    abstract setValidity: flags: ValidityStateFlags * ?message: string * ?anchor: HTMLElement -> unit
+    /// The element's validity, as a native control's <c>validity</c>.
+    abstract validity: ValidityState
+    /// The message <c>setValidity</c> set.
+    abstract validationMessage: string
+    /// Whether the element takes part in constraint validation.
+    abstract willValidate: bool
+    /// Whether the element is valid; fires <c>invalid</c> on it if not.
+    abstract checkValidity: unit -> bool
+    /// Whether the element is valid; if not, fires <c>invalid</c> and shows the message.
+    abstract reportValidity: unit -> bool
+    /// <summary>The element's ARIA role, such as <c>"switch"</c>.</summary>
+    abstract role: string with get, set
+    /// <summary><c>"true"</c>, <c>"false"</c> or <c>"mixed"</c>.</summary>
+    abstract ariaChecked: string with get, set
+    abstract ariaDisabled: string with get, set
+    abstract ariaExpanded: string with get, set
+    abstract ariaLabel: string with get, set
+    abstract ariaPressed: string with get, set
+    abstract ariaSelected: string with get, set
+    abstract ariaInvalid: string with get, set
+    abstract ariaRequired: string with get, set
+    abstract ariaValueNow: string with get, set
+    abstract ariaValueMin: string with get, set
+    abstract ariaValueMax: string with get, set
+    abstract ariaValueText: string with get, set
+
 /// A string representing one of the supported dev mode warning categories.
 [<StringEnum>]
 type WarningKind =
@@ -391,3 +468,21 @@ module ReactiveElementExtensions =
         /// answer you need, call <c>dispatchEvent</c> instead.
         /// </remarks>
         member inline this.dispatch(event: Event) : unit = this.dispatchEvent event |> ignore
+
+        /// <summary>
+        /// The component as the <c>HTMLElement</c> it is in the browser, for the element's own DOM members:
+        /// <c>this.element.addEventListener</c>, <c>this.element.tabIndex</c>, <c>this.element.hasAttribute "open"</c>.
+        /// </summary>
+        /// <remarks>
+        /// <c>LitElement</c> extends <c>HTMLElement</c> in JavaScript, but Fable's browser bindings declare
+        /// <c>HTMLElement</c> as an interface, which an F# class can't inherit. This is a cast that compiles to
+        /// <c>this</c>.
+        /// </remarks>
+        member inline this.element: HTMLElement = unbox<HTMLElement> this
+
+        /// <summary>
+        /// The element's <c>ElementInternals</c>, for a form-associated component or ARIA defaults. Call it once,
+        /// in the constructor: the browser throws on a second call.
+        /// </summary>
+        /// <seealso href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/attachInternals"/>
+        member inline this.attachInternals() : ElementInternals = Fable.Core.JsInterop.emitJsExpr this "$0.attachInternals()"

@@ -85,3 +85,25 @@ type Browser.Types.Event with
             )
 
         CustomEvent.Create(typeName, eventInit)
+
+// With `open Browser`, `Event` names Browser.Dom's `Event` value, an `EventType`, which hides the
+// extension above. The same member on `EventType` makes `Event.customEvent` work either way.
+type Browser.Types.EventType with
+    /// <summary>
+    /// A <c>CustomEvent</c> named <c>typeName</c> that carries <c>detail</c>; the same as the static
+    /// <c>Event.customEvent</c>, for when <c>open Browser</c> makes <c>Event</c> the browser's value.
+    /// </summary>
+    /// <param name="typeName">The event's name, such as <c>"count-changed"</c>.</param>
+    /// <param name="detail">The value listeners read as <c>e.detail</c>.</param>
+    /// <param name="bubbles">Whether it travels up through the element's ancestors. Default true.</param>
+    /// <param name="composed">Whether it crosses shadow root boundaries. Default true.</param>
+    /// <param name="cancelable">Whether a listener's <c>preventDefault</c> cancels it. Default false.</param>
+    member inline _.customEvent
+        (
+            typeName: string,
+            detail: 'T,
+            [<Optional; DefaultParameterValue(true)>] bubbles: bool,
+            [<Optional; DefaultParameterValue(true)>] composed: bool,
+            [<Optional; DefaultParameterValue(false)>] cancelable: bool
+        ) =
+        Browser.Types.Event.customEvent (typeName, detail, bubbles, composed, cancelable)

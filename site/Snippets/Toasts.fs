@@ -82,9 +82,8 @@ type Toaster() =
 
     override this.connectedCallback() =
         base.connectedCallback ()
-        let onToast (e: Event) = (e :?> CustomEvent<string>).detail |> Option.iter this.Add
-        document.addEventListener ("toast", onToast)
-        stopListening <- fun () -> document.removeEventListener ("toast", onToast)
+        stopListening <-
+            Ev.listen document "toast" (Ev.custom<string> (fun e -> e.detail |> Option.iter this.Add))
 
     override this.disconnectedCallback() =
         base.disconnectedCallback ()
@@ -107,7 +106,7 @@ type Toaster() =
         html
             $"""
         <div class="stack" role="status" aria-atomic="false" @focusin={Ev.focus this.FocusIn}>
-            {repeat (this.toasts, (fun t _ -> t.Id), (fun t _ -> this.ToastView t))}
+            {repeat (this.toasts, (fun t -> t.Id), this.ToastView)}
         </div>"""
 
 /// A component far from the toaster, which raises toasts without knowing where it is.

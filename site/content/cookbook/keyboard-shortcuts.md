@@ -24,8 +24,8 @@ shortcut. Untick Single-key shortcuts to turn them off.
 `KeyboardShortcut` is a [controller](/guides/controllers/). A component creates one per key in its
 constructor, with the function to run, and the controller does the rest: it adds a `keydown`
 listener to `document` when the component joins the page, and removes it when the component leaves.
-The listener is a local function, so `removeEventListener` gets the same function
-`addEventListener` did.
+`Ev.listen` adds the listener and returns the function that removes it, which
+`hostDisconnected` calls.
 
 - **Skip typing.** A shortcut mustn't fire while the user types into a field. The field may be
   inside a shadow root, and a listener on `document` sees `e.target` retargeted to the outermost

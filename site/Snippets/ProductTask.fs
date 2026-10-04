@@ -19,6 +19,7 @@ let fetchProduct (id: string) : JS.Promise<string> =
 
 let private status =
     StatusRenderer(
+        initial = (fun () -> html $"<p>Pick a product.</p>"),
         pending = (fun () -> html $"<p>Loading…</p>"),
         complete = (fun (text: string) -> html $"<p>{text}</p>"),
         error = (fun error -> html $"<p class='error'>{error}</p>")
@@ -32,12 +33,14 @@ type ProductView() as this =
     let mutable productId = "1"
 
     // Runs again whenever productId changes, and re-renders as the request goes
-    // from pending to complete or error.
+    // from pending to complete or error. With no product, initialState puts the task
+    // back in its initial state, without a request.
     let product =
         LitTask(
             this,
             TaskConfig(
-                TaskFunction(fun (args: string[]) _ -> U2.Case2(fetchProduct args.[0])),
+                TaskFunction(fun (args: string[]) _ ->
+                    if args.[0] = "" then initialState else U2.Case2(fetchProduct args.[0])),
                 args = (fun () -> [| productId |])
             )
         )
@@ -60,7 +63,7 @@ type ProductView() as this =
     override this.render() =
         html
             $"""
-        <div>{[ "1"; "2"; "3" ] |> List.map this.ProductButton}</div>
+        <div>{[ "1"; "2"; "3" ] |> List.map this.ProductButton} <button @click={fun _ -> this.Show ""}>Clear</button></div>
         {product.render status |> Option.defaultValue (html $"")}"""
 
 defineElement<ProductView> "my-product-view"

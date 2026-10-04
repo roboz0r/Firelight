@@ -119,9 +119,15 @@ type LitTask<'Args, 'Result>(host: ReactiveControllerHost, config: TaskConfig<'A
 
 [<AutoOpen>]
 module TaskHelpers =
-    /// A special value that resets a task to INITIAL status when returned by its task function.
-    [<Import("initialState", "@lit/task")>]
-    let initialState<'Result> : TaskResult<'Result> = nativeOnly
+    /// <summary>
+    /// A special value that resets a task to INITIAL status when returned by its task function:
+    /// <c>TaskFunction(fun args _ -> if ready args then U2.Case2(load args) else initialState)</c>.
+    /// </summary>
+    /// <remarks>
+    /// Inline, so it compiles to the imported value itself. A generic <c>let</c> value compiles to a function,
+    /// which Fable called: the task got Lit's symbol called as a function, threw, and went to its error state.
+    /// </remarks>
+    let inline initialState<'Result> : TaskResult<'Result> = JsInterop.import "initialState" "@lit/task"
 
     /// Compare task argument arrays by reference or primitive value.
     [<Import("shallowArrayEquals", "@lit/task")>]

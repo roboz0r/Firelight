@@ -212,6 +212,10 @@ override this.render() =
     html $"""<div>{this.name}</div>"""
 ```
 
+### The host element: `this.element`
+
+`LitElement` is an `HTMLElement` in the browser but not to F# (Fable's `HTMLElement` is an interface). Use `this.element` (a cast compiling to `this`) for the host's own DOM members: `this.element.addEventListener`, `this.element.tabIndex`, `this.element.hasAttribute "open"`. `this.attachInternals ()` returns Firelight's `ElementInternals` (form value, validity, ARIA role/states); call it once in the constructor. A form-associated element also declares `static member formAssociated = true`, and form callbacks such as `formResetCallback` are plain members (with `[<AttachMembers>]`).
+
 ### 7. Lifecycle (optional)
 Available overrides: `connectedCallback()`, `disconnectedCallback()`, `firstUpdated(changedProperties)`, `updated(changedProperties)`, `willUpdate(changedProperties)`.
 
@@ -276,7 +280,7 @@ Helper signature:
 Event.customEvent(typeName, detail, ?bubbles (* default true *), ?composed (* default true *), ?cancelable (* default false *))
 ```
 
-For an event a listener may cancel, pass `cancelable = true` and use `this.dispatchEvent`, which returns `false` when a listener called `preventDefault`. `Event.customEvent` needs `open Browser.Types` and not `open Browser` (whose `Event` value hides the extension).
+For an event a listener may cancel, pass `cancelable = true` and use `this.dispatchEvent`, which returns `false` when a listener called `preventDefault`. `Event.customEvent` needs `open Browser.Types`; it works with or without `open Browser`.
 
 ### Listeners outside the template: `Ev.listen`
 
@@ -654,7 +658,7 @@ All accessed via `open type Firelight.Lit`:
 |---|---|---|
 | `classMap` | Dynamic CSS classes | `classMap (ClassInfo.create ["active", isActive; "hidden", isHidden])` — **each key must be a single class name, no spaces** |
 | `styleMap` | Dynamic inline styles; `None` removes one | `styleMap (StyleInfo.create ["color", Some color; "font-size", Some size])` |
-| `repeat` | Keyed list rendering | `repeat (items, (fun item _ -> item.Id), fun item i -> renderItem item i)` |
+| `repeat` | Keyed list rendering | `repeat (items, (fun item _ -> item.Id), fun item i -> renderItem item i)`, or with one-argument functions/methods: `repeat (items, (fun item -> item.Id), this.ItemView)` |
 | `ifDefined` | Leave out an attribute when `None` | `href={ifDefined maybeUrl}` |
 | `live` | Compare with the element's live value | `.value={live text}` |
 | `cache` | Keep the DOM of templates you switch between | `cache (if tab = 0 then home () else settings ())` |

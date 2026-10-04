@@ -194,6 +194,12 @@ Use `repeat` when items are inserted, removed or reordered and their elements ho
 components. Otherwise `List.map` is simpler and does less work. The key must be unique and stay
 with the item, like an id. An item's position isn't a key.
 
+`repeat` takes its key and template functions in two forms: of the item and its index,
+`fun item index -> ...`, as in Lit, or of the item alone. A method fits either form if its
+arguments match: `repeat (people, (fun p -> p.Id), this.PersonView)` for
+`member this.PersonView(p: Person)`. A method that takes the item and the index as a tuple,
+`member this.Row(p, i)`, doesn't convert to either; wrap it: `fun p i -> this.Row(p, i)`.
+
 ## Directives
 
 Directives are functions that take over how a binding is applied. They are static members of

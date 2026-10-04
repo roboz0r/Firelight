@@ -83,15 +83,14 @@ type AnimatedList() as this =
         base.connectedCallback ()
         let query = matchMedia "(prefers-reduced-motion: reduce)"
 
-        let apply (_: Event) =
+        let apply () =
             motion.disabled <- query.matches
 
             if query.matches then
                 motion.finish ()
 
-        apply null
-        query.addEventListener ("change", apply)
-        stopListening <- fun () -> query.removeEventListener ("change", apply)
+        apply ()
+        stopListening <- Ev.listen query "change" (Ev.event (fun _ -> apply ()))
 
     override this.disconnectedCallback() =
         base.disconnectedCallback ()
@@ -109,6 +108,6 @@ type AnimatedList() as this =
         html
             $"""
         <button id="add" @click={fun _ -> this.Add()}>Add someone</button>
-        <ul>{repeat (this.people, (fun p _ -> p.Id), (fun p _ -> this.PersonView p))}</ul>"""
+        <ul>{repeat (this.people, (fun p -> p.Id), this.PersonView)}</ul>"""
 
 defineElement<AnimatedList> "my-animated-list"

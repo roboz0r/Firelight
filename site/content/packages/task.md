@@ -29,7 +29,10 @@ doesn't clash with .NET's `Task`.
 
 ## Example
 
-Each button changes the task's argument, which starts a new request. Product 3 fails, to show the error state.
+Each button changes the task's argument, which starts a new request. Product 3 fails, to show the
+error state. Clear sets the argument to an empty id, for which the task function returns
+`initialState`: the task goes back to its initial state, which `render` shows with its `initial`
+template, and no request starts.
 
 <p class="notice">
   <code>args</code> must return a plain JavaScript array. <a href="https://fable.io/">Fable</a> compiles numeric arrays such as

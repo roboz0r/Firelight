@@ -110,6 +110,26 @@ each break is listed under Changed with how to migrate.
   the hole: `css: the hole after ":host { color: " holds the string "red"`. Lit throws for such a
   value in every build, but its message doesn't say which hole.
 - `isServer` (Lit's), `true` under Lit SSR in Node and `false` in a browser.
+- `this.element`, the component as the `HTMLElement` it is in the browser, for the host's own DOM
+  members. `LitElement` can't inherit Fable's `HTMLElement` interface, so these needed a cast:
+
+  ```fsharp
+  // 0.2
+  (unbox<HTMLElement> this).addEventListener ("click", onClick)
+  // 0.3
+  this.element.addEventListener ("click", onClick)
+  ```
+
+- `this.attachInternals ()`, returning a typed `ElementInternals` (`setFormValue`, `setValidity`
+  with `ValidityStateFlags`, `validity`, `checkValidity`, `role` and the common ARIA properties),
+  for form-associated components (`static member formAssociated = true`).
+- Firelight.Observers: `IntersectionController.target ()`, like `ResizeController.target ()`:
+  `<div {visible.target ()}>` observes the element a render puts there. `@lit-labs/observers` has
+  no such directive for it; this one is Lit's `ref` with one callback per controller.
+- `repeat (items, keyFn, template)` also takes functions of the item alone, so a method fits:
+  `repeat (people, (fun p -> p.Id), this.PersonView)`.
+- `Event.customEvent` also works after `open Browser`, whose `Event` value hid it ("The type
+  'EventType' does not define the field, constructor or member 'customEvent'").
 - `until (promise)` and `until (promise, placeholder)` overloads.
 - `StaticHTML.mathml`.
 - Firelight.Router: `RouterController.Navigate (url, ?replace)` goes to `url` from code as a
@@ -204,6 +224,12 @@ Breaking changes, with how to migrate:
   A `U2<bool, string>` value no longer fits; unwrap it, or pass `!!value`.
 - **`AttributeConverter` is `AttributeConverter<'T>`**, a typed options object (see Added). The
   old empty interface could only be created by `unbox`.
+- **`repeat`'s template delegate is `RepeatTemplate<'T, 'R>`**, generic in what it returns, and
+  `ItemTemplate<'T>` is now an abbreviation for `RepeatTemplate<'T, ChildRenderable>`. This lets
+  the new one-argument overload sit beside it: with two overloads, F# types a lambda before
+  choosing, and a lambda returning an `HTMLTemplateResult` no longer matched a delegate returning
+  `ChildRenderable`. Calls with lambdas, and `ItemTemplate(fun item index -> ...)`, compile as
+  before.
 - **`until` takes promises and values directly.** The `ParamArray` of
   `U2<Promise<ChildRenderable>, ChildRenderable>` is now `until (promise)`,
   `until (promise, placeholder)`, or `until (values: obj[])` for more than one promise:
@@ -259,6 +285,9 @@ Other changes:
 
 ### Fixed
 
+- Firelight.Task: `initialState` was a generic `let` value, which Fable compiled to a function
+  and called, so a task function that returned it threw and the task went to its error state. It
+  is now inline and compiles to Lit's value.
 - `PropertyDeclaration<float>()`, and other numeric or `bool` properties declared without
   ``` ``type`` ```, set from an attribute held the attribute's text: `0 + "0.5"` was `"00.5"`.
   See Changed.
