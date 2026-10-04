@@ -17,7 +17,7 @@ toc: true
   what this page says about them.
 -->
 
-A Firelight component is a standard custom element. You write it in F#, the Fable compiler turns
+A Firelight component is a standard custom element. You write it in F#, the [Fable](https://fable.io/) compiler turns
 it into JavaScript, and Lit runs it in the browser. A `dotnet new` template sets all of that up.
 
 ## What you need

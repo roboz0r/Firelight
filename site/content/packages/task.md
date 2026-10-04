@@ -32,7 +32,7 @@ doesn't clash with .NET's `Task`.
 Each button changes the task's argument, which starts a new request. Product 3 fails, to show the error state.
 
 <p class="notice">
-  <code>args</code> must return a plain JavaScript array. Fable compiles numeric arrays such as
+  <code>args</code> must return a plain JavaScript array. <a href="https://fable.io/">Fable</a> compiles numeric arrays such as
   <code>int[]</code> to typed arrays (<code>Int32Array</code>), which <code>@lit/task</code> rejects,
   so this example uses string ids. Arrays of strings, records or <code>obj</code> are fine.
 </p>

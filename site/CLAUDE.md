@@ -58,7 +58,8 @@ unlisted: true                 # only linked to (the search page): no section, s
 ## Links
 
 Write internal links root-relative: `[Events](/guides/events/)`, also in raw HTML `<a href>`. The
-base path (`/Firelight/`) is added for you. The build fails on any link to a page, `#anchor` or
+base path (`/Firelight/`) is added for you. Link the first mention of Fable on a page to
+https://fable.io/, and only that one. The build fails on any link to a page, `#anchor` or
 file that doesn't exist, naming the file and line.
 
 ## Code and demos

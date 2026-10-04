@@ -35,7 +35,7 @@ let greeting (name: string) =
 
 Lit's `html` is a JavaScript tagged template, which keeps a template's fixed text apart from the
 values in its holes, such as `{name}` above. An F# interpolated string passed to `html` is a `FormattableString`, which makes
-the same split, and Fable compiles it to a tagged template. Lit sees exactly what it would see from
+the same split, and [Fable](https://fable.io/) compiles it to a tagged template. Lit sees exactly what it would see from
 JavaScript: it parses each template once, and on later renders it updates only the values that
 changed.
 
