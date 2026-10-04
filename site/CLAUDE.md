@@ -32,6 +32,29 @@ unlisted: true                 # only linked to (the search page): no section, s
 ---
 ```
 
+## Voice
+
+`content/guides/templates.md` is the model page; the owner approved its voice.
+
+1. Open with what the developer writes, in their terms, then what it gets them. Within a section,
+   the reason comes before the details (a short example may lead).
+2. Short, plain sentences; imperatives for instructions ("Type a note…", "Use `repeat` when…").
+   "You" only for something the reader actually does. No hype, no exclamation marks, no "simply"
+   or "just".
+3. Say what is Lit's and spend the words on the F# part: explain as much Lit as the F# examples
+   need, and link to lit.dev for the rest.
+4. Reference material goes in compact tables (thing, what it does, example), but only when the rows
+   are parallel; things that don't line up across columns are lists. Keep cells short: tables stop
+   at the reading width. Prose covers the judgement calls: when, why not, the caveat.
+5. Check every claim: run what you say about behaviour, compile what you say about types, and quote
+   the real compiler message. Say so when an API is awkward. Prefer compiled ```` ```fsharp ```` blocks;
+   use `fragment` only when a whole module would bury the point.
+6. Put a live demo next to any idea that is easier to see than to read. Make the demo show the
+   difference, and tell the reader what to try.
+7. State security caveats concretely: what runs, with whose permissions, and the safe alternative.
+8. Mistakes are "you wrote / what happens / write instead", split into what the compiler catches
+   and what compiles silently.
+
 ## Links
 
 Write internal links root-relative: `[Events](/guides/events/)`, also in raw HTML `<a href>`. The
