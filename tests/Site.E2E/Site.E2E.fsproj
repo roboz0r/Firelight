@@ -9,6 +9,9 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Server.fs finds its files from __SOURCE_DIRECTORY__, so keep real paths when CI turns on
+         ContinuousIntegrationBuild. Deterministic paths would map it to /_/. -->
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Server.fs" />
