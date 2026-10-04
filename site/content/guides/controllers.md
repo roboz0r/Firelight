@@ -122,7 +122,8 @@ at build time, where there is no `window`. It also reads the query only after th
 update. The build can't know the answer, so the prerendered page says "light", and a prerendered
 component's first render in the browser has to match it. Reading the query in `hostConnected`
 would change that first render, and the prerendered text would stay on the page. Without
-prerendering, read it in `hostConnected` and skip the wait.
+prerendering, read it in `hostConnected` and skip the wait. [Prerendering components at build
+time](/guides/prerendering/) has the rules.
 
 Keep the cleanup next to the setup, as `stopListening` does. `removeEventListener` needs the very
 function `addEventListener` was given, which a method or a class-level `let` function isn't (see

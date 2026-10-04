@@ -33,6 +33,7 @@ and the button keeps its old count. Untick it, then remove the component and put
 Putting the component back logs `constructor` again. The template creates a new element, so
 nothing carries over from the old one. Lit SSR also ran the constructor, `willUpdate` and `render`
 when this page was built, to prerender the demo; the log only shows what ran in your browser.
+See [Prerendering components at build time](/guides/prerendering/).
 
 ## Connected and disconnected
 
@@ -138,8 +139,8 @@ type Leaderboard() =
         html $"""<ol>{ranked |> List.map (fun (name, score) -> html $"<li>{name}: {score}</li>")}</ol>"""
 ```
 
-The `not this.hasUpdated` covers the first render on the server, where `changed` lists only the
-properties set by attributes or by a parent's template. Assigning a property in `updated` instead works, but costs a second
+The `not this.hasUpdated` covers the first render on the server, where `changed` leaves out a
+property that still has the value its `member val` gave it. Assigning a property in `updated` instead works, but costs a second
 update every time, and Lit's development build warns: "scheduled an update … after an update
 completed".
 
