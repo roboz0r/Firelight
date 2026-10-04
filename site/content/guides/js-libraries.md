@@ -204,7 +204,7 @@ lifecycle gives each step its place:
 | Destroy it | `disconnectedCallback` | The component has left the page |
 | Create it again | `connectedCallback` | The element was moved, or removed and added back |
 
-The Lifecycle guide covers each method. <!-- link: /guides/lifecycle/ --> Here they wrap
+The [Lifecycle guide](/guides/lifecycle/) covers each method. Here they wrap
 [Chart.js](https://www.chartjs.org/):
 
 ```fsharp
@@ -298,7 +298,7 @@ A few details matter:
 
 None of these methods run when Lit SSR prerenders the component, so the chart is created only in
 the browser. The module that imports Chart.js still has to load in Node to prerender, though; the
-Prerendering guide covers that. <!-- link: /guides/prerendering/ -->
+[Prerendering guide](/guides/prerendering/) covers that.
 
 ## Wrapping a library as a component
 

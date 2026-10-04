@@ -273,7 +273,7 @@ machinery. Prerendering also constrains the components: they must render in Node
 same thing first in the browser as on the server.
 
 An app with public pages can do both: prerender the public pages, and serve the app itself from a
-shell. The Prerendering guide covers how. <!-- link: /guides/prerendering/ -->
+shell. The [Prerendering guide](/guides/prerendering/) covers how.
 
 ## Beyond the browser
 

@@ -235,8 +235,8 @@ doesn't make a component safe to render in Node.
 
 The module that prerenders must load in Node, too. The demo on this page imports the theme's CSS
 file, which Vite understands and Node doesn't, so this site renders it in the browser only. Keep
-CSS imports in the module that starts the app, out of the modules you prerender. The Prerendering
-guide covers what Lit SSR runs. <!-- link: /guides/prerendering/ -->
+CSS imports in the module that starts the app, out of the modules you prerender. The [Prerendering
+guide](/guides/prerendering/) covers what Lit SSR runs.
 
 ## Common mistakes
 
