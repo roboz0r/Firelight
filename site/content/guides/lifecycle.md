@@ -75,7 +75,7 @@ type LastKey() =
 
 Call the base method first in both. Lit's `connectedCallback` creates the shadow root and lets
 updates start, so a component that skips it never renders. Lit's `disconnectedCallback` tells the
-component's controllers it has gone.
+component's [controllers](/guides/controllers/) it has gone.
 
 `removeEventListener` only removes the very function `addEventListener` was given. In F#, that's
 harder than it looks: [Fable](https://fable.io/) compiles a method such as `this.OnKeyDown`, and a
@@ -240,7 +240,7 @@ type Marker() =
 | Change the DOM after a property changes | `updated` |
 | Wait for the DOM after setting a property | `updateComplete` |
 | Load data | [Firelight.Task](/packages/task/) |
-| Reuse any of these across components | A controller |
+| Reuse any of these across components | A [controller](/guides/controllers/) |
 
 ## Common mistakes
 
