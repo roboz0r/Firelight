@@ -33,9 +33,12 @@ directly, and with the Lit features Firelight doesn't bind yet.
 
 - [Components](/from-lit/components/): defining, rendering and reactive properties.
 - [Styles](/from-lit/styles/): static styles, sharing them, and shadow DOM.
+- [Lifecycle](/from-lit/lifecycle/): connecting, the update cycle and `changedProperties`.
+- [Events](/from-lit/events/): listening, dispatching custom events and listening on the element.
 - [Decorators](/from-lit/decorators/): what each Lit decorator becomes in F#.
 - [Templates](/from-lit/templates/): expressions, conditionals, lists, directives and static
   values.
+- [Composition](/from-lit/composition/): reactive controllers, and what replaces mixins.
 
 ## Beyond these pages
 
