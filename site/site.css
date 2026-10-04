@@ -259,6 +259,7 @@ section > p { max-width: 48rem; }
 
 /* Demo layouts */
 .demo.stacked { flex-direction: column; gap: 0.5rem; }
+.demo.spaced { flex-wrap: wrap; gap: 1rem; }
 .nested { padding: 0.75rem; border: 1px dashed var(--border); border-radius: var(--radius); display: grid; gap: 0.75rem; justify-items: start; }
 
 /* Client-side routing demo (light DOM, so it uses these styles directly) */

@@ -15,14 +15,21 @@ type SlotCard() =
     static member styles =
         css
             $$"""
-        :host { display: block; align-self: start; width: 16rem; border: 1px solid var(--border); border-radius: 0.5rem;
-                background: var(--bg); }
+        :host { display: block; align-self: start; width: 16rem; border: 1px solid var(--border);
+                border-radius: var(--radius); background: var(--bg); }
         header, .body, footer { padding: 0.75rem 1rem; }
-        header { border-bottom: 1px solid var(--border); font-weight: 600; }
-        ::slotted([slot="heading"]) { margin: 0; font-size: 1.1rem; }
+        /* The heading looks the same from the slot as from the fallback: the slotted one inherits. */
+        header { border-bottom: 1px solid var(--border); font-size: 1.1rem; font-weight: 600; }
+        ::slotted([slot="heading"]) { margin: 0; font: inherit; }
+        /* The body's elements lose their own margins; the grid's gap spaces them instead. */
+        .body { display: grid; gap: 0.5rem; }
+        .body ::slotted(*) { margin: 0; }
         footer { display: flex; gap: 0.5rem; justify-content: end; border-top: 1px solid var(--border); }
         footer[hidden] { display: none; }
-        ::slotted(button) { font: inherit; padding: 0.3rem 0.9rem; }
+        ::slotted(button) { font: inherit; color: var(--fg); background: var(--surface); padding: 0.3rem 0.9rem;
+                            border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; }
+        ::slotted(button:hover) { border-color: var(--muted); }
+        ::slotted(button:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
         """
 
     member val hasFooter = false with get, set
@@ -30,13 +37,15 @@ type SlotCard() =
     member this.CheckFooter(slot: HTMLSlotElement) =
         this.hasFooter <- slot.assignedElements().Length > 0
 
-    // slotchange reports changes. Check once the first update is done, too: in a prerendered
-    // card, the page's elements were in their slots before this code ran.
+    // slotchange reports changes, but a prerendered card's elements were in their slots before
+    // this code ran, so check once as well. After updateComplete, not in firstUpdated itself:
+    // setting hasFooter during an update schedules another, which Lit warns about.
     override this.firstUpdated _ =
-        this.updateComplete.``then`` (fun _ ->
+        promise {
+            let! _ = this.updateComplete
             this.query<HTMLSlotElement> "slot[name=footer]" |> Option.iter this.CheckFooter
-        )
-        |> ignore
+        }
+        |> Promise.start
 
     override this.render() =
         html
