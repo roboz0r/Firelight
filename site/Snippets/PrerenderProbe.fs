@@ -37,9 +37,7 @@ type PrerenderProbe() =
     // Browser APIs only here, never in the constructor, willUpdate or render.
     override this.connectedCallback() =
         base.connectedCallback ()
-        let onResize (_: Event) = this.width <- window.innerWidth
-        window.addEventListener ("resize", onResize)
-        stopListening <- fun () -> window.removeEventListener ("resize", onResize)
+        stopListening <- Ev.listen window "resize" (Ev.event (fun _ -> this.width <- window.innerWidth))
 
         // The first update hydrates, so it must render what the server did. Afterwards, show what
         // only the browser knows.

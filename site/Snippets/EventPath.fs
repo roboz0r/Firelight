@@ -24,7 +24,7 @@ type SignalButtons() =
     member this.Raise(composed: bool) =
         this.sent <- this.sent + 1
         let signal = { Number = this.sent }
-        this.dispatchEvent (Event.customEvent ("signal", signal, composed = composed)) |> ignore
+        this.dispatch (Event.customEvent ("signal", signal, composed = composed))
 
     override this.render() =
         html

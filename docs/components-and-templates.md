@@ -187,7 +187,7 @@ The child dispatches a `CustomEvent`; the parent listens with `@event-name`.
 
 ```fsharp
 // Child: Event.customEvent makes an event that bubbles out of the shadow root.
-this.dispatchEvent (Event.customEvent ("todo-completed", _todoId)) |> ignore
+this.dispatch (Event.customEvent ("todo-completed", _todoId))
 
 // Parent render: Ev.custom<int> types the event; its detail is an int option.
 html $"""<todo-item @todo-completed={Ev.custom<int> (fun e -> e.detail |> Option.iter (Complete >> this.Dispatch))}></todo-item>"""

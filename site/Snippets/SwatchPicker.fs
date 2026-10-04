@@ -33,7 +33,7 @@ type SwatchPicker() =
 
     member this.Pick(color: string) =
         this.selected <- color
-        this.dispatchEvent (Event.customEvent ("color-picked", color)) |> ignore
+        this.dispatch (Event.customEvent ("color-picked", color))
 
     override this.render() =
         html $"""{[ for color in this.colors -> swatch color (color = this.selected) (fun () -> this.Pick color) ]}"""

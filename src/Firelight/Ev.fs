@@ -1,6 +1,7 @@
 namespace Firelight
 
 open Browser.Types
+open Fable.Core.JsInterop
 
 /// <summary>
 /// Typed event handlers for <c>@event</c> bindings in templates.
@@ -137,3 +138,59 @@ module Ev =
     /// </example>
     let inline checked' ([<InlineIfLambda>] handler: bool -> unit) : Event -> unit =
         fun (e: Event) -> handler (e.currentTarget :?> HTMLInputElement).``checked``
+
+    /// <summary>
+    /// A handler that receives the <c>value</c> property of the element the binding is on as a <c>'T</c>, for
+    /// elements whose <c>value</c> isn't a string, such as a slider component whose <c>value</c> is a number:
+    /// <c>@input={Ev.valueAs&lt;float&gt; setVolume}</c>.
+    /// </summary>
+    /// <remarks>
+    /// It reads <c>value</c> from the event's <c>currentTarget</c> and unboxes it: it doesn't parse or convert
+    /// anything, and nothing checks that the value is a <c>'T</c>. A native <c>&lt;input type="number"&gt;</c>'s
+    /// <c>value</c> is still a string, so <c>Ev.valueAs&lt;float&gt;</c> on it passes your handler a string; use
+    /// <c>Ev.value</c> and parse it. Nothing checks the bound event's name or the element; see
+    /// <see cref="T:Firelight.Ev"/>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// html $"""&lt;wa-slider .value={volume} @input={Ev.valueAs&lt;float&gt; (fun v -&gt; setVolume v)}&gt;&lt;/wa-slider&gt;"""
+    /// </code>
+    /// </example>
+    let inline valueAs<'T> ([<InlineIfLambda>] handler: 'T -> unit) : Event -> unit =
+        fun (e: Event) -> handler (unbox<'T> e.currentTarget?value)
+
+    /// <summary>
+    /// Adds <c>handler</c> as a listener for <c>eventName</c> on <c>target</c>, and returns a function that
+    /// removes it: <c>let stop = Ev.listen window "keydown" (Ev.keyboard (fun e -&gt; ...))</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// For listeners outside a component's template, such as on <c>window</c> or <c>document</c>: call it in
+    /// <c>connectedCallback</c> or a controller's <c>hostConnected</c>, keep the remover, and call it in
+    /// <c>disconnectedCallback</c> or <c>hostDisconnected</c>.
+    /// </para>
+    /// <para>
+    /// <c>removeEventListener</c> only removes the very function it was given. A method, or a function bound
+    /// with <c>let</c> in a class, becomes a new JavaScript function each time it's passed, so removing it
+    /// directly removes nothing. The remover holds the one function <c>listen</c> added, so it always works.
+    /// </para>
+    /// <para>
+    /// The handler's event type, <c>'E</c>, is unchecked: <c>listen</c> casts each event to it. Nothing checks
+    /// it against the event's name.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// override this.connectedCallback() =
+    ///     base.connectedCallback ()
+    ///     stopListening &lt;- Ev.listen window "keydown" (Ev.keyboard (fun e -&gt; this.key &lt;- e.key))
+    ///
+    /// override this.disconnectedCallback() =
+    ///     base.disconnectedCallback ()
+    ///     stopListening ()
+    /// </code>
+    /// </example>
+    let listen<'E when 'E :> Event> (target: EventTarget) (eventName: string) (handler: 'E -> unit) : unit -> unit =
+        let listener (e: Event) = handler (unbox<'E> e)
+        target.addEventListener (eventName, listener)
+        fun () -> target.removeEventListener (eventName, listener)

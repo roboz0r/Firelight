@@ -35,7 +35,7 @@ type ClickCounter() =
     member this.Add(step: int) =
         this.count <- this.count + step
         // The event bubbles out of the shadow DOM, so the page can listen for it.
-        this.dispatchEvent (Event.customEvent ("count-changed", this.count)) |> ignore
+        this.dispatch (Event.customEvent ("count-changed", this.count))
 
     override this.render() =
         let stepButton step =

@@ -18,8 +18,35 @@ each break is listed under Changed with how to migrate.
   - `Firelight.Virtualizer`: bindings for `@lit-labs/virtualizer`.
   - `Firelight.Templates`: `dotnet new firelight -n MyApp` creates a Vite app with one component.
 - `LightDomElement`: a `LitElement` that renders into the host element instead of a shadow root.
-- `ReactiveElement.dispatchEvent`, so a component can raise an event without a cast:
-  `this.dispatchEvent (Event.customEvent ("changed", value))`.
+- `ReactiveElement.dispatchEvent`, so a component can raise an event without a cast, and
+  `this.dispatch`, the same without its `bool` result, so without `|> ignore`:
+
+  ```fsharp
+  // 0.2
+  (box this :?> HTMLElement).dispatchEvent (Event.customEvent ("changed", value)) |> ignore
+  // 0.3
+  this.dispatch (Event.customEvent ("changed", value))
+  ```
+
+  Keep `dispatchEvent` for a cancelable event, whose result you need.
+- `Event.customEvent` takes `cancelable` (default `false`), so an event a listener can cancel no
+  longer needs `CustomEvent.Create` and `jsOptions`:
+  `this.dispatchEvent (Event.customEvent ("note-closing", id, cancelable = true))`.
+- `Ev.listen target name handler` adds an event listener and returns the function that removes it,
+  for listeners on `window` or `document` added in `connectedCallback`. Removing one yourself with a
+  method or a class `let` function removed nothing, as Fable passes a new function each time:
+
+  ```fsharp
+  // 0.2
+  let onKey (e: Event) = this.key <- (e :?> KeyboardEvent).key
+  window.addEventListener ("keydown", onKey)
+  stopListening <- fun () -> window.removeEventListener ("keydown", onKey)
+  // 0.3
+  stopListening <- Ev.listen window "keydown" (Ev.keyboard (fun e -> this.key <- e.key))
+  ```
+
+- `Ev.valueAs<'T>`, for an element whose `value` property isn't a string, such as a slider
+  component's number: it unboxes `currentTarget.value`, and parses nothing.
 - Lit's `when`, `choose`, `map` and `range` directives. `when` is an F# keyword, so it's `when'`:
 
   ```fsharp

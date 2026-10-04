@@ -16,7 +16,7 @@ toc: true
 
 Listeners on `window` or `document` go on in `connectedCallback` and come off in
 `disconnectedCallback`, as in Lit. F# has no arrow-function field to hand both calls the same
-function, so create the handler where you add it and keep the way to remove it.
+function, so `Ev.listen` adds the listener and returns the function that removes it.
 
 ::: compare
 ```ts
@@ -71,14 +71,11 @@ type EscNotice() =
     override this.connectedCallback() =
         base.connectedCallback ()
 
-        let onKey (e: Event) =
-            if (e :?> KeyboardEvent).key = "Escape" then
+        let onKey (e: KeyboardEvent) =
+            if e.key = "Escape" then
                 this.shown <- false
 
-        window.addEventListener ("keydown", onKey)
-
-        stop <- fun () ->
-            window.removeEventListener ("keydown", onKey)
+        stop <- Ev.listen window "keydown" onKey
 
     override this.disconnectedCallback() =
         base.disconnectedCallback ()
@@ -94,8 +91,8 @@ defineElement<EscNotice> "esc-notice"
 ```
 :::
 
-`window.addEventListener` takes an `Event -> unit`, so the handler casts to `KeyboardEvent`.
-`:?>` to an interface type isn't checked when it runs, like `as` in TypeScript.
+`Ev.listen` takes a handler of any event type and casts each event to it, unchecked, like `as` in
+TypeScript: nothing compares `KeyboardEvent` with the name `"keydown"`.
 
 ## Computing values before render
 
@@ -304,8 +301,8 @@ defineElement<FieldList> "field-list"
 
 - **Arrow-function fields.** F# compiles a `let` function or a `member val` holding a function to
   a method, and passes a new wrapper each time it's used. `removeEventListener` then can't find
-  the listener you added, so the listener stays. Create the handler in the method that adds it,
-  and keep its removal, as `EscNotice` does.
+  the listener you added, so the listener stays. Add it with `Ev.listen`, which returns its own
+  remover, as `EscNotice` does.
 - **`performUpdate()` and `createRenderRoot()`.** These aren't overridable members in Firelight.
   `LightDomElement` replaces `createRenderRoot` for you; see
   [Styles](/from-lit/styles/#rendering-without-shadow-dom).
@@ -320,7 +317,7 @@ defineElement<FieldList> "field-list"
 
 | You wrote | What happens | Write instead |
 |---|---|---|
-| `window.removeEventListener ("keydown", this.OnKey)` | The listener stays: each use of `this.OnKey` is a new function | Keep the handler from `connectedCallback`, as above |
+| `window.removeEventListener ("keydown", this.OnKey)` | The listener stays: each use of `this.OnKey` is a new function | `Ev.listen`, as above |
 | No `base.connectedCallback ()` | Lit doesn't create the shadow root or start updating, so nothing renders | Call `base` first |
 | `changed.ContainsKey "frist"` | Never true | The property's exact name |
 

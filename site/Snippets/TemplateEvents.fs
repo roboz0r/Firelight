@@ -21,7 +21,7 @@ type TagInput() =
         let tag = this.text.Trim()
 
         if tag <> "" then
-            this.dispatchEvent (Event.customEvent ("tag-added", tag)) |> ignore
+            this.dispatch (Event.customEvent ("tag-added", tag))
             this.text <- ""
 
     override this.render() =

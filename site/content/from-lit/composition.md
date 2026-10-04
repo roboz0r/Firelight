@@ -89,10 +89,7 @@ type WidthController(host: ReactiveControllerHost) as this =
 
         width <- window.innerWidth
         host.requestUpdate ()
-        window.addEventListener ("resize", onResize)
-
-        stop <- fun () ->
-            window.removeEventListener ("resize", onResize)
+        stop <- Ev.listen window "resize" onResize
 
     interface ReactiveController with
         member this.hostConnected() = this.Listen()
@@ -116,8 +113,8 @@ defineElement<WidthLabel> "width-label"
 :::
 
 The controller doesn't need `[<AttachMembers>]`: Lit calls only the interface's four members, and
-an F# interface implementation keeps their names. The listener is created when the host connects
-and its removal kept, as on [Lifecycle](/from-lit/lifecycle/#connecting-and-disconnecting).
+an F# interface implementation keeps their names. The listener is added with `Ev.listen` when the
+host connects, and its remover kept, as on [Lifecycle](/from-lit/lifecycle/#connecting-and-disconnecting).
 
 ## Mixins
 

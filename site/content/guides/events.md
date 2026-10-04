@@ -57,10 +57,13 @@ the [Templates guide](/guides/templates/#typed-event-handlers) shows: in
 | `Ev.event` | An `Event` | Anything else, such as `change` |
 | `Ev.value` | The field's `value`, a string | `input` or `change` on the field |
 | `Ev.checked'` | Whether the box is checked | `change` on the checkbox |
+| `Ev.valueAs<'T>` | The element's `value`, unboxed as a `'T` | A component whose `value` isn't a string |
 
 `Ev.value` and `Ev.checked'` read the element the listener is on, so bind them on the field itself,
-not on a `<form>` around it. Nothing checks the function against the event's name; see
-[Typed details](#typed-details).
+not on a `<form>` around it. `Ev.valueAs<'T>` is for components whose `value` property holds
+something other than a string, such as a slider's number: it unboxes the value and parses nothing.
+A native `<input type="number">`'s `value` is still a string, so use `Ev.value` there and parse it.
+Nothing checks the function against the event's name; see [Typed details](#typed-details).
 
 A few members of the event are worth knowing in any handler:
 
@@ -116,9 +119,8 @@ click outside a menu, add a listener to `window` or `document` in `connectedCall
 in `disconnectedCallback`. Otherwise every component that's been removed keeps listening, and
 keeps the component alive in memory.
 
-`removeEventListener` only removes the function it's given, the same object. A function written as
-a class `let` or `member` doesn't qualify: [Fable](https://fable.io/) compiles it to a method, and each use wraps it in a
-new JavaScript function. Make the function in `connectedCallback` and keep a way to remove it:
+`Ev.listen target name handler` adds the listener and returns a function that removes it. Keep
+that function, and call it on the way out:
 
 ```fsharp
 open Fable.Core
@@ -141,12 +143,8 @@ type Menu() =
     override this.connectedCallback() =
         base.connectedCallback ()
 
-        let onKey (e: Event) =
-            if (e :?> KeyboardEvent).key = "Escape" then
-                this.isOpen <- false
-
-        window.addEventListener ("keydown", onKey)
-        stopListening <- fun () -> window.removeEventListener ("keydown", onKey)
+        stopListening <-
+            Ev.listen window "keydown" (Ev.keyboard (fun e -> if e.key = "Escape" then this.isOpen <- false))
 
     override this.disconnectedCallback() =
         base.disconnectedCallback ()
@@ -161,9 +159,15 @@ type Menu() =
 defineElement<Menu> "my-menu"
 ```
 
-`onKey` is a local function, so both calls see the same JavaScript function. `connectedCallback`
-also keeps `window` out of the constructor and `render`, which Lit SSR runs where there is no
-`window`.
+The handler can be typed with any `Ev` function; `listen` doesn't check it against the event's
+name. `connectedCallback` also keeps `window` out of the constructor and `render`, which Lit SSR
+runs where there is no `window`.
+
+Calling `window.addEventListener` and `removeEventListener` yourself works too, with one trap:
+`removeEventListener` only removes the very function it's given. A method, or a function bound
+with `let` in the class, doesn't qualify: [Fable](https://fable.io/) wraps it in a new JavaScript
+function each time it's passed, so removing it removes nothing. The remover `Ev.listen` returns
+holds the one function it added.
 
 ## Raise an event
 
@@ -186,7 +190,7 @@ type Counter() =
 
     member this.Increment() =
         this.count <- this.count + 1
-        this.dispatchEvent (Event.customEvent ("count-changed", this.count)) |> ignore
+        this.dispatch (Event.customEvent ("count-changed", this.count))
 
     override this.render() =
         html $"""<button @click={fun _ -> this.Increment()}>Clicked {this.count} times</button>"""
@@ -196,8 +200,9 @@ defineElement<Counter> "my-counter"
 
 `Event.customEvent (name, detail)` comes with `open Browser.Types`. It makes a `CustomEvent` that
 carries `detail` and, by default, bubbles and is composed: the [next section](#how-far-an-event-goes)
-explains both. `dispatchEvent` returns `false` if a listener cancelled the event, and `true`
-otherwise, hence the `|> ignore`.
+explains both. `this.dispatch` raises it from the component. It's Lit's `dispatchEvent` without
+the result: `dispatchEvent` returns `false` if a listener cancelled the event, and `true`
+otherwise, which only matters for [an event a listener can cancel](#events-a-listener-can-cancel).
 
 Name events like the browser's own, in lower case with hyphens. Event names are case-sensitive, so
 a listener for `countchanged` misses `countChanged`. Raise the event after the change, so a listener
@@ -226,7 +231,7 @@ module SwatchPicked =
     let name = "swatch-picked"
 
     let raise (host: LitElement) (swatch: Swatch) =
-        host.dispatchEvent (Event.customEvent (name, swatch)) |> ignore
+        host.dispatch (Event.customEvent (name, swatch))
 
     let handle (onPicked: Swatch -> unit) =
         Ev.custom<Swatch> (fun e -> e.detail |> Option.iter onPicked)
@@ -243,8 +248,8 @@ records or anonymous records.
 ### Events a listener can cancel
 
 Some events ask permission: the component raises one before it acts, and acts only if no listener
-calls `preventDefault`. Such an event must be created with `cancelable` set. `Event.customEvent`
-has no parameter for it, so create the `CustomEvent` yourself.
+calls `preventDefault`. Such an event must be created with `cancelable = true`, and raised with
+`dispatchEvent`, whose result says whether a listener cancelled it.
 
 Tick the box, then close the note:
 
@@ -308,9 +313,10 @@ The compiler catches a few:
 
 | You wrote | The compiler says | Write instead |
 |---|---|---|
-| `this.dispatchEvent (Event.customEvent (...))` as a statement | The result of this expression has type 'bool' and is implicitly ignored (a warning) | `\|> ignore`, or use the result |
+| `this.dispatchEvent (Event.customEvent (...))` as a statement | The result of this expression has type 'bool' and is implicitly ignored (a warning) | `this.dispatch (...)`, or use the result |
 | `e.detail.Name` | The type 'Option<_>' does not define a field, constructor, or member named 'Name' | `e.detail \|> Option.iter (fun s -> ...)` |
 | `Event.customEvent` without `open Browser.Types` | The value, constructor, namespace or type 'customEvent' is not defined | `open Browser.Types` |
+| `Event.customEvent` with `open Browser` as well | The type 'EventType' does not define the field, constructor or member 'customEvent' | Drop `open Browser`, or write `Browser.Dom.window` where you need it |
 
 Most compile, because event names are strings and a hole accepts any value:
 
@@ -320,6 +326,6 @@ Most compile, because event names are strings and a hole accepts any value:
 | `Ev.custom<string>` for a detail that's an `int` | `e.detail` holds an `int`; string functions fail at run time | The detail's real type, kept beside the name |
 | `composed = false`, from a component inside another's shadow DOM | The page never hears it | Composed, the default of `Event.customEvent` |
 | A page listener reading `e.target` for the inner element | It gets the outermost host | `e.composedPath ()`, or put what it needs in `detail` |
-| `e.preventDefault ()` on an event made by `Event.customEvent` | Nothing: the event isn't cancelable | `CustomEvent.Create` with `cancelable` |
+| `e.preventDefault ()` on an event made by `Event.customEvent (name, detail)` | Nothing: the event isn't cancelable | `Event.customEvent (name, detail, cancelable = true)` |
 | `window.addEventListener` in the constructor or `render` | Fails in Lit SSR; with no removal, listens forever | `connectedCallback`, removed in `disconnectedCallback` |
-| `removeEventListener` with a class `let` function | The listener stays | A local function made in `connectedCallback` |
+| `removeEventListener` with a class `let` function or a method | The listener stays | `Ev.listen`, and call the function it returns |

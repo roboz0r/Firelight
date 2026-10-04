@@ -35,7 +35,7 @@ type Rating() =
 
     member this.Select(stars: int) =
         this.value <- stars
-        this.dispatchEvent (Event.customEvent ("rating-changed", stars)) |> ignore
+        this.dispatch (Event.customEvent ("rating-changed", stars))
 
     override this.render() =
         html $"""{[ for n in 1..5 -> star n this.value (fun () -> this.Select n) ]}"""

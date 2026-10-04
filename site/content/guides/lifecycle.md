@@ -62,9 +62,7 @@ type LastKey() =
 
     override this.connectedCallback() =
         base.connectedCallback ()
-        let onKeyDown (e: Event) = this.key <- (e :?> KeyboardEvent).key
-        window.addEventListener ("keydown", onKeyDown)
-        stopListening <- fun () -> window.removeEventListener ("keydown", onKeyDown)
+        stopListening <- Ev.listen window "keydown" (Ev.keyboard (fun e -> this.key <- e.key))
 
     override this.disconnectedCallback() =
         base.disconnectedCallback ()
@@ -78,12 +76,13 @@ Call the base method first in both. Lit's `connectedCallback` creates the shadow
 updates start, so a component that skips it never renders. Lit's `disconnectedCallback` tells the
 component's [controllers](/guides/controllers/) it has gone.
 
-`removeEventListener` only removes the very function `addEventListener` was given. In F#, that's
-harder than it looks: [Fable](https://fable.io/) compiles a method such as `this.OnKeyDown`, and a
-function bound with `let` in the class, to a member, and passing either one as a value wraps it in
-a new JavaScript function each time. Removing it then removes nothing, and the window keeps the
-element alive. `LastKey` avoids this by keeping the cleanup next to the setup: `onKeyDown` is a
-local value, and `stopListening` closes over that same value.
+`Ev.listen` adds the listener and returns the function that removes it, so the cleanup stays next
+to the setup. Removing a listener yourself is harder than it looks in F#: `removeEventListener`
+only removes the very function `addEventListener` was given, and [Fable](https://fable.io/)
+compiles a method such as `this.OnKeyDown`, and a function bound with `let` in the class, to a
+member, so passing either one as a value wraps it in a new JavaScript function each time. Removing
+it then removes nothing, and the window keeps the element alive. The [Events
+guide](/guides/events/#listen-outside-the-component) has more.
 
 ## The update cycle
 
@@ -264,7 +263,7 @@ Others compile:
 |---|---|---|
 | An override of `connectedCallback` or `update` without the base call | Nothing renders | `base.connectedCallback ()`, `base.update changed` |
 | An override of `disconnectedCallback` without the base call | Controllers keep running after the element has gone | `base.disconnectedCallback ()` |
-| `window.removeEventListener ("resize", this.OnResize)` | Removes nothing | Keep the function you added, as `LastKey` does |
+| `window.removeEventListener ("resize", this.OnResize)` | Removes nothing | `Ev.listen`, as `LastKey` does |
 | `window.addEventListener` in the constructor | Never removed; prerendering fails with "window is not defined" | `connectedCallback` |
 | `this.shadowRoot.querySelector` in the constructor or `render` | Throws or finds nothing: before the first update, the shadow root is missing or empty | A `ref`, read in `firstUpdated` or later |
 | `this.total <- ...` in `updated` | A second update after every update | Compute it in `willUpdate` |

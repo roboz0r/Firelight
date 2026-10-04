@@ -239,6 +239,7 @@ html $"""
 
 - `Ev.value` reads `value` from the element the binding is on (`currentTarget`): an `<input>`, `<select>` or `<textarea>`. `Ev.checked'` reads `checked` from a checkbox or radio `<input>`. Use them instead of `(e.target :?> HTMLInputElement).value`.
 - `Ev.mouse`, `pointer`, `keyboard`, `focus`, `input` (InputEvent), `wheel`, `drag`, `touch`, `submit`, `event` (any), and `Ev.custom<'T>` for a `CustomEvent<'T>` (`e.detail` is `'T option`).
+- `Ev.valueAs<'T>` reads `currentTarget.value` and unboxes it (no parsing), for components whose `value` isn't a string, e.g. a slider's number. A native `<input type="number">`'s `value` is still a string: use `Ev.value` and parse.
 - Nothing checks the function against the event name: `@click={Ev.keyboard ...}` compiles. Pick the matching one.
 
 ### LitEventListener with options
@@ -259,8 +260,8 @@ override this.render() =
 Firelight provides an inline helper `Event.customEvent` that sets `bubbles = true` and `composed = true` by default (the right defaults for Web Components crossing shadow DOM). Uses `CustomEvent<'T>` from `Fable.Browser.Event` where `detail` is `'T option`.
 
 ```fsharp
-// In the child component — dispatch with the helper:
-this.dispatchEvent(Event.customEvent("todo-completed", _todoId))
+// In the child component: this.dispatch is dispatchEvent without its bool result
+this.dispatch (Event.customEvent ("todo-completed", _todoId))
 
 // Parent listens — detail is 'T option:
 html $"""<todo-item @todo-completed={Ev.custom<int> (fun e ->
@@ -270,7 +271,25 @@ html $"""<todo-item @todo-completed={Ev.custom<int> (fun e ->
 
 Helper signature:
 ```fsharp
-Event.customEvent(typeName, detail, ?bubbles (* default true *), ?composed (* default true *))
+Event.customEvent(typeName, detail, ?bubbles (* default true *), ?composed (* default true *), ?cancelable (* default false *))
+```
+
+For an event a listener may cancel, pass `cancelable = true` and use `this.dispatchEvent`, which returns `false` when a listener called `preventDefault`. `Event.customEvent` needs `open Browser.Types` and not `open Browser` (whose `Event` value hides the extension).
+
+### Listeners outside the template: `Ev.listen`
+
+For `window`/`document` listeners, `Ev.listen target name handler` adds the listener and returns its remover. Never pass a method or class-level `let` function to `removeEventListener`: Fable wraps it in a new JS function each time, so nothing is removed.
+
+```fsharp
+let mutable stopListening = ignore
+
+override this.connectedCallback() =
+    base.connectedCallback ()
+    stopListening <- Ev.listen window "keydown" (Ev.keyboard (fun e -> if e.key = "Escape" then this.Close()))
+
+override this.disconnectedCallback() =
+    base.disconnectedCallback ()
+    stopListening ()
 ```
 
 ---
@@ -402,7 +421,7 @@ Use Firelight's `Event.customEvent` helper, which defaults `bubbles = true` and 
 
 ```fsharp
 // Child dispatches:
-this.dispatchEvent(Event.customEvent("card-deleted", detail = 42))
+this.dispatch (Event.customEvent ("card-deleted", 42))
 
 // Parent listens:
 html $"""

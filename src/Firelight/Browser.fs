@@ -55,18 +55,33 @@ open System
 open System.Runtime.InteropServices
 
 type Browser.Types.Event with
+    /// <summary>
+    /// A <c>CustomEvent</c> named <c>typeName</c> that carries <c>detail</c>. It bubbles and is composed unless
+    /// you say otherwise, so it leaves the component's shadow root and reaches the page.
+    /// </summary>
+    /// <remarks>
+    /// Pass <c>cancelable = true</c> for an event that asks permission: <c>dispatchEvent</c> then returns
+    /// <c>false</c> when a listener called <c>preventDefault</c>.
+    /// </remarks>
+    /// <param name="typeName">The event's name, such as <c>"count-changed"</c>.</param>
+    /// <param name="detail">The value listeners read as <c>e.detail</c>.</param>
+    /// <param name="bubbles">Whether it travels up through the element's ancestors. Default true.</param>
+    /// <param name="composed">Whether it crosses shadow root boundaries. Default true.</param>
+    /// <param name="cancelable">Whether a listener's <c>preventDefault</c> cancels it. Default false.</param>
     static member inline customEvent
         (
             typeName: string,
             detail: 'T,
             [<Optional; DefaultParameterValue(true)>] bubbles: bool,
-            [<Optional; DefaultParameterValue(true)>] composed: bool
+            [<Optional; DefaultParameterValue(true)>] composed: bool,
+            [<Optional; DefaultParameterValue(false)>] cancelable: bool
         ) =
         let eventInit =
             Fable.Core.JsInterop.jsOptions<CustomEventInit<'T>>(fun o ->
                 o.detail <- Some detail
                 o.bubbles <- bubbles
                 o.composed <- composed
+                o.cancelable <- cancelable
             )
 
         CustomEvent.Create(typeName, eventInit)

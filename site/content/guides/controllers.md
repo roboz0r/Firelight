@@ -97,9 +97,7 @@ type MediaQuery(host: ReactiveControllerHost, query: string) as this =
                 matches <- list.matches
                 host.requestUpdate ()
 
-            let onChange (_: Event) = read ()
-            list.addEventListener ("change", onChange)
-            stopListening <- fun () -> list.removeEventListener ("change", onChange)
+            stopListening <- Ev.listen list "change" (Ev.event (fun _ -> read ()))
             // After the host's first update: see below.
             host.updateComplete.``then`` (fun _ -> read ()) |> ignore
 
@@ -125,9 +123,10 @@ would change that first render, and the prerendered text would stay on the page.
 prerendering, read it in `hostConnected` and skip the wait. [Prerendering components at build
 time](/guides/prerendering/) has the rules.
 
-Keep the cleanup next to the setup, as `stopListening` does. `removeEventListener` needs the very
-function `addEventListener` was given, which a method or a class-level `let` function isn't (see
-[Lifecycle](/guides/lifecycle/#connected-and-disconnected)).
+Keep the cleanup next to the setup, as `stopListening` does: `Ev.listen` returns the function that
+removes its listener. Removing one with `removeEventListener` yourself needs the very function
+`addEventListener` was given, which a method or a class-level `let` function isn't (see
+[Events](/guides/events/#listen-outside-the-component)).
 
 ## Controllers in Firelight's packages
 

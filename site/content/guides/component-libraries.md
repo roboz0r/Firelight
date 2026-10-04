@@ -131,7 +131,7 @@ let notifications (on: bool) (setOn: bool -> unit) =
 ```
 
 `Ev.value` types the value as a `string`, so use it only where the property is one. A
-`<wa-slider>`'s `value` is a number: read it from the element through a typed interface, as in
+`<wa-slider>`'s `value` is a number: `Ev.valueAs<float>` reads it as one, as in
 [Typing elements](#typing-elements).
 
 Some events carry their data in `detail`. A dialog's `wa-hide` says which element closed it, in
@@ -200,21 +200,17 @@ let showDialog () =
 let view () =
     html $"""<wa-dialog {ref dialog} label="Saved">Your changes are saved.</wa-dialog>"""
 
-/// <wa-slider>'s value is a number.
-type WaSlider =
-    inherit HTMLElement
-    abstract value: float with get, set
-
+// <wa-slider>'s value is a number.
 let volume (level: float) (setLevel: float -> unit) =
     html
         $"""
-    <wa-slider label="Volume" .value={level}
-        @input={Ev.event (fun e -> setLevel (e.currentTarget :?> WaSlider).value)}>
+    <wa-slider label="Volume" .value={level} @input={Ev.valueAs<float> setLevel}>
     </wa-slider>"""
 ```
 
-The slider's handler reads the element the listener is on, `currentTarget`, as `Ev.value` does,
-but as a `float`.
+`Ev.valueAs<float>` reads `value` from the element the listener is on, `currentTarget`, as
+`Ev.value` does, and hands it over as a `float`. It converts nothing: it's only right because the
+slider's `value` really is a number.
 
 An interface over a JavaScript object costs nothing at run time: [Fable](https://fable.io/)
 reads and writes the members directly. Declare only what you use; the interface doesn't have to
@@ -256,7 +252,7 @@ The rest compile, and fail quietly in the browser:
 | No import for a tag you use | The tag renders as its plain text, with no error | `importSideEffects` for each component |
 | `checked={on}`, without `?` or `.` | `false` becomes the text "false", and the attribute's presence turns the default on | `.checked={on}` |
 | `?checked={on}` to control the switch | It stops following `on` once the user has toggled it | `.checked={on}` |
-| `@input={Ev.value setVolume}` on `<wa-slider>` | `setVolume` gets a number, though F# calls it a `string` | Read `value` through a typed interface |
+| `@input={Ev.value setVolume}` on `<wa-slider>` | `setVolume` gets a number, though F# calls it a `string` | `Ev.valueAs<float> setVolume` |
 | No theme stylesheet | Components lose their colours and spacing | Load it once for the document |
 | `wa-switch .thumb { ... }` | Matches nothing inside the shadow root | `wa-switch::part(thumb)` |
 | A `<form>` around your component, and library controls inside its shadow root | The controls aren't part of the form, and their values aren't submitted | The `<form>` in the same template as its controls |

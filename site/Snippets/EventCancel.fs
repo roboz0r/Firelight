@@ -1,8 +1,6 @@
 module Snippets.EventCancel
 
 open Fable.Core
-open Fable.Core.JsInterop
-open Browser
 open Browser.Types
 open Firelight
 open type Firelight.Lit
@@ -32,14 +30,7 @@ type ClosableNote() =
 
     member this.Close() =
         let closing =
-            CustomEvent.Create(
-                "note-closing",
-                jsOptions<CustomEventInit<string>> (fun o ->
-                    o.detail <- Some this.heading
-                    o.bubbles <- true
-                    o.composed <- true
-                    o.cancelable <- true)
-            )
+            Event.customEvent ("note-closing", this.heading, cancelable = true)
         // false when a listener called preventDefault.
         if this.dispatchEvent closing then
             this.closed <- true

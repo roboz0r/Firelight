@@ -55,7 +55,7 @@ open Browser.Types
 open Firelight
 
 let pick (host: LitElement) (color: string) =
-    host.dispatchEvent (Event.customEvent ("color-picked", color)) |> ignore
+    host.dispatch (Event.customEvent ("color-picked", color))
 ```
 
 `Event.customEvent` makes a `CustomEvent` with the value as its `detail`. It sets `bubbles` and

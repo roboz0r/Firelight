@@ -87,8 +87,9 @@ defineElement<QuickAdd> "quick-add"
 
 ## Dispatching a custom event
 
-`Event.customEvent` sets `bubbles` and `composed` to `true` for you. `dispatchEvent` returns
-whether the event went uncancelled, which F# makes you `ignore` or use.
+`Event.customEvent` sets `bubbles` and `composed` to `true` for you. `this.dispatch` is
+`dispatchEvent` without its result, whether the event went uncancelled, which F# would make you
+`ignore`. For an event a listener can cancel, pass `cancelable = true` and call `dispatchEvent`.
 
 ::: compare
 ```ts
@@ -120,9 +121,7 @@ type SwatchRow() =
     inherit LitElement()
 
     member private this.Pick(color: string) =
-        Event.customEvent ("color-picked", color)
-        |> this.dispatchEvent
-        |> ignore
+        this.dispatch (Event.customEvent ("color-picked", color))
 
     override this.render() =
         let swatch c =
@@ -260,10 +259,12 @@ defineElement<ClickTotal> "click-total"
 
 - **Event options.** `@eventOptions` becomes a `LitEventListener`; see
   [Decorators](/from-lit/decorators/#eventoptions).
-- **Listeners on `window` or `document`.** Add them in `connectedCallback`, and keep the handler
-  to remove it; see [Lifecycle](/from-lit/lifecycle/#connecting-and-disconnecting).
+- **Listeners on `window` or `document`.** Add them in `connectedCallback` with `Ev.listen`, and
+  call the function it returns in `disconnectedCallback`; see
+  [Lifecycle](/from-lit/lifecycle/#connecting-and-disconnecting).
 - **Typed `addEventListener`.** TypeScript picks the event type from the event's name. Fable's
-  `addEventListener` takes an `Event -> unit`, so cast inside the handler.
+  `addEventListener` takes an `Event -> unit`, so cast inside the handler, or use `Ev.listen`,
+  which takes a handler of any event type and casts for you, unchecked.
 - **`detail`.** It's an option in F#: `None` when the event has none.
 - **Defaults.** `new CustomEvent(...)` doesn't bubble or cross shadow roots unless you say so.
   `Event.customEvent` does both unless you pass `bubbles = false` or `composed = false`.

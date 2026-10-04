@@ -334,5 +334,46 @@ let private lateProvider =
                 )
     }
 
+// The probe listens to window resizes with Ev.listen while connected; its remover must stop that.
+let private listenRemoves =
+    testTask "Ev.listen's remover stops the listener, and connecting again listens again" {
+        let page = pageWith "my-prerender-probe"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let width () =
+                            opened.Page.EvaluateAsync<float>("() => window.probe.width")
+
+                        let waitForWidth (w: int) =
+                            opened.Page.WaitForFunctionAsync($"() => window.probe.width === {w}")
+                            :> Threading.Tasks.Task
+
+                        do! opened.Page.SetViewportSizeAsync(900, 700)
+                        let! _ = opened.Page.EvaluateAsync("() => { window.probe = document.querySelector('my-prerender-probe'); }")
+                        do! waitForWidth 900
+
+                        // Disconnected: a resize must not reach the old listener.
+                        let! _ = opened.Page.EvaluateAsync("() => { window.probe.remove(); }")
+                        do! opened.Page.SetViewportSizeAsync(700, 700)
+                        do! opened.Page.WaitForFunctionAsync("() => window.innerWidth === 700") :> Threading.Tasks.Task
+                        // Give a stray listener a chance to run before checking.
+                        let! _ = opened.Page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => setTimeout(r, 100)))")
+                        let! widthWhileRemoved = width ()
+                        Expect.equal widthWhileRemoved 900.0 $"{page.Path}: the removed probe still heard a resize"
+
+                        // Connected again: it listens again.
+                        let! _ = opened.Page.EvaluateAsync("() => { document.body.append(window.probe); }")
+                        do! waitForWidth 700
+                        do! opened.Page.SetViewportSizeAsync(800, 700)
+                        do! waitForWidth 800
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider ]
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves ]

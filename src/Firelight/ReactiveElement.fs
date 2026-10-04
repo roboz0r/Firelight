@@ -327,3 +327,17 @@ type ReactiveElement() =
         member this.updateComplete = nativeOnly
 
 and Initializer = delegate of element: ReactiveElement -> unit
+
+/// Members that make common calls on a component shorter.
+[<AutoOpen>]
+module ReactiveElementExtensions =
+    type ReactiveElement with
+        /// <summary>
+        /// Dispatches <c>event</c> from this element, as <c>dispatchEvent</c> does, without its result:
+        /// <c>this.dispatch (Event.customEvent ("count-changed", this.count))</c>.
+        /// </summary>
+        /// <remarks>
+        /// <c>dispatchEvent</c> returns whether the event went uncancelled. For a cancelable event, whose
+        /// answer you need, call <c>dispatchEvent</c> instead.
+        /// </remarks>
+        member inline this.dispatch(event: Event) : unit = this.dispatchEvent event |> ignore

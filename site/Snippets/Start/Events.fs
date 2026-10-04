@@ -29,7 +29,7 @@ type ClickCounter() =
     member this.Increment() =
         this.count <- this.count + 1
         // The event bubbles out of the shadow DOM, so the page can listen for it.
-        this.dispatchEvent (Event.customEvent ("count-changed", this.count)) |> ignore
+        this.dispatch (Event.customEvent ("count-changed", this.count))
 
     override this.render() =
         html
