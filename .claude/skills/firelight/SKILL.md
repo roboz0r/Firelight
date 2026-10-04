@@ -606,7 +606,7 @@ open Browser.Types.URLPattern
 importPolyfill ()
 ```
 
-`importPolyfill ()` compiles to a top-level `await` (no download when `URLPattern` is native). Never call it inside a function: the compiled module fails to parse. In a function, wait on `loadPolyfill ()`, which returns a `JS.Promise<unit>`.
+`importPolyfill ()` compiles to a top-level `await` (no download when `URLPattern` is native). ES modules run their imports first, so a module that creates a router at load time must call it itself, above that code. Never call it inside a function: the compiled module fails to parse. In a function, wait on `loadPolyfill ()`, which returns a `JS.Promise<unit>`.
 
 ### Key behaviors
 

@@ -1,0 +1,15 @@
+{
+  "name": "firelight-multipage-tests",
+  "version": "1.0.0",
+  "description": "Router tests for the MultiPage sample, compiled by Fable and run in Node",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preinstall": "dotnet tool restore",
+    "test": "dotnet fable ./ -o ./build/ --noCache --run node ./build/Main.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "urlpattern-polyfill": "10.0.0"
+  }
+}

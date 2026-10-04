@@ -46,6 +46,8 @@ npm install urlpattern-polyfill
 ```
 
 Call `importPolyfill ()` once, at the top level of your app's module, before you create a router,
-as the example does. A browser with native `URLPattern` skips the download. It compiles to a
-top-level `await`, which JavaScript allows only at the top level: inside a function, the compiled
-module fails to load. There, `loadPolyfill ()` returns a promise to wait on instead.
+as the example does. A module that creates a router as it loads needs the call itself, above that
+code, because the modules it imports run first. A browser with native `URLPattern` skips the
+download. The call compiles to a top-level `await`, which JavaScript allows only at the top level:
+inside a function, the compiled module fails to load. There, `loadPolyfill ()` returns a promise to
+wait on instead.

@@ -103,6 +103,23 @@ A multi-page app demonstrating client-side routing with `Firelight.Router`.
 - Extracting named groups from `URLPatternResult` (e.g. `result.pathname.groups.["id"]`)
 - Separating the route model (`MultiPageModel.fs`) from the component (`App.fs`)
 
+## MultiPage.Tests
+
+**`sample/MultiPage.Tests/`**
+
+Tests for the MultiPage route table, with [Fable.Pyxpecto](https://github.com/Freymaurer/Fable.Pyxpecto).
+Route matching uses the browser's `URLPattern`, which has no .NET implementation, so the tests run
+in Node, compiled by Fable, with `urlpattern-polyfill` standing in for `URLPattern`:
+
+```sh
+cd sample/MultiPage.Tests
+npm install
+npm test
+```
+
+`dotnet run` runs the tests that don't need `URLPattern` (page titles) and lists the router tests
+as pending.
+
 ## ObserversAndVirtualizer
 
 **`sample/ObserversAndVirtualizer/`**

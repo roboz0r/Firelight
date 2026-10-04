@@ -145,6 +145,10 @@ module URLPattern =
     /// and waits for it. Call it once, at the top level of a module, before code that creates a router.
     /// </summary>
     /// <remarks>
+    /// An ES module runs the modules it imports before its own code, so a module that creates a router
+    /// when it loads must call this itself, above that code. A router created later, in a component's
+    /// constructor for example, can rely on a call in the app's main module.
+    ///
     /// It compiles to a top-level <c>await</c>, which JavaScript allows only at the top level of a
     /// module: called inside a function, the compiled module fails to parse ("Unexpected reserved
     /// word"). Inside a function, use <c>loadPolyfill ()</c>, which returns a promise, instead.
