@@ -109,7 +109,8 @@ let private headerMark =
         """<svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="none" stroke="#c92a2a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M11 27 5 40 11 53M53 27 59 40 53 53"/><path fill="#f76707" d="M32 60C22.51 60 16 52 16 41.2 16 29.4 22.83 22.8 26.67 14.8 28.59 10.6 28.91 7.3 28.59 4 34.24 7.3 38.51 12.5 40.43 18.6 41.92 16.2 43.09 13.4 43.41 10.6 46.83 15.8 48 23.8 48 34.6 48 49.7 41.92 60 32 60Z"/><path fill="#ffc145" d="M32 60C27.41 60 24.43 56 24.43 50.6 24.43 44.4 28.16 40.4 30.08 34.1 35.2 38.1 39.57 43.6 39.57 50.6 39.57 56 36.59 60 32 60Z"/></svg>"""
 
 /// The site header, on every page.
-/// Its section links come from `Pages.sections`.
+/// Its section links come from `Pages.sections`. The outer `.site-header-bar` spans the window, so
+/// the sticky header's background does too (site.css); the header keeps to the page's column.
 let header (``base``: string) =
     let sectionLinks =
         Pages.sections
@@ -120,14 +121,16 @@ let header (``base``: string) =
         )
 
     LitSsr.html
-        $"""<header class="site-header">
+        $"""<div class="site-header-bar">
+  <header class="site-header">
     <a class="brand" href={``base``}>{headerMark}Firelight</a>
     <nav>
       <a href="{``base``}#examples">Examples</a>{sectionLinks}
       <a href={withBase ``base`` "/search/"}>Search</a>
       <a href="https://github.com/roboz0r/Firelight">GitHub</a>
     </nav>
-  </header>"""
+  </header>
+  </div>"""
 
 /// The site footer, on every page, with the version the site documents.
 let footer (version: string) =

@@ -18,6 +18,8 @@
   --code-padding: 1rem 1.25rem;
   --code-radius: var(--radius);
   --lit-logo-text-color: var(--fg);
+  /* The sticky header's height on wide screens (4.4rem, and its 1px border), for anchor offsets. */
+  --header-height: 4.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,6 +53,18 @@ code { font-family: var(--mono); font-size: 0.9em; }
   max-width: 72rem;
   margin: 0 auto;
   padding: 0 1.5rem;
+}
+
+/* The header stays at the top of the window while the page scrolls under it. The bar spans the
+   window, so nothing shows beside the header's column; the header keeps to the column. It sits
+   above the demos, some of which position their contents. In-page links (the table of contents,
+   #hash addresses, search results, the router's smooth scrolling) stop below it. On narrow screens
+   the wrapped header is over 9rem tall (at 375px), too much of the screen to keep, so it scrolls
+   away there. */
+.site-header-bar { background: var(--bg); border-bottom: 1px solid var(--border); }
+@media (width > 46rem) {
+  html { scroll-padding-top: calc(var(--header-height) + 1rem); }
+  .site-header-bar { position: sticky; top: 0; z-index: 10; }
 }
 
 .site-header {
