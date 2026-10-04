@@ -22,6 +22,23 @@ The code below is the source file for the live component beside it. This site is
 <my-counter></my-counter>
 :::
 
+### Why a class?
+
+You write a component as an F# class with mutable properties, which can look out of place in F#.
+But a custom element is a class: the browser creates it, calls its lifecycle methods and sets its
+properties, and Lit's components extend `LitElement`. Firelight keeps that mapping direct: a
+component is an ordinary F# class.
+
+- **What you write is what runs.** There's no Firelight-specific compiler plugin or build step:
+  `[<AttachMembers>]` tells Fable to put the members on the JavaScript class under their own
+  names, where Lit looks for them.
+- **Lit's features map directly.** Lifecycle callbacks, controllers and shadow DOM options are
+  members you override or call on the class, so [Lit's documentation](https://lit.dev/docs/components/overview/)
+  for them carries over.
+- **The class is a thin shell.** Changing `this.count`, a declared reactive property, schedules a
+  render. Keep domain logic in functions and state in immutable values; the next example moves the
+  state into an Elmish loop.
+
 ## The Elmish loop, inside a component {.same-section}
 
 `ElmishController` runs Model-View-Update inside a component. The update function
