@@ -20,3 +20,14 @@ lead: "Short recipes for common tasks, each with a live demo and its code. A rec
 
 - [Fetch JSON](/cookbook/fetch-json/): load JSON with `fetch`, with loading, error and retry
   states.
+- [Infinite scroll](/cookbook/load-more/): load the next page when the end of a list scrolls into
+  view.
+- [Remember state across visits](/cookbook/persist-state/): save F# values to `localStorage` and
+  restore them on the next visit.
+
+## Layout and components
+
+- [Dark and light themes](/cookbook/theme-toggle/): system, light and dark themes from custom
+  properties, remembered across visits.
+- [A card with slots](/cookbook/slots/): a card that takes its heading, body and footer from the
+  page.

@@ -178,5 +178,120 @@ let private fetchJson =
                 )
     }
 
+let private loadMore =
+    testTask "infinite scroll: scrolling to the end loads the next page, until all 50 are there" {
+        do!
+            withDemo
+                "my-load-more"
+                (fun opened list ->
+                    task {
+                        let status = list.GetByRole(AriaRole.Status)
+                        do! Expect(status).ToHaveTextAsync("Showing 10 of 50.")
+                        let scroller = list.Locator(".scroller")
+
+                        // From the keyboard: the button loads a page and keeps the focus.
+                        let button = list.GetByRole(AriaRole.Button)
+                        do! button.FocusAsync()
+                        do! button.PressAsync("Enter")
+                        do! Expect(status).ToHaveTextAsync("Showing 20 of 50.")
+                        do! Expect(button).ToBeFocusedAsync()
+                        do! Expect(button).ToBeInViewportAsync()
+
+                        let scrollToEnd () =
+                            task {
+                                let! _ = scroller.EvaluateAsync("el => el.scrollTop = el.scrollHeight")
+                                ()
+                            }
+
+                        do! scrollToEnd ()
+                        do! Expect(status).ToHaveTextAsync("Showing 30 of 50.")
+                        let mutable tries = 0
+                        let! text = status.TextContentAsync()
+                        let mutable current = text
+
+                        while current <> "Showing 50 of 50." && tries < 20 do
+                            do! scrollToEnd ()
+                            do! opened.Page.WaitForTimeoutAsync(500.0f)
+                            let! text = status.TextContentAsync()
+                            current <- text
+                            tries <- tries + 1
+
+                        do! Expect(status).ToHaveTextAsync("Showing 50 of 50.")
+                        do! Expect(list.Locator("li")).ToHaveCountAsync(50)
+                        do! Expect(button).ToHaveTextAsync("All 50 loaded")
+                        do! Expect(button).ToHaveAttributeAsync("aria-disabled", "true")
+                        noProblems opened
+                    }
+                )
+    }
+
+let private packingList =
+    testTask "remember state: the packing list survives a reload, and Start again resets it" {
+        do!
+            withDemo
+                "my-packing-list"
+                (fun opened list ->
+                    task {
+                        do! Expect(list.Locator("li")).ToHaveCountAsync(2)
+                        do! list.GetByLabel("New item").FillAsync("Socks")
+                        do! list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Add")).ClickAsync()
+                        do! list.GetByLabel("Passport", LocatorGetByLabelOptions(Exact = true)).CheckAsync()
+                        let! _ = opened.Page.ReloadAsync()
+                        do! Expect(list.Locator("li")).ToHaveCountAsync(3)
+                        do! Expect(list.GetByLabel("Passport", LocatorGetByLabelOptions(Exact = true))).ToBeCheckedAsync()
+                        do! Expect(list.GetByLabel("Socks", LocatorGetByLabelOptions(Exact = true))).Not.ToBeCheckedAsync()
+                        do! list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Remove Charger")).ClickAsync()
+                        do! Expect(list.Locator("li")).ToHaveCountAsync(2)
+                        do! list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Start again")).ClickAsync()
+                        let! _ = opened.Page.ReloadAsync()
+                        do! Expect(list.Locator("li")).ToHaveCountAsync(2)
+                        do! Expect(list.GetByLabel("Passport", LocatorGetByLabelOptions(Exact = true))).Not.ToBeCheckedAsync()
+                        noProblems opened
+                    }
+                )
+    }
+
+let private themePicker =
+    testTask "themes: Dark darkens the preview and is still chosen after a reload" {
+        do!
+            withDemo
+                "my-theme-picker"
+                (fun opened picker ->
+                    task {
+                        do! opened.Page.EmulateMediaAsync(PageEmulateMediaOptions(ColorScheme = ColorScheme.Light))
+                        let preview = picker.Locator(".preview")
+                        let background () = preview.EvaluateAsync<string>("el => getComputedStyle(el).backgroundColor")
+                        let! light = background ()
+                        Expect.equal light "rgb(255, 253, 249)" "System, on a light device"
+                        do! picker.GetByLabel("Dark").CheckAsync()
+                        let! dark = background ()
+                        Expect.equal dark "rgb(23, 21, 26)" "Dark"
+                        let! _ = opened.Page.ReloadAsync()
+                        do! Expect(picker.GetByLabel("Dark")).ToBeCheckedAsync()
+                        let! dark = background ()
+                        Expect.equal dark "rgb(23, 21, 26)" "Dark, after a reload"
+                        do! picker.GetByLabel("System").CheckAsync()
+                        noProblems opened
+                    }
+                )
+    }
+
+let private slotCards =
+    testTask "slots: a filled footer shows, an empty one hides, and the heading falls back" {
+        do!
+            withDemo
+                "my-slot-card"
+                (fun opened first ->
+                    task {
+                        let second = opened.Page.Locator("my-slot-card").Nth(1)
+                        do! Expect(first.Locator("footer")).ToBeVisibleAsync()
+                        do! Expect(first.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Open"))).ToBeVisibleAsync()
+                        do! Expect(second.Locator("footer")).ToBeHiddenAsync()
+                        do! Expect(second.Locator("header")).ToHaveTextAsync("Untitled")
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; fetchJson ]
+    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; fetchJson; loadMore; packingList; themePicker; slotCards ]
