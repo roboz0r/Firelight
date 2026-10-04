@@ -294,8 +294,9 @@ defineElement<FileCard> "file-card"
 :::
 
 Every element of the class shares the one stylesheet. Rules from the page's own `<link>`
-stylesheets don't reach inside a shadow root, in either language. The Styling guide covers using
-a global stylesheet, such as Tailwind, this way. <!-- link: /guides/styling/ -->
+stylesheets don't reach inside a shadow root, in either language. The
+[Styling guide](/guides/styling/#share-styles-between-components) covers using a global
+stylesheet, such as Tailwind's, this way.
 
 ## Shadow root options
 

@@ -343,5 +343,5 @@ Every option keeps its name, as an optional argument of `PropertyDeclaration`:
 | `PropertyDeclaration<bool>()` for an attribute | `<stock-meter low>` sets `low` to `""`, which is falsy | `` ``type`` = jsConstructor<Boolean> `` |
 | `let mutable count` changed in a handler | Nothing re-renders | A declared property, or `this.requestUpdate()` |
 
-The Firelight side of properties and attributes is covered in more depth in the Properties guide.
-<!-- link: /guides/properties/ -->
+The [Properties and attributes guide](/guides/properties/) covers the Firelight side in more
+depth.

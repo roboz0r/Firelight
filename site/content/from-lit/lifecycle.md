@@ -323,3 +323,5 @@ defineElement<FieldList> "field-list"
 | `window.removeEventListener ("keydown", this.OnKey)` | The listener stays: each use of `this.OnKey` is a new function | Keep the handler from `connectedCallback`, as above |
 | No `base.connectedCallback ()` | Lit doesn't create the shadow root or start updating, so nothing renders | Call `base` first |
 | `changed.ContainsKey "frist"` | Never true | The property's exact name |
+
+The [Lifecycle guide](/guides/lifecycle/) covers the Firelight side in more depth.

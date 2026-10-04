@@ -17,7 +17,8 @@ toc: true
 ---
 
 Composing components, with child elements in a template, properties passed down and events sent
-up, works as in Lit: see [Components](/from-lit/components/) and [Events](/from-lit/events/).
+up, works as in Lit: see [Components](/from-lit/components/), [Events](/from-lit/events/) and
+the [Component communication guide](/guides/communication/).
 
 ## Reactive controllers
 
@@ -203,5 +204,5 @@ Firelight packages bind several of Lit's controllers: `ContextProvider` and `Con
 ([Context](/from-lit/context/)), `Task` as `LitTask` ([Tasks](/from-lit/tasks/)), the resize,
 intersection, mutation and performance controllers in
 [Firelight.Observers](/packages/observers/), and the animation controllers in
-[Firelight.Motion](/packages/motion/). The Controllers guide covers writing your own.
-<!-- link: /guides/controllers/ -->
+[Firelight.Motion](/packages/motion/). The [Controllers guide](/guides/controllers/) covers
+writing your own.

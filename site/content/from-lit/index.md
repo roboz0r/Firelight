@@ -48,7 +48,8 @@ Firelight doesn't bind yet.
 Some of Lit's documentation needs no F# version, or has none yet:
 
 - **Server rendering.** Lit SSR runs in Node, so it can prerender Firelight components at build
-  time, as this site does. A .NET server can't render them.
+  time, as this site does; see [Prerendering](/guides/prerendering/). A .NET server can't render
+  them.
 - **Localization.** `@lit/localize` isn't bound. Its tooling reads TypeScript or JavaScript
   source, not F#.
 - **React.** `@lit/react` isn't bound. Firelight components are custom elements, so any

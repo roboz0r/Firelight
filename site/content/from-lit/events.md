@@ -268,4 +268,4 @@ defineElement<ClickTotal> "click-total"
 - **Defaults.** `new CustomEvent(...)` doesn't bubble or cross shadow roots unless you say so.
   `Event.customEvent` does both unless you pass `bubbles = false` or `composed = false`.
 
-The Events guide covers the Firelight side in more depth. <!-- link: /guides/events/ -->
+The [Events guide](/guides/events/) covers the Firelight side in more depth.
