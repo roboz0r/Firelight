@@ -429,5 +429,47 @@ let private stopwatch =
                 )
     }
 
+// RouterController.Navigate: a route from code, without a reload, with a history entry.
+let private routingNavigate =
+    testTask "RouterController.Navigate routes from code without a reload, and Back returns" {
+        let page = pageWith "fl-route-explorer"
+        let root = page.Path
+
+        let renders (opened: Browser.OpenPage) (address: string) (description: string) =
+            task {
+                let result = opened.Page.Locator("fl-route-explorer .route-result dd")
+                do! Expect(result.Nth(0)).ToHaveTextAsync(address)
+                do! Expect(result.Nth(2)).ToHaveTextAsync(description)
+            }
+
+        do!
+            Browser.withPage
+                true
+                (root + "users/42")
+                (fun opened ->
+                    task {
+                        do! renders opened (root + "users/42") "the profile of user 42"
+                        let! _ = opened.Page.EvaluateAsync("() => { window.notReloaded = true; }")
+
+                        let button =
+                            opened.Page
+                                .Locator("fl-route-explorer")
+                                .GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Go to user 43"))
+
+                        do! button.ClickAsync()
+                        do! Expect(opened.Page).ToHaveURLAsync(Server.url (root + "users/43"))
+                        do! renders opened (root + "users/43") "the profile of user 43"
+
+                        do! opened.Page.GoBackAsync() :> Threading.Tasks.Task
+                        do! Expect(opened.Page).ToHaveURLAsync(Server.url (root + "users/42"))
+                        do! renders opened (root + "users/42") "the profile of user 42"
+
+                        let! notReloaded = opened.Page.EvaluateAsync<bool>("() => window.notReloaded === true")
+                        Expect.isTrue notReloaded $"{root}: the page reloaded while navigating from code"
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves; propertyTypes; stopwatch ]
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves; propertyTypes; stopwatch; routingNavigate ]

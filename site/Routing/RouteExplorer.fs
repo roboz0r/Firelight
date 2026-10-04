@@ -62,9 +62,21 @@ type RouteExplorer() as this =
             | UserPost(userId, slug) -> $"post \"{slug}\" by user {userId}"
             | NotFound -> "a not-found page"
 
+        // Navigate goes to an address from code, as a click on a link to it would.
+        let nextUser =
+            match routing.route with
+            | User id
+            | UserPost(id, _) -> id + 1
+            | Home
+            | NotFound -> 1
+
+        let goToNextUser _ =
+            routing.Navigate(root + $"users/{nextUser}")
+
         html
             $"""
         <ul class="route-links">{examples |> List.map exampleLink}</ul>
+        <p><button type="button" @click={goToNextUser}>Go to user {nextUser}</button></p>
         <dl class="route-result">
             <dt>Address</dt><dd><code>{window.location.pathname}</code></dd>
             <dt>Route value</dt><dd><code>{sprintf "%A" routing.route}</code></dd>

@@ -88,6 +88,31 @@ module EventHandlers =
         [<Emit("$0.composedPath()")>]
         member this.composedPath() : EventTarget[] = nativeOnly
 
+    /// The absolute address of <c>url</c>, resolved against the page's address.
+    [<Emit("new URL($0, window.location.href).href")>]
+    let resolve (url: string) : string = nativeOnly
+
+    /// <summary>
+    /// Goes to the absolute address <c>href</c> as a click on a link to it does: when a route matches,
+    /// pushes (or with <c>replace</c>, replaces) a history entry and dispatches the route; when none
+    /// does, the browser loads <c>href</c>. Going to the current address does nothing.
+    /// </summary>
+    let navigate (router: Router<'Route>) (dispatch: 'Route -> unit) (replace: bool) (href: string) =
+        if href <> window.location.href then
+            match router.TryMatch href with
+            | Some route ->
+                if replace then
+                    history.replaceState (null, "", href)
+                else
+                    history.pushState (null, "", href)
+
+                dispatch route
+            | None ->
+                if replace then
+                    window.location.replace href
+                else
+                    window.location.assign href
+
     let onPopState (router: Router<'Route>) (dispatch: 'Route -> unit) =
         fun (_: PopStateEvent) ->
             let url = window.location.href

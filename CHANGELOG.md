@@ -112,6 +112,13 @@ each break is listed under Changed with how to migrate.
 - `isServer` (Lit's), `true` under Lit SSR in Node and `false` in a browser.
 - `until (promise)` and `until (promise, placeholder)` overloads.
 - `StaticHTML.mathml`.
+- Firelight.Router: `RouterController.Navigate (url, ?replace)` goes to `url` from code as a
+  click on a link to it does: a matching route pushes a history entry (or with `replace = true`
+  replaces it) and renders, and an address no route matches is loaded by the browser.
+- Firelight.Router: `RouterController(host, router, onRouteChange)` calls `onRouteChange` with
+  the route after each change (a link, Back or Forward, `Navigate`) and when the host connects, so
+  an Elmish component can keep the route in its model:
+  `RouterController(this, router, fun route -> loop.dispatch (RouteChanged route))`.
 - `loadPolyfill ()` in Firelight.Router: loads `urlpattern-polyfill` when `URLPattern` isn't
   native and returns a promise, for use inside a function, where `importPolyfill ()` can't go.
 

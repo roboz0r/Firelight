@@ -18,7 +18,8 @@ lead: >-
 <fl-route-explorer></fl-route-explorer>
 :::
 
-Try reloading the page on one of the routes, or editing the number in the address bar.
+The "Go to user" button does the same from code, with `routing.Navigate`. Try reloading the page
+on one of the routes, or editing the number in the address bar.
 
 ## How it works
 

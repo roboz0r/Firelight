@@ -566,6 +566,14 @@ let router =
 - Intercepts clicks on same-origin links that match one of its routes, calls `history.pushState`, and updates the route. Links it has no route for (other pages on the same site) navigate normally
 - Handles hash links (`#section`) with smooth scrolling, piercing shadow DOM boundaries
 - Cleans up event listeners on disconnect
+- `routing.Navigate url` (or `routing.Navigate (url, replace = true)`) goes to `url` from code exactly as a link click would: a matching route pushes (or replaces) a history entry and re-renders; an unmatched URL is loaded by the browser. Relative URLs resolve against the current address
+- An optional third constructor argument, `onRouteChange: 'Route -> unit`, is called after every route change (link, Back/Forward, `Navigate`) and on connect. Use it to dispatch Elmish messages:
+
+```fsharp
+let loop = ElmishController.simple this (fun () -> { Route = router.OfLocation() }) update
+let routing = RouterController(this, router, fun route -> loop.dispatch (RouteChanged route))
+// In a handler: routing.Navigate "/users/1"
+```
 
 ```fsharp
 open Firelight
