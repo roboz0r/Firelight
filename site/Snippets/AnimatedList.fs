@@ -1,6 +1,7 @@
 module Snippets.AnimatedList
 
 open Fable.Core
+open Fable.Core.JsInterop
 open Browser.Types
 open Firelight
 open Firelight.Motion
@@ -31,7 +32,7 @@ type AnimatedList() as this =
             this,
             AnimateControllerOptions(
                 defaultOptions =
-                    MotionOptions(keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 250.0, easing = "ease-out"))
+                    MotionOptions(keyframeOptions = MotionKeyframeOptions(duration = !^250.0, easing = "ease-out"))
             )
         )
 
@@ -72,11 +73,11 @@ type AnimatedList() as this =
                 | Some p -> $"#remove-{p.Id}"
                 | None -> "#add"
 
-            async {
-                let! _ = this.updateComplete |> Async.AwaitPromise
+            promise {
+                let! _ = this.updateComplete
                 this.query<HTMLElement> next |> Option.iter _.focus()
             }
-            |> Async.StartImmediate
+            |> Promise.start
 
     // Follow the reduced-motion setting, including changes while the page is open.
     override this.connectedCallback() =

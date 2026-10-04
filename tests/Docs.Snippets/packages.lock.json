@@ -2,6 +2,16 @@
   "version": 2,
   "dependencies": {
     ".NETStandard,Version=v2.0": {
+      "Fable.Promise": {
+        "type": "Direct",
+        "requested": "[2.2.2, )",
+        "resolved": "2.2.2",
+        "contentHash": "yHFSo7GCY0l/Wjskh/HESuFoGzXIoRM22UlrARA5ewnX736Y1wM27kcqCWeGcIzaEsgJnZcDkp093M0gQyMcWA==",
+        "dependencies": {
+          "FSharp.Core": "4.7.2",
+          "Fable.Core": "3.1.5"
+        }
+      },
       "NETStandard.Library": {
         "type": "Direct",
         "requested": "[2.0.3, )",
@@ -47,15 +57,6 @@
           "FSharp.Core": "4.7.2",
           "Fable.Browser.Event": "1.6.0",
           "Fable.Core": "3.2.8"
-        }
-      },
-      "Fable.Promise": {
-        "type": "Transitive",
-        "resolved": "2.2.2",
-        "contentHash": "yHFSo7GCY0l/Wjskh/HESuFoGzXIoRM22UlrARA5ewnX736Y1wM27kcqCWeGcIzaEsgJnZcDkp093M0gQyMcWA==",
-        "dependencies": {
-          "FSharp.Core": "4.7.2",
-          "Fable.Core": "3.1.5"
         }
       },
       "Microsoft.NETCore.Platforms": {

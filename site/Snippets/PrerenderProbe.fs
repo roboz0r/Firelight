@@ -41,11 +41,12 @@ type PrerenderProbe() =
 
         // The first update hydrates, so it must render what the server did. Afterwards, show what
         // only the browser knows.
-        this.updateComplete.``then`` (fun _ ->
+        promise {
+            let! _ = this.updateComplete
             this.hydrated <- true
             this.width <- window.innerWidth
-        )
-        |> ignore
+        }
+        |> Promise.start
 
     override this.disconnectedCallback() =
         base.disconnectedCallback ()

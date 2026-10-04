@@ -2,6 +2,7 @@ module Snippets.DebouncedSearch
 
 open System
 open Fable.Core
+open Fable.Core.JsInterop
 open Fetch
 open Firelight
 open Firelight.Task
@@ -14,10 +15,10 @@ let mutable private requests = 0
 let private search (query: string) (signal: AbortSignal) =
     requests <- requests + 1
 
-    async {
+    promise {
         let url = $"fruits.json?q={Uri.EscapeDataString query}"
-        let! response = fetch url [ Signal signal ] |> Async.AwaitPromise
-        let! fruits = response.json<string[]> () |> Async.AwaitPromise
+        let! response = fetch url [ Signal signal ]
+        let! fruits = response.json<string[]> ()
         return fruits |> Array.filter (fun f -> f.ToLower().Contains(query.ToLower())) |> List.ofArray
     }
 
@@ -30,20 +31,17 @@ type DebouncedSearch() as this =
             this,
             TaskConfig(
                 TaskFunction(fun (args: string[]) options ->
-                    let query = args[0].Trim()
-
-                    if query = "" then
-                        U2.Case1 []
-                    else
-                        async {
+                    match args with
+                    | [| text |] when text.Trim() <> "" ->
+                        !^(promise {
                             // Each keystroke starts a new run and aborts the one before,
                             // so only a query left alone for 300 ms gets past this line.
-                            do! Async.Sleep 300
+                            do! Promise.sleep 300
                             options.signal.throwIfAborted ()
-                            return! search query options.signal
-                        }
-                        |> Async.StartAsPromise
-                        |> U2.Case2
+                            return! search (text.Trim()) options.signal
+                        })
+                    // An empty box, and any other args: no results, no request.
+                    | _ -> !^[]
                 ),
                 args = fun () -> [| this.query |]
             )

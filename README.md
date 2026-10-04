@@ -176,20 +176,20 @@ The `RouterController` handles `popstate` events, intercepts clicks on links tha
 
 ## Async Tasks
 
-`Firelight.Task` binds Lit's [`@lit/task`](https://lit.dev/docs/data/task/) controller. The F# type is named `LitTask` to keep it distinct from `System.Threading.Tasks.Task`. Pass an argument array to run automatically when its values change, or set `autoRun = U2.Case1 false` and call `run()` yourself.
+`Firelight.Task` binds Lit's [`@lit/task`](https://lit.dev/docs/data/task/) controller. The F# type is named `LitTask` to keep it distinct from `System.Threading.Tasks.Task`. Pass an argument array to run automatically when its values change, or set `autoRun = !^false` and call `run()` yourself.
 
 ```fsharp
 open Fable.Core
+open Fable.Core.JsInterop
 open Firelight
 open Firelight.Task
 
-// Stands in for a real request, e.g. a fetch to your API.
+// Stands in for a real request, e.g. a fetch to your API. promise { } is Fable.Promise's.
 let fetchProduct (id: string) : JS.Promise<string> =
-    async {
-        do! Async.Sleep 500
+    promise {
+        do! Promise.sleep 500
         return $"Product {id}"
     }
-    |> Async.StartAsPromise
 
 [<AttachMembers>]
 type ProductView() as this =
@@ -197,8 +197,10 @@ type ProductView() as this =
 
     let mutable productId = "123"
 
-    let loadProduct (args: string[]) (_: TaskFunctionOptions) =
-        U2.Case2 (fetchProduct args.[0])
+    let loadProduct (args: string[]) (_: TaskFunctionOptions) : TaskResult<string> =
+        match args with
+        | [| id |] -> !^(fetchProduct id)
+        | _ -> initialState // args always holds one id
 
     let product =
         LitTask(
@@ -254,6 +256,7 @@ defineElement<SignalCounter> "signal-counter"
 
 ```fsharp
 open Fable.Core
+open Fable.Core.JsInterop
 open Firelight
 open Firelight.Motion
 
@@ -267,7 +270,7 @@ type MovingBox() =
         Lit.html $"""
             <button @click={fun _ -> shifted <- not shifted; this.requestUpdate()}>Move</button>
             <div class={if shifted then "shifted" else ""}
-                 {Motion.animate(MotionOptions(keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 300.0), ``in`` = Motion.fade))}>
+                 {Motion.animate(MotionOptions(keyframeOptions = MotionKeyframeOptions(duration = !^300.0), ``in`` = Motion.fade))}>
             </div>
         """
 ```

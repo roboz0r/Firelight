@@ -184,7 +184,7 @@ elements are registered, then renders the whole page with Lit SSR. In `Prerender
 // Registering a demo's custom elements is what makes Lit SSR prerender them.
 for demo in body.Demos do
     if demo.Prerender then
-        do! host.loadModule demo.Module |> Async.AwaitPromise |> Async.Ignore
+        do! host.loadModule demo.Module
 ```
 
 `LitSsr.fs` binds the two functions it needs from `@lit-labs/ssr`:

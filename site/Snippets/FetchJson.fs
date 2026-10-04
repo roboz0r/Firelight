@@ -13,12 +13,11 @@ type Book =
     abstract year: int
 
 let getBooks (url: string) (signal: AbortSignal) =
-    async {
+    promise {
         // Fails for a response that isn't ok, such as a 404, as well as for no response.
-        let! response = fetch url [ Signal signal ] |> Async.AwaitPromise
-        return! response.json<Book[]> () |> Async.AwaitPromise
+        let! response = fetch url [ Signal signal ]
+        return! response.json<Book[]> ()
     }
-    |> Async.StartAsPromise
 
 let private bookList (books: Book[]) =
     html $"""<ul>{books |> Array.map (fun b -> html $"<li><cite>{b.title}</cite>, {b.author} ({b.year})</li>")}</ul>"""
@@ -34,7 +33,13 @@ type BookList() as this =
         LitTask(
             this,
             TaskConfig(
-                TaskFunction(fun (args: string[]) options -> U2.Case2(getBooks args[0] options.signal)),
+                TaskFunction(fun (args: string[]) options ->
+                    match args with
+                    // U2.Case2, not !^: nothing here says if the task's result is the books or the promise.
+                    | [| url |] -> U2.Case2(getBooks url options.signal)
+                    // Never happens, as args holds one URL, but a match covers every length.
+                    | _ -> initialState
+                ),
                 // A relative URL, next to this page. Yours would be your API's address.
                 args = fun () -> [| if this.broken then "no-such-file.json" else "books.json" |]
             )

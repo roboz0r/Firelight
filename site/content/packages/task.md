@@ -44,6 +44,12 @@ template, and no request starts.
 <my-product-view></my-product-view>
 :::
 
+`fetchProduct` builds its promise with `promise { }`, from Fable.Promise, which comes with
+Firelight.Task through Fable.Fetch; reference Fable.Promise in your project when your code uses
+it. The task function takes the id out of `args` with the pattern `[| id |]`, and wraps the
+promise in `U2.Case2`: `!^` would need the task's result type, which nothing in this lambda gives it
+([Tasks](/from-lit/tasks/#loading-when-arguments-change) has the details).
+
 ## Cancelling requests
 
 The task function's second argument has one member, `signal`. The task aborts it when the run is
@@ -55,19 +61,23 @@ Its type is Fable.Fetch's `AbortSignal`. Firelight.Task depends on
 `fetch`, so with `open Fetch` the signal goes straight to `fetch`'s `Signal` option:
 
 ```fsharp
-open Fable.Core
+open Fable.Core.JsInterop
 open Fetch
 open Firelight.Task
 
 let loadText (url: string) (signal: AbortSignal) =
-    async {
-        let! response = fetch url [ Signal signal ] |> Async.AwaitPromise
-        return! response.text () |> Async.AwaitPromise
+    promise {
+        let! response = fetch url [ Signal signal ]
+        return! response.text ()
     }
-    |> Async.StartAsPromise
 
-let loadPage = TaskFunction(fun (args: string[]) options -> U2.Case2(loadText args[0] options.signal))
+let loadPage (args: string[]) (options: TaskFunctionOptions) : TaskResult<string> =
+    match args with
+    | [| url |] -> !^(loadText url options.signal)
+    | _ -> initialState
 ```
+
+Pass it as `TaskFunction loadPage`.
 
 The value is the browser's own `AbortSignal` object, so any other API that takes a signal accepts
 it too. In a binding of your own, such as a hand-written `fetch`, type the parameter as Fable.Fetch's
@@ -75,12 +85,16 @@ it too. In a binding of your own, such as a hand-written `fetch`, type the param
 
 ```fsharp
 open Fable.Core
+open Fable.Core.JsInterop
 open Firelight.Task
 
 [<Global>]
 let fetch (url: string, init: {| signal: Fetch.Types.AbortSignal |}) : JS.Promise<obj> = jsNative
 
-let loadPage = TaskFunction(fun (args: string[]) options -> U2.Case2(fetch (args[0], {| signal = options.signal |})))
+let loadPage (args: string[]) (options: TaskFunctionOptions) : TaskResult<obj> =
+    match args with
+    | [| url |] -> !^(fetch (url, {| signal = options.signal |}))
+    | _ -> initialState
 ```
 
 Where another library's binding has an `AbortSignal` type of its own, convert at the call with

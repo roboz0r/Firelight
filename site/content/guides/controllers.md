@@ -105,7 +105,11 @@ type MediaQuery(host: ReactiveControllerHost, query: string) as this =
 
         stopListening <- Ev.listen list "change" (Ev.event (fun _ -> read ()))
         // After the host's first update: see below.
-        host.updateComplete.``then`` (fun _ -> read ()) |> ignore
+        promise {
+            let! _ = host.updateComplete
+            read ()
+        }
+        |> Promise.start
 
     override _.hostDisconnected() = stopListening ()
 

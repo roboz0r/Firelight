@@ -41,20 +41,18 @@ let private queryInAddress () : string = jsNative
 let private addressWith (query: string) : string = jsNative
 
 // Pagefind, loaded once, by the first search.
-let mutable private pagefind: Async<Pagefind> option = None
+let mutable private pagefind: JS.Promise<Pagefind> option = None
 
 let private loadPagefind () =
     match pagefind with
     | Some loading -> loading
     | None ->
         let loading =
-            async {
-                let! loaded = importUrl (basePath () + "pagefind/pagefind.js") |> Async.AwaitPromise
-                do! loaded.options {| baseUrl = basePath () |} |> Async.AwaitPromise
+            promise {
+                let! loaded = importUrl (basePath () + "pagefind/pagefind.js")
+                do! loaded.options {| baseUrl = basePath () |}
                 return loaded
             }
-            |> Async.StartAsPromise
-            |> Async.AwaitPromise
 
         pagefind <- Some loading
         loading
@@ -114,16 +112,13 @@ type Search() =
             state <- Searching
             this.requestUpdate ()
 
-            async {
+            promise {
                 try
                     let! pagefind = loadPagefind ()
-                    let! results = pagefind.search text |> Async.AwaitPromise
+                    let! results = pagefind.search text
 
                     // Every match: the site is small enough to list them all.
-                    let! data =
-                        results.results
-                        |> Array.map (fun r -> r.data () |> Async.AwaitPromise)
-                        |> Async.Parallel
+                    let! data = results.results |> Array.map (fun r -> r.data ()) |> Promise.all
 
                     if request = latest then
                         state <-
@@ -144,7 +139,7 @@ type Search() =
                 if request = latest then
                     this.requestUpdate ()
             }
-            |> Async.StartImmediate
+            |> Promise.start
 
     member private this.OnInput(text: string) =
         // The address keeps the search, so it can be shared or come back to.

@@ -55,6 +55,16 @@ unlisted: true                 # only linked to (the search page): no section, s
 8. Mistakes are "you wrote / what happens / write instead", split into what the compiler catches
    and what compiles silently.
 
+## F# idioms
+
+- Promises: Fable.Promise's `promise { }` (`let!`, `Promise.sleep`, `|> Promise.start`), not
+  `async { } |> Async.StartAsPromise`, `Async.AwaitPromise` or `` .``then`` `` chains.
+- Fixed-length arrays: `match args with [| id |] -> ... | _ -> fallback`, not `args[0]`; a bare
+  `fun [| id |] -> ...` is FS0025, an error here. Say why the fallback is there if a reader would ask.
+- Erased unions: `!^x` (`open Fable.Core.JsInterop`), not `U2.Case1 x`. Where `!^` can't infer
+  (FS0043 in a `TaskFunction` lambda whose result type nothing fixes, FS0041 on `slot.assign`),
+  keep the case and say why.
+
 ## Links
 
 Write internal links root-relative: `[Events](/guides/events/)`, also in raw HTML `<a href>`. The

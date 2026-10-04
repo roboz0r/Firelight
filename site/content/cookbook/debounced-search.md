@@ -28,8 +28,8 @@ A [`LitTask`](/packages/task/) runs its task function each time its arguments ch
 keystroke. When a new run starts, the task aborts the signal it gave the run before, and it keeps
 only the newest run's result.
 
-That gives a debounce in two lines. The task function waits 300 ms, then calls
-`options.signal.throwIfAborted ()`. If another key was pressed in the meantime, a newer run has
+That gives a debounce in two lines. The task function's `promise { }` waits 300 ms, with
+`do! Promise.sleep 300`, then calls `options.signal.throwIfAborted ()`. If another key was pressed in the meantime, a newer run has
 aborted this one's signal, so it throws and never sends its request. Only a run that was left alone
 for 300 ms gets through, and there's no timer to clear.
 
@@ -39,7 +39,10 @@ requests that cost something.
 
 The rest:
 
-- An empty box gets an empty list straight away, as `U2.Case1`, with no wait and no request.
+- An empty box gets an empty list straight away, as a value (`!^[]`) rather than a promise, with
+  no wait and no request. An empty list can only be the value, which settles the task's result
+  type, so `!^` also knows the promise from it
+  ([Tasks](/from-lit/tasks/#loading-when-arguments-change) explains).
   `render` shows the prompt instead of a count while the box is empty.
 - `render` reads `matches.status` for the message and `matches.value` for the list. The value
   keeps the last results while the next search runs, so the list doesn't flash empty at each

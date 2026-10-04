@@ -47,6 +47,7 @@ export class UserCard extends LitElement {
 ```
 ```fsharp
 open Fable.Core
+open Fable.Core.JsInterop
 open Fetch
 open Firelight
 open Firelight.Task
@@ -61,8 +62,13 @@ let loadUser
     : JS.Promise<User> =
     jsNative
 
-let fetchUser (args: string[]) (opts: TaskFunctionOptions) =
-    U2.Case2(loadUser (args[0], opts.signal))
+let fetchUser
+    (args: string[])
+    (opts: TaskFunctionOptions)
+    : TaskResult<User> =
+    match args with
+    | [| id |] -> !^(loadUser (id, opts.signal))
+    | _ -> initialState
 
 let showUser (u: User) = html $"<p>{u.name}</p>"
 
@@ -99,9 +105,21 @@ defineElement<UserCard> "user-card"
 ```
 :::
 
-The task function returns a `TaskResult`, a value or a promise, so the promise goes in
-`U2.Case2`. `render` returns an option, `None` for a status with no template, and a hole
-renders `None` as nothing.
+`[id]` becomes the array pattern `[| id |]`, in a `match`. On the parameter itself,
+`fun [| id |] opts -> ...`, it compiles with warning FS0025, "Incomplete pattern matches on this
+expression. For example, the value '[|_; _|]' may indicate a case not covered by the
+pattern(s)." `args` always returns one item, so the other case never runs; `initialState` is a
+harmless answer for it.
+
+The task function returns a `TaskResult`, an erased union of a value and a promise, and `!^`
+converts the promise to it. `!^` picks the case from the type it converts to, so `fetchUser`
+declares `TaskResult<User>`. In a lambda passed straight to `TaskFunction`, as in `ReportButton`
+below, nothing says whether the result is the promise or the value it resolves to, and `!^` fails
+with FS0043, "A unique overload for method 'op_ErasedCast' could not be determined based on type
+information prior to this program point"; write `U2.Case2` there.
+
+`render` returns an option, `None` for a status with no template, and a hole renders `None` as
+nothing.
 
 The `signal` is typed as [Fable.Fetch](https://github.com/fable-compiler/fable-fetch)'s
 `AbortSignal`, hence `open Fetch`: Firelight.Task depends on Fable.Fetch, so the signal passes
@@ -188,7 +206,7 @@ shows nothing.
 | `task.value`, `task.error` | `task.value`, `task.error`, as options |
 | `task.run()`, `task.run([id])` | `task.run ()`, `task.run [\| id \|]` |
 | `task.abort()` | `task.abort ()` |
-| `await task.taskComplete` | `task.taskComplete`, a `JS.Promise` |
+| `await task.taskComplete` | `let! value = task.taskComplete`, in `promise { }` |
 | `argsEqual: deepArrayEquals` | `argsEqual = TaskArgsEqual(fun a b -> deepArrayEquals a b)` |
 | `initialValue`, `onComplete`, `onError` | The same names, as `TaskConfig` arguments |
 | `autoRun: 'afterUpdate'` | `autoRun = !^"afterUpdate"` |
@@ -196,12 +214,14 @@ shows nothing.
 ## No direct equivalent
 
 - **The name.** `Task` is `LitTask` in F#.
-- **Destructuring `[id]`.** The task function gets the array: `args[0]`.
+- **Destructuring `[id]`.** An array pattern does it, in a `match` with a case for any other
+  length: `match args with [| id |] -> ... | _ -> initialState`.
 - **Number arguments.** `args` must return a JavaScript array, and Fable compiles an `int[]` or
   `float[]` to a typed array, so Lit throws "The args function must return an array". Return a
   `string[]`, an `obj[]`, or an F# tuple, which [Fable](https://fable.io/) compiles to an array:
   `fun () -> this.page, this.size`.
-- **`async` task functions.** Return a promise. An F# `async { ... }` becomes one with
-  `Async.StartAsPromise`.
+- **`async` task functions.** Return a promise. Write one with Fable.Promise's `promise { ... }`,
+  where `let!` awaits a promise as `await` does; F#'s own `async` isn't a promise. Fable.Promise
+  comes with Firelight.Task, through Fable.Fetch.
 
 The [Firelight.Task](/packages/task/) page has a live example.

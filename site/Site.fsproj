@@ -30,4 +30,8 @@
     <ProjectReference Include="..\src\Firelight.Task\Firelight.Task.fsproj" />
     <ProjectReference Include="..\src\Firelight.Virtualizer\Firelight.Virtualizer.fsproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- For promise { } in the demos. Firelight.Task brings it in through Fable.Fetch. -->
+    <PackageReference Include="Fable.Promise" />
+  </ItemGroup>
 </Project>

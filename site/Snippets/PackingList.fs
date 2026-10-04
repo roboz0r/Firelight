@@ -81,8 +81,11 @@ type PackingList() =
     // Once the first update is done, so the first render matches the prerendered HTML, and the
     // change starts an update of its own.
     override this.firstUpdated _ =
-        this.updateComplete.``then`` (fun _ -> load () |> Option.iter (fun items -> this.items <- items))
-        |> ignore
+        promise {
+            let! _ = this.updateComplete
+            load () |> Option.iter (fun items -> this.items <- items)
+        }
+        |> Promise.start
 
     member this.ItemView (index: int) (item: Item) =
         let toggle packed =

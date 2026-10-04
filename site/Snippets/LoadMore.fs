@@ -11,8 +11,8 @@ let private total = 50
 
 // Stands in for a request for one page of results, such as /api/items?page=2.
 let private fetchPage (page: int) =
-    async {
-        do! Async.Sleep 400
+    promise {
+        do! Promise.sleep 400
         return [ for i in page * pageSize + 1 .. min total ((page + 1) * pageSize) -> $"Item {i}" ]
     }
 
@@ -69,11 +69,11 @@ type LoadMoreList() as this =
         if not this.loading && this.HasMore then
             this.loading <- true
 
-            async {
+            promise {
                 let! more = fetchPage (this.items.Length / pageSize)
                 this.items <- this.items @ more
                 this.loading <- false
-                let! _ = this.updateComplete |> Async.AwaitPromise
+                let! _ = this.updateComplete
 
                 // An observer reports changes. If the end is still in view, nothing changed, so
                 // observe it afresh: the observer then reports where it is now. Not if the
@@ -86,7 +86,7 @@ type LoadMoreList() as this =
                         watcher.observe el
                 )
             }
-            |> Async.StartImmediate
+            |> Promise.start
 
     override _.firstUpdated _ =
         endOfList.value |> Option.iter watcher.observe

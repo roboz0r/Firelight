@@ -209,7 +209,7 @@ defineElement<SearchStart> "search-start"
 
 ## Waiting for an update
 
-`updateComplete` is a `JS.Promise<bool>`. An F# `async` waits for it with `Async.AwaitPromise`,
+`updateComplete` is a `JS.Promise<bool>`. Fable.Promise's `promise { }` waits for it with `let!`,
 where TypeScript uses `await`.
 
 ::: compare
@@ -260,11 +260,11 @@ type FieldList() =
     member private this.Add() =
         this.count <- this.count + 1
 
-        async {
-            let! _ = Async.AwaitPromise this.updateComplete
+        promise {
+            let! _ = this.updateComplete
             this.FocusLast()
         }
-        |> Async.StartImmediate
+        |> Promise.start
 
     override this.render() =
         let add _ = this.Add()
@@ -307,13 +307,13 @@ defineElement<FieldList> "field-list"
   remover, as `EscNotice` does.
 - **`await super.scheduleUpdate()` in a deferred update.** `scheduleUpdate` returns an `obj`,
   Lit's `void | Promise<unknown>`: return `box` of a promise to make `updateComplete` wait for it.
-  F# doesn't allow `base` inside a lambda ("'base' is being used. This is only allowed in the
-  direct implementation of members since they could escape their object scope"), so
-  call the base method through a member of your own, such as
-  `member this.ScheduleNow() = base.scheduleUpdate ()`, from the promise's callback.
+  F# doesn't allow `base` inside a lambda or a `promise { }` ("'base' is being used. This is only
+  allowed in the direct implementation of members since they could escape their object scope"),
+  so call the base method through a member of your own, such as
+  `member this.ScheduleNow() = base.scheduleUpdate ()`, from inside the promise.
 - **`PropertyValues<this>`.** The keys of `changed` are unchecked strings.
-- **`async` and `await`.** Use F# `async` with `Async.AwaitPromise`, or call
-  `` updateComplete.``then`` `` directly.
+- **`async` and `await`.** Use Fable.Promise's `promise { }`, with `let!` for `await`. F#'s own
+  `async` isn't a promise.
 
 ## Mistakes that compile
 

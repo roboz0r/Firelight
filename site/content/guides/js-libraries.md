@@ -56,15 +56,17 @@ let private highlighter =
     lazy (createHighlighter {| langs = [| "fsharp" |]; themes = [| "github-light" |] |})
 
 let highlight (code: string) =
-    async {
-        let! h = highlighter.Value |> Async.AwaitPromise
+    promise {
+        let! h = highlighter.Value
         return h.codeToHtml (code, {| lang = "fsharp"; theme = "github-light" |})
     }
 ```
 
 That is a complete binding for this use: one function, one interface for the object it returns,
-and anonymous records for the options. An anonymous record compiles to a plain JavaScript object,
-and a `JS.Promise` becomes `async` with `Async.AwaitPromise`.
+and anonymous records for the options. An anonymous record compiles to a plain JavaScript object.
+A `JS.Promise` is awaited with `let!` in a `promise { }`, from
+[Fable.Promise](https://github.com/fable-compiler/fable-promise) (add it to your project), and
+`highlight` returns a `JS.Promise` too.
 
 A `lazy` promise that fails stays failed: every later call gets the same error. That suits a
 failure that won't fix itself, such as a missing grammar. To retry after a network error, start a
@@ -156,14 +158,10 @@ type ShikiModule =
 // Created on first use, then shared: Shiki loads once, however many times it's needed.
 let highlighter =
     lazy
-        (async {
-            let! shiki = importDynamic<ShikiModule> "shiki" |> Async.AwaitPromise
-
-            return!
-                shiki.createHighlighter {| langs = [| "fsharp" |]; themes = [| "github-light" |] |}
-                |> Async.AwaitPromise
-         }
-         |> Async.StartAsPromise)
+        (promise {
+            let! shiki = importDynamic<ShikiModule> "shiki"
+            return! shiki.createHighlighter {| langs = [| "fsharp" |]; themes = [| "github-light" |] |}
+        })
 ```
 
 `importDynamic<ShikiModule>` types the module it loads; the interface describes the exports used.
@@ -325,9 +323,9 @@ type CodeBlock() as this =
         latest <- latest + 1
         let request = latest
 
-        async {
+        promise {
             try
-                let! h = highlighter.Value |> Async.AwaitPromise
+                let! h = highlighter.Value
                 let result = h.codeToHtml (text, MultipleThemeOptions(this.lang, themes))
 
                 // Ignore a result that arrives after a newer request.
@@ -338,7 +336,7 @@ type CodeBlock() as this =
                 // The plain code stays on screen.
                 console.error ($"fl-code: could not highlight '{this.lang}'", e)
         }
-        |> Async.StartImmediate
+        |> Promise.start
 
     // ...
 

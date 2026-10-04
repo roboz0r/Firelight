@@ -66,14 +66,14 @@ type Toaster() =
         this.Remove id
         let next = this.toasts |> List.tryItem (min index (this.toasts.Length - 1))
 
-        async {
-            let! _ = this.updateComplete |> Async.AwaitPromise
+        promise {
+            let! _ = this.updateComplete
 
             match next with
             | Some toast -> this.query<HTMLElement> $"#dismiss-{toast.Id}" |> Option.iter _.focus()
             | None -> cameFrom |> Option.iter (fun el -> el.focus ())
         }
-        |> Async.StartImmediate
+        |> Promise.start
 
     member this.FocusIn(e: FocusEvent) =
         match e.relatedTarget with

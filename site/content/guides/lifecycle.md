@@ -150,8 +150,8 @@ and on the server they run without a DOM at all. Use `firstUpdated` for one-time
 handing an element to a JavaScript library, and `updated` for work that follows each change.
 Reach elements with a [`ref`](/guides/templates/#directives) rather than a query.
 
-When code changes a property and then needs the result in the DOM, await `updateComplete`. This
-panel focuses its search box once the box is there:
+When code changes a property and then needs the result in the DOM, await `updateComplete`, with
+`let!` in Fable.Promise's `promise { }`. This panel focuses its search box once the box is there:
 
 ```fsharp
 open Browser.Types
@@ -173,11 +173,11 @@ type SearchPanel() =
     member this.Open() =
         this.isOpen <- true
 
-        async {
-            let! _ = this.updateComplete |> Async.AwaitPromise
+        promise {
+            let! _ = this.updateComplete
             field.value |> Option.iter (fun input -> input.focus ())
         }
-        |> Async.StartImmediate
+        |> Promise.start
 
     override this.render() =
         if this.isOpen then

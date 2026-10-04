@@ -21,6 +21,16 @@
           "Fable.LinkifyIt": "0.1.1"
         }
       },
+      "Fable.Promise": {
+        "type": "Direct",
+        "requested": "[2.2.2, )",
+        "resolved": "2.2.2",
+        "contentHash": "yHFSo7GCY0l/Wjskh/HESuFoGzXIoRM22UlrARA5ewnX736Y1wM27kcqCWeGcIzaEsgJnZcDkp093M0gQyMcWA==",
+        "dependencies": {
+          "FSharp.Core": "4.7.2",
+          "Fable.Core": "3.1.5"
+        }
+      },
       "FSharp.Core": {
         "type": "Direct",
         "requested": "[6.0.0, )",

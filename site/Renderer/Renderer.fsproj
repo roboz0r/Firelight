@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Fable.Core" />
     <PackageReference Include="Fable.MarkdownIt" />
+    <PackageReference Include="Fable.Promise" />
     <PackageReference Include="FSharp.Core" />
   </ItemGroup>
   <ItemGroup>

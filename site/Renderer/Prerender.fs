@@ -12,8 +12,9 @@ type Host =
     /// Vite's base path, such as `/Firelight/`.
     abstract ``base``: string
     /// Imports a module by its root-relative URL, such as `/build/Snippets/Rating.js`. In dev this
-    /// goes through Vite, so edited modules are reloaded.
-    abstract loadModule: url: string -> JS.Promise<obj>
+    /// goes through Vite, so edited modules are reloaded. Typed `unit`: only the import's effect,
+    /// registering the demo's elements, is used.
+    abstract loadModule: url: string -> JS.Promise<unit>
 
 [<Import("readFileSync", "node:fs")>]
 let private readFileSync (path: string, encoding: string) : string = jsNative
@@ -38,8 +39,8 @@ let pages (root: string) =
     )
 
 let private markdown (host: Host) (site: Pages.Page list) =
-    async {
-        let! highlighter = highlighter.Value |> Async.AwaitPromise
+    promise {
+        let! highlighter = highlighter.Value
         // The package table renders summaries with the instance it belongs to.
         let mutable md = Unchecked.defaultof<MarkdownIt.MarkdownIt>
 
@@ -67,15 +68,15 @@ let rec private renderDocument
     (host: Host)
     (site: Pages.Page list)
     (page: Pages.Page)
-    : Async<string * Markdown.Demo list> =
-    async {
+    : JS.Promise<string * Markdown.Demo list> =
+    promise {
         let! md = markdown host site
         let body = Markdown.render md page.Body
 
         // Registering a demo's custom elements is what makes Lit SSR prerender them.
         for demo in body.Demos do
             if demo.Prerender then
-                do! host.loadModule demo.Module |> Async.AwaitPromise |> Async.Ignore
+                do! host.loadModule demo.Module
 
         let apps =
             if page.Source = Pages.notFoundSource then
@@ -121,7 +122,7 @@ let rec private renderDocument
                     Version = Pages.packageVersion host.root
                 }
 
-        let! html = LitSsr.renderToString layout |> Async.AwaitPromise
+        let! html = LitSsr.renderToString layout
         let mains = fallbacks |> List.map snd |> Array.ofList
         // The apps' pages go in after rendering, as they are already rendered.
         let html =
@@ -136,7 +137,7 @@ let rec private renderDocument
 /// Renders `content/...md` to a complete HTML document. Vite then processes it like any other
 /// HTML page (module scripts, base path).
 let renderPage (host: Host) (source: string) : JS.Promise<string> =
-    async {
+    promise {
         try
             let site = Pages.load host.root |> List.ofArray
 
@@ -150,12 +151,11 @@ let renderPage (host: Host) (source: string) : JS.Promise<string> =
         with e ->
             return failwith $"{source}: {e.Message}"
     }
-    |> Async.StartAsPromise
 
 /// The site as Markdown for agents (see Agents): each page's `index.md`, `llms.txt` and
 /// `llms-full.txt`, as files relative to `dist/` with their text.
 let agentFiles (host: Host) : JS.Promise<{| file: string; text: string |}[]> =
-    async {
+    promise {
         let site = Pages.load host.root |> List.ofArray
         let! md = markdown host site
 
@@ -199,7 +199,6 @@ let agentFiles (host: Host) : JS.Promise<{| file: string; text: string |}[]> =
                 ]
             )
     }
-    |> Async.StartAsPromise
 
 let private escapeXml (text: string) =
     text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;")

@@ -64,7 +64,7 @@ module Highlight =
             MultipleThemeOptions(
                 lang,
                 themes,
-                defaultColor = U2.Case2 false,
+                defaultColor = !^false,
                 colorReplacements = colorReplacements
             )
 

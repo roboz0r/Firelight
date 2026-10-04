@@ -2,6 +2,7 @@ module App
 
 open Browser
 open Fable.Core
+open Fable.Core.JsInterop
 open Firelight
 open Firelight.Motion
 open type Firelight.Lit
@@ -82,7 +83,7 @@ type LayoutDemo() as this =
             AnimateControllerOptions(
                 defaultOptions =
                     MotionOptions(
-                        keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 500.0),
+                        keyframeOptions = MotionKeyframeOptions(duration = !^500.0),
                         skipInitial = true
                     ),
                 onComplete =
@@ -159,7 +160,7 @@ type MotionShowcase() as this =
     // This host has no AnimateController, so the notice sets its own timing.
     let noticeOptions =
         MotionOptions(
-            keyframeOptions = MotionKeyframeOptions(duration = U2.Case1 500.0),
+            keyframeOptions = MotionKeyframeOptions(duration = !^500.0),
             skipInitial = true,
             ``in`` = Motion.fadeIn,
             ``out`` = Motion.fadeOut,

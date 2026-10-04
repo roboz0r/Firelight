@@ -59,7 +59,11 @@ type ThemePicker() =
     // Once the first update is done, so the first render matches the prerendered HTML, and the
     // change starts an update of its own.
     override this.firstUpdated _ =
-        this.updateComplete.``then`` (fun _ -> this.Restore()) |> ignore
+        promise {
+            let! _ = this.updateComplete
+            this.Restore()
+        }
+        |> Promise.start
 
     override this.render() =
         let choice (value: string, label: string) =

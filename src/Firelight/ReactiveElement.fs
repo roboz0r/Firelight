@@ -413,8 +413,8 @@ type ReactiveElement() =
     /// Override it to change when the update runs: call <c>base.scheduleUpdate ()</c> later, and return a
     /// promise that resolves after it, which <c>updateComplete</c> waits for. Return
     /// <c>base.scheduleUpdate ()</c> itself to keep the default. The result is an <c>obj</c> because Lit's is
-    /// <c>void | Promise&lt;unknown&gt;</c>: box a promise, as in
-    /// <c>box (promise.``then`` (fun _ -&gt; this.ScheduleNow ()))</c>.
+    /// <c>void | Promise&lt;unknown&gt;</c>: box a promise, as in Fable.Promise's
+    /// <c>box (promise { let! _ = frame in return this.ScheduleNow () })</c>.
     /// </remarks>
     /// <seealso href="https://lit.dev/docs/components/lifecycle/#scheduleupdate"/>
     abstract member scheduleUpdate: unit -> obj

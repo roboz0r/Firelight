@@ -132,7 +132,7 @@ type LitTask<'Args, 'Result>(host: ReactiveControllerHost, config: TaskConfig<'A
 module TaskHelpers =
     /// <summary>
     /// A special value that resets a task to INITIAL status when returned by its task function:
-    /// <c>TaskFunction(fun args _ -> if ready args then U2.Case2(load args) else initialState)</c>.
+    /// <c>let loadUser (args: string[]) _ : TaskResult&lt;User&gt; = match args with [| id |] when id &lt;&gt; "" -> !^(load id) | _ -> initialState</c>.
     /// </summary>
     /// <remarks>
     /// Inline, so it compiles to the imported value itself. A generic <c>let</c> value compiles to a function,

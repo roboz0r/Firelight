@@ -44,11 +44,11 @@ type SettingsTabs() =
         this.selected <- id
 
         if moveFocus then
-            async {
-                let! _ = this.updateComplete |> Async.AwaitPromise
+            promise {
+                let! _ = this.updateComplete
                 this.query<HTMLElement> ("#tab-" + id) |> Option.iter _.focus()
             }
-            |> Async.StartImmediate
+            |> Promise.start
 
     /// Arrow keys, Home and End move between the tabs, as in a native tab strip.
     member this.OnKey(e: KeyboardEvent) =

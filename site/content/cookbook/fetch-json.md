@@ -27,7 +27,8 @@ The request uses `fetch` from [Fable.Fetch](https://github.com/fable-compiler/fa
 [Fable](https://fable.io/) binding for the browser's Fetch API. Firelight.Task depends on it, so
 `open Fetch` is all the module needs.
 
-- **The request.** `getBooks` is an F# `async` that awaits the promises `fetch` and `json` return.
+- **The request.** `getBooks` is a `promise { }` that awaits, with `let!`, the promises `fetch`
+  and `json` return. The `promise` builder is Fable.Promise's, which also comes with Firelight.Task.
   The browser's `fetch` only fails when there's no response at all, and a 404 or a 500 arrives as
   an ordinary response; Fable.Fetch's `fetch` also fails for those, with a message such as
   "404 Not Found for URL …". Use `fetchUnsafe` to read such a response yourself.

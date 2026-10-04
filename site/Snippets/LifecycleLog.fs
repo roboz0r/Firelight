@@ -62,11 +62,11 @@ type LifecycleProbe() =
     member this.AddOne() =
         this.count <- this.count + 1
 
-        async {
-            let! _ = this.updateComplete |> Async.AwaitPromise
+        promise {
+            let! _ = this.updateComplete
             log "updateComplete resolved"
         }
-        |> Async.StartImmediate
+        |> Promise.start
 
     override this.render() =
         log "render"

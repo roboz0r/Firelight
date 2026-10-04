@@ -73,11 +73,11 @@ type SignupForm() =
         | (firstId, _) :: _ ->
             this.thanks <- None
 
-            async {
-                let! _ = this.updateComplete |> Async.AwaitPromise
+            promise {
+                let! _ = this.updateComplete
                 this.query<HTMLInputElement> ("#" + firstId) |> Option.iter _.focus()
             }
-            |> Async.StartImmediate
+            |> Promise.start
 
     override this.render() =
         let errors = if this.tried then Map(validate this.form) else Map.empty

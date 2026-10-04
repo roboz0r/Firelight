@@ -54,11 +54,11 @@ type ReorderList() =
     member this.Nudge(step: Step, index: int, button: string) =
         this.Move(step, index)
 
-        async {
-            let! _ = this.updateComplete |> Async.AwaitPromise
+        promise {
+            let! _ = this.updateComplete
             this.query<HTMLElement> $"#{button}-{step.Id}" |> Option.iter _.focus()
         }
-        |> Async.StartImmediate
+        |> Promise.start
 
     member this.StepView (step: Step) (index: int) =
         let dragStart =

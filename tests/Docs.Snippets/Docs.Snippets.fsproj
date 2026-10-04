@@ -39,6 +39,10 @@
     <ProjectReference Include="..\..\src\Firelight.Task\Firelight.Task.fsproj" />
     <ProjectReference Include="..\..\src\Firelight.Virtualizer\Firelight.Virtualizer.fsproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- For promise { } in examples. Firelight.Task brings it in through Fable.Fetch. -->
+    <PackageReference Include="Fable.Promise" />
+  </ItemGroup>
 
   <UsingTask TaskName="ExtractFSharpBlocks" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>

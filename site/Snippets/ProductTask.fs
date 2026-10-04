@@ -7,15 +7,14 @@ open type Firelight.Lit
 
 // Stands in for a real request, such as a fetch to your API.
 let fetchProduct (id: string) : JS.Promise<string> =
-    async {
-        do! Async.Sleep 800
+    promise {
+        do! Promise.sleep 800
 
         if id = "3" then
             failwith "Product 3 is out of stock"
 
         return $"Product {id} is in stock"
     }
-    |> Async.StartAsPromise
 
 let private status =
     StatusRenderer(
@@ -34,13 +33,17 @@ type ProductView() as this =
 
     // Runs again whenever productId changes, and re-renders as the request goes
     // from pending to complete or error. With no product, initialState puts the task
-    // back in its initial state, without a request.
+    // back in its initial state, without a request. (args always holds one id, but a
+    // match must cover every length, so the other lengths go there too.)
     let product =
         LitTask(
             this,
             TaskConfig(
                 TaskFunction(fun (args: string[]) _ ->
-                    if args.[0] = "" then initialState else U2.Case2(fetchProduct args.[0])),
+                    match args with
+                    // U2.Case2, not !^: nothing here says if the task's result is the string or the promise.
+                    | [| id |] when id <> "" -> U2.Case2(fetchProduct id)
+                    | _ -> initialState),
                 args = (fun () -> [| productId |])
             )
         )

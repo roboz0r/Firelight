@@ -925,6 +925,14 @@ Define `Model`, `Msg`, and `update` in their own module (e.g. `TodoModel.fs`), s
 
 ---
 
+## F# Idioms
+
+- **Promises: `promise { }`** (Fable.Promise). `let!` awaits a `JS.Promise`, `do! Promise.sleep 300` waits, `|> Promise.start` fires and forgets: `promise { let! _ = this.updateComplete in this.Focus() } |> Promise.start`. Not `async { } |> Async.StartAsPromise`, `Async.AwaitPromise`, or `` .``then`` `` chains. Firelight.Task brings Fable.Promise in through Fable.Fetch; reference it explicitly (`<PackageReference Include="Fable.Promise" />`) in a project that uses it. Plain `async` stays fine for timer loops that touch no promise, such as the clock controller above.
+- **Fixed-length arrays: pattern-match.** `match args with [| id |] -> ... | _ -> initialState`, not `args[0]`. A parameter pattern `fun [| id |] _ -> ...` is incomplete (warning FS0025, an error with TreatWarningsAsErrors), so use `match` with a sensible fallback.
+- **Erased unions: `!^`** (`open Fable.Core.JsInterop`) instead of `U2.Case1`/`U2.Case2`: `autoRun = !^false`, `duration = !^300.0`. `!^` needs the target type from context. A task function written as a named function with `: TaskResult<'T>` can return `!^promise`; in a bare `TaskFunction(fun ...)` lambda where nothing else fixes the result type, `!^` fails (FS0043), so keep `U2.Case2` there (a branch such as `!^[]`, which can only be the value, does fix it). Overloaded methods such as `slot.assign` (element, text and `U2` overloads) also need the explicit cases (FS0041).
+
+---
+
 ## Common Imports
 
 ```fsharp
