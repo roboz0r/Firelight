@@ -54,6 +54,7 @@ type LoadMoreList() as this =
                     border-radius: 0.5rem; padding: 0.5rem 1rem; }
         ul { margin: 0; padding-left: 1.25rem; }
         li { padding: 0.25rem 0; }
+        .scroller:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         .end { height: 1px; }
         button { font: inherit; padding: 0.3rem 0.9rem; }
         p { margin: 0; }
@@ -99,7 +100,7 @@ type LoadMoreList() as this =
         // The button stays, outside the box, so it keeps the focus as the list grows and ends.
         html
             $"""
-        <div class="scroller">
+        <div class="scroller" tabindex="0" role="region" aria-label="Items">
             <ul>{this.items |> List.map (fun item -> html $"<li>{item}</li>")}</ul>
             <div class="end" {ref endOfList}></div>
         </div>

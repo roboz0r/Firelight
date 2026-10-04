@@ -293,5 +293,161 @@ let private slotCards =
                 )
     }
 
+let private dialog =
+    testTask "dialog: opens with focus on the safe button, Escape cancels, Delete answers, focus returns" {
+        do!
+            withDemo
+                "my-confirm-delete"
+                (fun opened demo ->
+                    task {
+                        let page = opened.Page
+                        let opener = demo.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Delete report.pdf…"))
+                        let dialog = demo.GetByRole(AriaRole.Dialog, LocatorGetByRoleOptions(Name = "Delete report.pdf?"))
+                        let status = demo.GetByRole(AriaRole.Status)
+
+                        do! opener.ClickAsync()
+                        do! Expect(dialog).ToBeVisibleAsync()
+                        do! Expect(dialog.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Keep it"))).ToBeFocusedAsync()
+                        do! dialog.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Delete")).ClickAsync()
+                        do! Expect(dialog).ToBeHiddenAsync()
+                        do! Expect(status).ToHaveTextAsync("Deleted report.pdf.")
+                        do! Expect(opener).ToBeFocusedAsync()
+
+                        do! opener.PressAsync("Enter")
+                        do! Expect(dialog).ToBeVisibleAsync()
+                        do! page.Keyboard.PressAsync("Escape")
+                        do! Expect(dialog).ToBeHiddenAsync()
+                        do! Expect(status).ToHaveTextAsync("Kept report.pdf.")
+                        do! Expect(opener).ToBeFocusedAsync()
+                        noProblems opened
+                    }
+                )
+    }
+
+let private tabs =
+    testTask "tabs: arrow keys, Home and End move and select, and a panel keeps its text" {
+        do!
+            withDemo
+                "my-settings-tabs"
+                (fun opened demo ->
+                    task {
+                        let page = opened.Page
+                        let tab (name: string) = demo.GetByRole(AriaRole.Tab, LocatorGetByRoleOptions(Name = name))
+                        let panel = demo.GetByRole(AriaRole.Tabpanel)
+
+                        do! Expect(tab "General").ToHaveAttributeAsync("aria-selected", "true")
+                        do! Expect(panel).ToHaveAccessibleNameAsync("General")
+                        do! tab("General").FocusAsync()
+                        do! page.Keyboard.PressAsync("ArrowRight")
+                        do! Expect(tab "Notes").ToBeFocusedAsync()
+                        do! Expect(tab "Notes").ToHaveAttributeAsync("aria-selected", "true")
+                        do! Expect(tab "General").ToHaveAttributeAsync("tabindex", "-1")
+                        do! panel.GetByLabel("Notes").FillAsync("Pack the charger")
+                        do! tab("Notes").FocusAsync()
+                        do! page.Keyboard.PressAsync("End")
+                        do! Expect(tab "About").ToBeFocusedAsync()
+                        do! Expect(panel).ToHaveTextAsync("Settings, version 1.0.")
+                        do! page.Keyboard.PressAsync("ArrowRight")
+                        do! Expect(tab "General").ToBeFocusedAsync()
+                        do! page.Keyboard.PressAsync("ArrowLeft")
+                        do! page.Keyboard.PressAsync("ArrowLeft")
+                        do! Expect(tab "Notes").ToBeFocusedAsync()
+                        do! Expect(panel.GetByLabel("Notes")).ToHaveValueAsync("Pack the charger")
+                        do! page.Keyboard.PressAsync("Home")
+                        do! Expect(tab "General").ToBeFocusedAsync()
+                        noProblems opened
+                    }
+                )
+    }
+
+let private toasts =
+    testTask "toasts: raised by a component and by page JavaScript, dismissed by hand and on a timer" {
+        do!
+            withDemo
+                "my-toaster"
+                (fun opened toaster ->
+                    task {
+                        let page = opened.Page
+                        let toastsShown = toaster.Locator(".toast")
+                        do! page.Locator("my-save-button").GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Save")).ClickAsync()
+                        do! page.GetByRole(AriaRole.Button, PageGetByRoleOptions(Name = "Raise one from JavaScript")).ClickAsync()
+                        do! Expect(toastsShown).ToHaveCountAsync(2)
+                        do! Expect(toaster.GetByRole(AriaRole.Status)).ToContainTextAsync("Saved.")
+                        do! Expect(toastsShown.Nth(1)).ToContainTextAsync("Hello from plain JavaScript.")
+                        do! Expect(toaster.GetByRole(AriaRole.Status)).ToHaveAttributeAsync("aria-atomic", "false")
+
+                        // Dismissed from the keyboard: the focus moves to the next toast's button,
+                        // then back to where it came from.
+                        let source = page.GetByRole(AriaRole.Button, PageGetByRoleOptions(Name = "Raise one from JavaScript"))
+                        do! source.FocusAsync()
+                        do! page.Keyboard.PressAsync("Tab")
+                        let first = toastsShown.Nth(0).GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Dismiss"))
+                        do! Expect(first).ToBeFocusedAsync()
+                        do! page.Keyboard.PressAsync("Enter")
+                        do! Expect(toastsShown).ToHaveCountAsync(1)
+                        let remaining = toastsShown.Nth(0).GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Dismiss"))
+                        do! Expect(remaining).ToBeFocusedAsync()
+
+                        // While the focus is on it, the toast outlives its five seconds.
+                        do! page.WaitForTimeoutAsync(6000.0f)
+                        do! Expect(toastsShown).ToHaveCountAsync(1)
+                        do! page.Keyboard.PressAsync("Enter")
+                        do! Expect(toastsShown).ToHaveCountAsync(0)
+                        do! Expect(source).ToBeFocusedAsync()
+
+                        do! page.Locator("my-save-button").GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Save")).ClickAsync()
+                        do! Expect(toastsShown).ToHaveCountAsync(1)
+                        do! Expect(toastsShown).ToHaveCountAsync(0, LocatorAssertionsToHaveCountOptions(Timeout = 7000.0f))
+                        noProblems opened
+                    }
+                )
+    }
+
+let private shortcuts =
+    testTask "keyboard shortcuts: / focuses the search box, ? toggles the help, but not while typing" {
+        do!
+            withDemo
+                "my-shortcut-demo"
+                (fun opened demo ->
+                    task {
+                        let page = opened.Page
+                        let search = demo.GetByRole(AriaRole.Searchbox, LocatorGetByRoleOptions(Name = "Search"))
+                        let help = demo.Locator("dl")
+                        do! page.Locator("main h1").ClickAsync()
+                        do! page.Keyboard.PressAsync("?")
+                        do! Expect(help).ToBeVisibleAsync()
+                        do! page.Keyboard.PressAsync("/")
+                        do! Expect(search).ToBeFocusedAsync()
+                        do! page.Keyboard.TypeAsync("a?/")
+                        do! Expect(search).ToHaveValueAsync("a?/")
+                        do! Expect(help).ToBeVisibleAsync()
+                        do! page.Locator("main h1").ClickAsync()
+                        do! page.Keyboard.PressAsync("?")
+                        do! Expect(help).ToBeHiddenAsync()
+
+                        // A held key's repeats don't toggle it back and forth.
+                        let! _ =
+                            page.EvaluateAsync(
+                                "() => ['?', '?', '?'].forEach((key, i) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key, repeat: i > 0, bubbles: true, composed: true })))"
+                            )
+
+                        do! Expect(help).ToBeVisibleAsync()
+
+                        // Turned off, the keys do nothing.
+                        do! demo.GetByLabel("Single-key shortcuts").UncheckAsync()
+                        do! page.Locator("main h1").ClickAsync()
+                        do! page.Keyboard.PressAsync("?")
+                        do! Expect(help).ToBeVisibleAsync()
+                        do! page.Keyboard.PressAsync("/")
+                        do! Expect(search).Not.ToBeFocusedAsync()
+                        do! Expect(search).Not.ToHaveAttributeAsync("aria-keyshortcuts", "/")
+                        // Removed from the page, the component stops listening.
+                        let! _ = demo.EvaluateAsync("el => el.remove()")
+                        do! page.Keyboard.PressAsync("/")
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; fetchJson; loadMore; packingList; themePicker; slotCards ]
+    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; fetchJson; loadMore; packingList; themePicker; slotCards; dialog; tabs; toasts; shortcuts ]

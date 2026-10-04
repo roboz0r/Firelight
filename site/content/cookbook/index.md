@@ -31,3 +31,13 @@ lead: "Short recipes for common tasks, each with a live demo and its code. A rec
   properties, remembered across visits.
 - [A card with slots](/cookbook/slots/): a card that takes its heading, body and footer from the
   page.
+- [A modal dialog](/cookbook/dialog/): ask a question with `<dialog>`, and read the answer when it
+  closes.
+- [Tabs](/cookbook/tabs/): tabs with the ARIA roles, arrow keys, and panels that keep their state.
+
+## Behaviour
+
+- [Toast notifications](/cookbook/toasts/): short messages that any code can raise, shown in one
+  place.
+- [Keyboard shortcuts](/cookbook/keyboard-shortcuts/): page-wide keys that skip fields, in a
+  controller any component can use.

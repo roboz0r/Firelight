@@ -11,8 +11,8 @@ links:
     href: https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
 ---
 
-Scroll to the bottom of the box, and the next ten items arrive. Or Tab to Load more and press
-Enter.
+Scroll to the bottom of the box, with the mouse or the arrow keys, and the next ten items arrive.
+Or Tab to Load more and press Enter.
 
 ::: example Snippets/LoadMore.fs
 <my-load-more></my-load-more>
@@ -39,8 +39,10 @@ when it is.
   request was running, since leaving stopped the observer.
 - **One request at a time.** The callback and the button both call `LoadMore`, which does nothing
   while `loading` is set.
-- **The button.** Infinite scroll alone shuts out anyone who can't scroll the box, and a keyboard
-  user who tabs past the list never reaches its end. The button sits below the box, where new
+- **The keyboard.** The box has `tabindex="0"`, so the arrow keys can scroll it, and a
+  `role="region"` with a label, so a screen reader says what it is when it gets the focus.
+- **The button.** Infinite scroll alone shuts out anyone who can't scroll the box, and a reader
+  who tabs past the list never reaches its end. The button sits below the box, where new
   items don't push it out of sight, and it stays on the page to the end, with
   `aria-disabled` once everything has loaded. Disabling it, or removing it, would drop the focus.
 
