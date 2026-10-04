@@ -10,7 +10,9 @@ each break is listed under Changed with how to migrate.
 - **New packages**, published for the first time:
   - `Firelight.Signals`: bindings for `@lit-labs/signals`, with `LitSignals.defineElement` and
     signal-aware `html` and `svg` tags.
-  - `Firelight.Task`: bindings for `@lit/task` (`LitTask`).
+  - `Firelight.Task`: bindings for `@lit/task` (`LitTask`). It depends on Fable.Fetch (2.7.0 or
+    later): the task function's `signal` is Fable.Fetch's `AbortSignal`, so it passes straight to
+    Fable.Fetch's `fetch`: `fetch url [ Signal options.signal ]`.
   - `Firelight.Motion`: bindings for `@lit-labs/motion` (the `animate` directive, its keyframe
     presets, `AnimateController` and spring controllers).
   - `Firelight.Observers`: bindings for `@lit-labs/observers` (resize, intersection, mutation and
@@ -293,6 +295,24 @@ Breaking changes, with how to migrate:
   the result as `TemplateResult` still compiles; a function whose type must stay `TemplateResult`
   may need `:> TemplateResult`.
 
+- **Firelight.Task: the signal is Fable.Fetch's `AbortSignal`.** The package is new in 0.3, but
+  code built against the repository before this release saw its own `Firelight.Task.AbortSignal`,
+  with only `aborted`, `reason` and `throwIfAborted`. That type is removed; `options.signal` is
+  `Fetch.Types.AbortSignal`, the same JavaScript object, with the `abort` event too:
+
+  ```fsharp
+  // before
+  open Firelight.Task
+  [<Global>]
+  let fetch (url: string, init: {| signal: AbortSignal |}) : JS.Promise<Response> = jsNative
+  fetch (url, {| signal = options.signal |})
+  // 0.3
+  open Fetch
+  fetch url [ Signal options.signal ]
+  ```
+
+  A binding of your own that typed its parameter `AbortSignal` with only `open Firelight.Task`
+  says "The type 'AbortSignal' is not defined": add `open Fetch`, or write `Fetch.Types.AbortSignal`.
 - **Firelight.Router: `EventHandlers.origin` is removed.** It held the page's origin, read from
   `window` when the module loaded. Read it where you need it: `window.location.origin`.
 - **Firelight.Router: `importPolyfill ()` returns `unit`**, not a generic value. Code that used

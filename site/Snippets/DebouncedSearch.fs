@@ -1,27 +1,25 @@
 module Snippets.DebouncedSearch
 
+open System
 open Fable.Core
+open Fetch
 open Firelight
 open Firelight.Task
 open type Firelight.Lit
 
-let private fruits =
-    [ "Apple"; "Apricot"; "Banana"; "Blackberry"; "Blackcurrant"; "Blueberry"; "Cherry"; "Cranberry"
-      "Damson"; "Date"; "Elderberry"; "Fig"; "Gooseberry"; "Grape"; "Greengage"; "Kiwi"; "Lemon"
-      "Lime"; "Mango"; "Melon"; "Mulberry"; "Nectarine"; "Orange"; "Peach"; "Pear"; "Plum"
-      "Quince"; "Raspberry"; "Redcurrant"; "Strawberry" ]
-
 let mutable private requests = 0
 
-// Stands in for a request to your search API, such as `fetch` with the task's signal.
-let private search (query: string) : JS.Promise<string list> =
+// Stands in for your search API: it fetches a file of every fruit, next to this page, and filters
+// it here, where your server would do the filtering. The signal cancels the request.
+let private search (query: string) (signal: AbortSignal) =
     requests <- requests + 1
 
     async {
-        do! Async.Sleep 200
-        return fruits |> List.filter (fun f -> f.ToLower().Contains(query.ToLower()))
+        let url = $"fruits.json?q={Uri.EscapeDataString query}"
+        let! response = fetch url [ Signal signal ] |> Async.AwaitPromise
+        let! fruits = response.json<string[]> () |> Async.AwaitPromise
+        return fruits |> Array.filter (fun f -> f.ToLower().Contains(query.ToLower())) |> List.ofArray
     }
-    |> Async.StartAsPromise
 
 [<AttachMembers>]
 type DebouncedSearch() as this =
@@ -42,7 +40,7 @@ type DebouncedSearch() as this =
                             // so only a query left alone for 300 ms gets past this line.
                             do! Async.Sleep 300
                             options.signal.throwIfAborted ()
-                            return! search query |> Async.AwaitPromise
+                            return! search query options.signal
                         }
                         |> Async.StartAsPromise
                         |> U2.Case2
@@ -70,7 +68,7 @@ type DebouncedSearch() as this =
 
         let message =
             match matches.status with
-            | _ when this.query.Trim() = "" -> $"Type to search {fruits.Length} fruits."
+            | _ when this.query.Trim() = "" -> "Type to search for a fruit."
             | TaskStatus.PENDING -> "Searching…"
             | TaskStatus.ERROR -> "The search failed."
             | _ -> $"{found.Length} found. Requests so far: {requests}."

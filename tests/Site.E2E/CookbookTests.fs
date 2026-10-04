@@ -5,6 +5,7 @@ module Site.E2E.CookbookTests
 open System
 open System.IO
 open System.Text.RegularExpressions
+open System.Threading.Tasks
 open Expecto
 open Microsoft.Playwright
 open type Microsoft.Playwright.Assertions
@@ -26,6 +27,60 @@ let private noProblems (opened: Browser.OpenPage) =
 /// Opens the page with the `tag` demo and runs `f` with the page and the demo's first element.
 let private withDemo (tag: string) (f: Browser.OpenPage -> ILocator -> Threading.Tasks.Task<unit>) =
     Browser.withPage true (pageWith tag).Path (fun opened -> f opened (opened.Page.Locator(tag).First))
+
+/// The result of `t`, or a failed test saying `what` didn't happen within `seconds`.
+let private within (seconds: float) (what: string) (t: Task<'T>) =
+    task {
+        let! first = Task.WhenAny(t, Task.Delay(TimeSpan.FromSeconds seconds))
+
+        if not (obj.ReferenceEquals(first, t)) then
+            failtest $"{what} didn't happen within {seconds} s."
+
+        return t.Result
+    }
+
+/// Checks that `interrupt` aborts, at the network, the first request matching `url` that `start`
+/// makes. The request is held at the network until then, so it is still in flight when `interrupt`
+/// runs: if the page doesn't pass the task's signal to fetch, nothing aborts it and this fails.
+let private abortsInFlight (page: IPage) (url: Regex) (start: unit -> Task) (interrupt: unit -> Task) =
+    task {
+        let arrived = TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously)
+        let failed = TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously)
+        let release = TaskCompletionSource<unit>(TaskCreationOptions.RunContinuationsAsynchronously)
+
+        page.RequestFailed.Add(fun request ->
+            if arrived.Task.IsCompleted && request.Url = arrived.Task.Result then
+                failed.TrySetResult(string request.Failure) |> ignore
+        )
+
+        do!
+            page.RouteAsync(
+                url,
+                fun route ->
+                    task {
+                        // Hold only the first request; later ones, such as a retry, go straight through.
+                        if arrived.TrySetResult route.Request.Url then
+                            let! _ = Task.WhenAny(release.Task, Task.Delay(TimeSpan.FromSeconds 10.0))
+                            ()
+
+                        // The page may have cancelled it in the meantime.
+                        try
+                            do! route.ContinueAsync()
+                        with _ ->
+                            ()
+                    }
+                    :> Task
+            )
+
+        try
+            do! start ()
+            let! requested = arrived.Task |> within 5.0 $"A request matching {url}"
+            do! interrupt ()
+            let! failure = failed.Task |> within 5.0 $"Aborting {requested}"
+            Expect.stringContains failure "ERR_ABORTED" $"why {requested} failed"
+        finally
+            release.TrySetResult() |> ignore
+    }
 
 let private signupForm =
     testTask "form validation: errors on submit, focus on the first, thanks once fixed" {
@@ -135,8 +190,30 @@ let private debouncedSearch =
                         do! Expect(search.GetByRole(AriaRole.Status)).ToHaveTextAsync("8 found. Requests so far: 1.")
                         do! Expect(search.Locator("li")).ToHaveCountAsync(8)
                         do! box.FillAsync("")
-                        do! Expect(search.GetByRole(AriaRole.Status)).ToHaveTextAsync("Type to search 30 fruits.")
+                        do! Expect(search.GetByRole(AriaRole.Status)).ToHaveTextAsync("Type to search for a fruit.")
                         noProblems opened
+                    }
+                )
+    }
+
+let private debouncedSearchAbort =
+    testTask "search as you type: typing while a search is in flight aborts its request" {
+        do!
+            withDemo
+                "my-debounced-search"
+                (fun opened search ->
+                    task {
+                        let box = search.GetByRole(AriaRole.Searchbox, LocatorGetByRoleOptions(Name = "Search fruit"))
+
+                        do!
+                            abortsInFlight
+                                opened.Page
+                                (Regex @"/fruits\.json\?q=b$")
+                                (fun () -> box.PressSequentiallyAsync("b"))
+                                (fun () -> box.PressSequentiallyAsync("e"))
+
+                        do! Expect(search.GetByRole(AriaRole.Status)).ToHaveTextAsync("8 found. Requests so far: 2.")
+                    // The aborted request is logged as a failed request, on purpose, so no noProblems here.
                     }
                 )
     }
@@ -153,7 +230,7 @@ let private fetchJson =
 
                         do!
                             Expect(books.GetByRole(AriaRole.Alert))
-                                .ToHaveTextAsync("The books didn't load. The server answered 404.")
+                                .ToHaveTextAsync(Regex @"^The books didn't load\. 404 Not Found for URL \S+/no-such-file\.json$")
 
                         do! books.GetByLabel("Ask for a file that isn't there").UncheckAsync()
                         do! Expect(books.Locator("li")).ToHaveCountAsync(5)
@@ -163,17 +240,37 @@ let private fetchJson =
                         do! again.PressAsync("Enter")
                         do! Expect(again).ToBeFocusedAsync()
                         do! Expect(books.Locator("li")).ToHaveCountAsync(5)
-
-                        // Moved while loading: the request is aborted and made again.
-                        let! _ =
-                            books.EvaluateAsync(
-                                "el => { el.shadowRoot.querySelector('button').click(); const p = el.parentNode; p.removeChild(el); p.appendChild(el); }"
-                            )
-
-                        do! opened.Page.WaitForTimeoutAsync(500.0f)
-                        do! Expect(books.GetByRole(AriaRole.Alert)).ToHaveCountAsync(0)
-                        do! Expect(books.Locator("li")).ToHaveCountAsync(5)
                     // The 404 is logged as a console error, on purpose, so no noProblems here.
+                    }
+                )
+    }
+
+let private fetchJsonAbort =
+    testTask "fetch JSON: removing the element while loading aborts the request; putting it back loads again" {
+        do!
+            withDemo
+                "my-book-list"
+                (fun opened books ->
+                    task {
+                        do! Expect(books.Locator("li")).ToHaveCountAsync(5)
+                        let again = books.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Load again"))
+                        let! element = books.ElementHandleAsync()
+                        let! parent = element.EvaluateHandleAsync("el => el.parentNode")
+
+                        // Only removed, not yet put back: putting it back runs the task again, and a new
+                        // run aborts the old one by itself, so the abort must happen before that.
+                        do!
+                            abortsInFlight
+                                opened.Page
+                                (Regex @"/books\.json$")
+                                (fun () -> again.ClickAsync())
+                                (fun () -> element.EvaluateAsync("el => el.remove()") :> Task)
+
+                        // Back on the page, it makes the request again.
+                        let! _ = parent.EvaluateAsync("(p, el) => p.appendChild(el)", element)
+                        do! Expect(books.Locator("li")).ToHaveCountAsync(5)
+                        do! Expect(books.GetByRole(AriaRole.Alert)).ToHaveCountAsync(0)
+                    // The aborted request is logged as a failed request, on purpose, so no noProblems here.
                     }
                 )
     }
@@ -541,4 +638,4 @@ let private reducedMotion =
     }
 
 let all =
-    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; fetchJson; loadMore; packingList; themePicker; slotCards; dialog; tabs; toasts; shortcuts; dragReorder; animatedList; reducedMotion ]
+    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; debouncedSearchAbort; fetchJson; fetchJsonAbort; loadMore; packingList; themePicker; slotCards; dialog; tabs; toasts; shortcuts; dragReorder; animatedList; reducedMotion ]

@@ -220,7 +220,7 @@ type ProductView() as this =
         |> unbox
 ```
 
-The task exposes `status`, `value`, `error`, and `taskComplete`. Its task function receives an `AbortSignal` through `TaskFunctionOptions`; pass that signal to cancellable work when a newer run supersedes the current one.
+The task exposes `status`, `value`, `error`, and `taskComplete`. Its task function receives an `AbortSignal` through `TaskFunctionOptions`, aborted when a newer run supersedes the current one. Its type is [Fable.Fetch](https://github.com/fable-compiler/fable-fetch)'s, which Firelight.Task depends on, so it passes straight to Fable.Fetch's `fetch`: `fetch url [ Signal options.signal ]`.
 
 ## Signals
 

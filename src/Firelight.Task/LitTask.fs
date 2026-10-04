@@ -3,13 +3,6 @@ namespace Firelight.Task
 open Fable.Core
 open Firelight
 
-[<AllowNullLiteral>]
-[<Interface>]
-type AbortSignal =
-    abstract aborted: bool with get
-    abstract reason: obj with get
-    abstract throwIfAborted: unit -> unit
-
 /// States for task status.
 type TaskStatus =
     | INITIAL = 0
@@ -17,10 +10,28 @@ type TaskStatus =
     | COMPLETE = 2
     | ERROR = 3
 
+/// What a task function gets besides its arguments.
 [<AllowNullLiteral>]
 [<Interface>]
 type TaskFunctionOptions =
-    abstract signal: AbortSignal with get
+    /// <summary>
+    /// Aborted when this run is no longer wanted: a newer run started, or <c>abort</c> was called. Pass it on to
+    /// the work, or call <c>signal.throwIfAborted ()</c> after each wait.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Its type is Fable.Fetch's <c>AbortSignal</c> (<c>Fetch.Types.AbortSignal</c>), so it goes straight to
+    /// Fable.Fetch's <c>fetch</c>: <c>open Fetch</c>, then <c>fetch url [ Signal options.signal ]</c>.
+    /// </para>
+    /// <para>
+    /// The value is the browser's own <c>AbortSignal</c> object, so any other API that takes one accepts it,
+    /// such as a <c>fetch</c> binding of your own:
+    /// <c>[&lt;Global&gt;] let fetch (url: string, init: {| signal: Fetch.Types.AbortSignal |}) : JS.Promise&lt;obj&gt; = jsNative</c>,
+    /// then <c>fetch (url, {| signal = options.signal |})</c>. Where an API's binding types it differently, convert
+    /// with <c>unbox</c>.
+    /// </para>
+    /// </remarks>
+    abstract signal: Fetch.Types.AbortSignal with get
 
 type TaskResult<'Result> = U2<'Result, JS.Promise<'Result>>
 

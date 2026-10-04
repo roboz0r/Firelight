@@ -46,9 +46,10 @@ The rest:
   keystroke.
 - The message is in a `role="status"` paragraph that is always on the page, so screen readers
   announce the count without moving focus from the box.
-- `search` stands in for your API. With a real request, pass the signal on, so that a search that
-  is already running is cancelled when the text changes. `fetch`'s option for it is `signal`;
-  [Fetch JSON](/cookbook/fetch-json/) shows the binding.
+- `search` stands in for your API: it fetches a file of every fruit and filters it, where your
+  server would filter. It passes the task's signal to Fable.Fetch's `fetch` with `Signal signal`,
+  so a search that is already running is cancelled when the text changes.
+  [Fetch JSON](/cookbook/fetch-json/) explains the request.
 
 Choose the delay by how expensive a search is: around 300 ms feels immediate when typing stops,
 and still saves most requests.

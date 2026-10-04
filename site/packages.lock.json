@@ -49,17 +49,19 @@
           "Fable.Core": "3.2.8"
         }
       },
+      "Fable.Promise": {
+        "type": "Transitive",
+        "resolved": "2.2.2",
+        "contentHash": "yHFSo7GCY0l/Wjskh/HESuFoGzXIoRM22UlrARA5ewnX736Y1wM27kcqCWeGcIzaEsgJnZcDkp093M0gQyMcWA==",
+        "dependencies": {
+          "FSharp.Core": "4.7.2",
+          "Fable.Core": "3.1.5"
+        }
+      },
       "Microsoft.NETCore.Platforms": {
         "type": "Transitive",
         "resolved": "1.1.0",
         "contentHash": "kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A=="
-      },
-      "fable.shiki": {
-        "type": "Project",
-        "dependencies": {
-          "FSharp.Core": "[6.0.0, )",
-          "Fable.Core": "[5.0.0, )"
-        }
       },
       "firelight": {
         "type": "Project",
@@ -126,6 +128,7 @@
         "dependencies": {
           "Fable.Browser.Dom": "[2.20.0, )",
           "Fable.Core": "[5.0.0, )",
+          "Fable.Fetch": "[2.7.0, )",
           "Firelight": "[0.2.0, )"
         }
       },
@@ -190,6 +193,19 @@
         "dependencies": {
           "FSharp.Core": "4.7.2",
           "Fable.Core": "4.0.0"
+        }
+      },
+      "Fable.Fetch": {
+        "type": "CentralTransitive",
+        "requested": "[2.7.0, )",
+        "resolved": "2.7.0",
+        "contentHash": "2ndGZZTqpX9Hyso51tnIxWAskN2zrHX+7LeAwfG4zew+DtMMGa/3IyJGl2BOYUwweq2MhfuVqs1K3avgBFDq+Q==",
+        "dependencies": {
+          "FSharp.Core": "4.7.2",
+          "Fable.Browser.Blob": "1.2.0",
+          "Fable.Browser.Event": "1.5.0",
+          "Fable.Core": "3.7.1",
+          "Fable.Promise": "2.2.2"
         }
       },
       "FSharp.Core": {

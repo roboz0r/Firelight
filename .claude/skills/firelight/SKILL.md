@@ -15,7 +15,7 @@ Firelight provides F# bindings for [Lit](https://lit.dev/) 3.x web components vi
 | **Firelight.Elmish** | Elmish integration: `ElmishController`, `DevTools` |
 | **Firelight.Router** | Client-side routing via the URL Pattern API: `Router`, `RouterController` |
 | **Firelight.Signals** | `@lit-labs/signals`: `LitSignals`, signal-aware `html` |
-| **Firelight.Task** | `@lit/task`: `LitTask` for async data |
+| **Firelight.Task** | `@lit/task`: `LitTask` for async data; its `signal` is Fable.Fetch's `AbortSignal` (`open Fetch`, then `fetch url [ Signal options.signal ]`) |
 | **Firelight.Motion** | `@lit-labs/motion`: the `animate` directive |
 | **Firelight.Observers** | `@lit-labs/observers`: resize, intersection and mutation controllers |
 | **Firelight.Virtualizer** | `@lit-labs/virtualizer`: long lists |

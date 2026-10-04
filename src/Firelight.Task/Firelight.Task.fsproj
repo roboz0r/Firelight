@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Fable.Browser.Dom" />
     <PackageReference Include="Fable.Core" />
+    <PackageReference Include="Fable.Fetch" />
     <PackageReference Include="Fable.Package.SDK">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

@@ -47,6 +47,7 @@ export class UserCard extends LitElement {
 ```
 ```fsharp
 open Fable.Core
+open Fetch
 open Firelight
 open Firelight.Task
 open type Firelight.Lit
@@ -101,6 +102,10 @@ defineElement<UserCard> "user-card"
 The task function returns a `TaskResult`, a value or a promise, so the promise goes in
 `U2.Case2`. `render` returns an option, `None` for a status with no template, and a hole
 renders `None` as nothing.
+
+The `signal` is typed as [Fable.Fetch](https://github.com/fable-compiler/fable-fetch)'s
+`AbortSignal`, hence `open Fetch`: Firelight.Task depends on Fable.Fetch, so the signal passes
+straight to its `fetch`. See [Cancelling requests](/packages/task/#cancelling-requests).
 
 ## Running by hand
 

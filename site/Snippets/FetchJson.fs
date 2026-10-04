@@ -1,18 +1,10 @@
 module Snippets.FetchJson
 
 open Fable.Core
+open Fetch
 open Firelight
 open Firelight.Task
 open type Firelight.Lit
-
-/// The parts of fetch's Response this module uses.
-type Response =
-    abstract ok: bool
-    abstract status: int
-    abstract json: unit -> JS.Promise<obj>
-
-[<Global>]
-let fetch (url: string, init: {| signal: AbortSignal |}) : JS.Promise<Response> = jsNative
 
 /// A book as the server sends it. Nothing checks that the JSON has these fields.
 type Book =
@@ -22,13 +14,9 @@ type Book =
 
 let getBooks (url: string) (signal: AbortSignal) =
     async {
-        let! response = fetch (url, {| signal = signal |}) |> Async.AwaitPromise
-
-        if not response.ok then
-            failwith $"The server answered {response.status}."
-
-        let! json = response.json () |> Async.AwaitPromise
-        return unbox<Book[]> json
+        // Fails for a response that isn't ok, such as a 404, as well as for no response.
+        let! response = fetch url [ Signal signal ] |> Async.AwaitPromise
+        return! response.json<Book[]> () |> Async.AwaitPromise
     }
     |> Async.StartAsPromise
 
