@@ -280,10 +280,15 @@ cause:
 | `if empty then nothing else html $"..."` | All branches of an 'if' expression must return values implicitly convertible to the type of the first branch, which here is 'nothing' | The template first: `if not empty then html $"..." else nothing` |
 | `ref 0` | No overloads match for method 'ref' | `Operators.ref 0`: Lit's `ref` hides F#'s |
 
-F# gives an `if` or `match` the type of its first branch, and `nothing` fits where a template does
-but not the other way round. When `nothing` has to come first, as in a `match` whose first case is
-the empty list, annotate the result as `ChildRenderable`, the interface of everything Lit can
-render.
+All branches of an `if` or `match` must fit one type, which F# takes from the first branch.
+`nothing` fits where a template is expected, so a template first needs nothing extra. When
+`nothing` comes first, annotate the expression as `ChildRenderable` (the interface for anything Lit
+can render):
+
+```fsharp fragment
+let button: ChildRenderable =
+    if isEmpty then nothing else html $"<button>...</button>"
+```
 
 Others compile, because a hole's type is `obj` and it accepts any value:
 
