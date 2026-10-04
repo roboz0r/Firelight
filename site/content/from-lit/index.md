@@ -26,8 +26,8 @@ differences you meet on every page:
 Each pair of code blocks does exactly the same thing, with Lit's TypeScript on the left (or first,
 on a narrow screen) and Firelight's F# on the right. The TypeScript uses Lit's decorators with
 `experimentalDecorators: true` and `useDefineForClassFields: false`, the settings Lit's own
-examples assume. Each page ends with what doesn't carry over
-directly, and with the Lit features Firelight doesn't bind yet.
+examples assume. Each page ends with what doesn't carry over directly, and with the Lit features
+Firelight doesn't bind yet.
 
 ## Topics
 
@@ -39,6 +39,9 @@ directly, and with the Lit features Firelight doesn't bind yet.
 - [Templates](/from-lit/templates/): expressions, conditionals, lists, directives and static
   values.
 - [Composition](/from-lit/composition/): reactive controllers, and what replaces mixins.
+- [Context](/from-lit/context/): providing and consuming values with `@lit/context`.
+- [Tasks](/from-lit/tasks/): async work with `@lit/task`.
+- [Signals](/from-lit/signals/): shared reactive state with `@lit-labs/signals`.
 
 ## Beyond these pages
 

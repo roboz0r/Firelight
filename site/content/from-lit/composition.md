@@ -197,10 +197,10 @@ class's, as it does in TypeScript.
 - **Optional controller callbacks.** An F# interface implementation has every member; write
   `()` for the ones you don't need.
 - **Lit's own mixins.** `SignalWatcher` is applied by `LitSignals.defineElement`; see
-  Signals<!-- TODO-LINK /from-lit/signals/ -->.
+  [Signals](/from-lit/signals/).
 
 Firelight packages bind several of Lit's controllers: `ContextProvider` and `ContextConsumer`
-(Context<!-- TODO-LINK /from-lit/context/ -->), `Task` as `LitTask` (Tasks<!-- TODO-LINK /from-lit/tasks/ -->), the resize,
+([Context](/from-lit/context/)), `Task` as `LitTask` ([Tasks](/from-lit/tasks/)), the resize,
 intersection, mutation and performance controllers in
 [Firelight.Observers](/packages/observers/), and the animation controllers in
 [Firelight.Motion](/packages/motion/). The Controllers guide covers writing your own.

@@ -25,7 +25,7 @@ toc: true
 | `@queryAssignedElements()` | The slot's `assignedElements()` |
 | `@queryAssignedNodes()` | The slot's `assignedNodes()` |
 | `@eventOptions({ passive: true })` | `LitEventListener(handler, passive = true)` |
-| `@provide`, `@consume` | `ContextProvider`, `ContextConsumer` (Context<!-- TODO-LINK /from-lit/context/ -->) |
+| `@provide`, `@consume` | `ContextProvider`, `ContextConsumer` ([Context](/from-lit/context/)) |
 
 ## @query
 
