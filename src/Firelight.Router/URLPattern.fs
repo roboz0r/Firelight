@@ -140,11 +140,30 @@ type URLPatternType =
 
 [<AutoOpen>]
 module URLPattern =
-    /// Imports the `urlpattern-polyfill` polyfill if `URLPattern` is not natively supported.
-    /// This is necessary for environments that do not support `URLPattern` natively.
-    /// The polyfill should be included in the project dependencies.
-    [<Emit("if (!globalThis.URLPattern) {  await import(\"urlpattern-polyfill\"); }")>]
-    let inline importPolyfill () = nativeOnly
+    /// <summary>
+    /// Loads the <c>urlpattern-polyfill</c> package when the browser has no native <c>URLPattern</c>,
+    /// and waits for it. Call it once, at the top level of a module, before code that creates a router.
+    /// </summary>
+    /// <remarks>
+    /// It compiles to a top-level <c>await</c>, which JavaScript allows only at the top level of a
+    /// module: called inside a function, the compiled module fails to parse ("Unexpected reserved
+    /// word"). Inside a function, use <c>loadPolyfill ()</c>, which returns a promise, instead.
+    /// The polyfill is loaded with a dynamic <c>import</c>, so a browser with native <c>URLPattern</c>
+    /// doesn't download it. Firelight.Router declares the npm dependency.
+    /// </remarks>
+    [<Emit("if (!globalThis.URLPattern) { await import(\"urlpattern-polyfill\"); }")>]
+    let inline importPolyfill () : unit = nativeOnly
+
+    /// <summary>
+    /// Loads the <c>urlpattern-polyfill</c> package when the browser has no native <c>URLPattern</c>.
+    /// The promise resolves once <c>URLPattern</c> is available; create routers after that.
+    /// </summary>
+    /// <remarks>
+    /// For use inside a function, such as an entry point. At the top level of a module,
+    /// <c>importPolyfill ()</c> waits without a promise.
+    /// </remarks>
+    [<Emit("(globalThis.URLPattern ? Promise.resolve() : import(\"urlpattern-polyfill\").then(() => {}))")>]
+    let inline loadPolyfill () : JS.Promise<unit> = nativeOnly
 
     [<Global>]
     let URLPattern: URLPatternType = nativeOnly

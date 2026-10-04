@@ -204,6 +204,47 @@ let private routing =
                     )
         }
 
+        // Browsers without URLPattern get urlpattern-polyfill through importPolyfill's dynamic import.
+        testTask "without native URLPattern, the polyfill loads and the links route" {
+            let page = pageWith "fl-route-explorer"
+            let root = page.Path
+
+            do!
+                Browser.withPageAndScript
+                    (Some "delete globalThis.URLPattern;")
+                    true
+                    page.Path
+                    (fun opened ->
+                        task {
+                            do! renders opened root "the list of examples"
+
+                            let! kind =
+                                opened.Page.EvaluateAsync<string>(
+                                    "() => typeof URLPattern !== 'function' ? 'missing' : /\\[native code\\]/.test(String(URLPattern)) ? 'native' : 'polyfill'"
+                                )
+
+                            Expect.equal kind "polyfill" $"{root}: URLPattern after deleting the native one"
+
+                            Expect.exists
+                                opened.Scripts
+                                (fun path -> path.Contains "urlpattern-polyfill")
+                                $"{root}: the polyfill's chunk wasn't loaded"
+
+                            do!
+                                opened.Page
+                                    .Locator("fl-route-explorer")
+                                    .GetByRole(
+                                        AriaRole.Link,
+                                        LocatorGetByRoleOptions(Name = "/users/42", Exact = true)
+                                    )
+                                    .ClickAsync()
+
+                            do! renders opened (root + "users/42") "the profile of user 42"
+                            noProblems opened
+                        }
+                    )
+        }
+
         testTask "a deep link opens the routing demo on that route" {
             let root = (pageWith "fl-route-explorer").Path
 

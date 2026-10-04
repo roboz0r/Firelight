@@ -602,9 +602,11 @@ The `Firelight.Router` package includes an npm dependency on `urlpattern-polyfil
 ```fsharp
 open Browser.Types.URLPattern
 
-// Call once at the top level of your app module:
+// Call once at the top level of your app module, before creating a router:
 importPolyfill ()
 ```
+
+`importPolyfill ()` compiles to a top-level `await` (no download when `URLPattern` is native). Never call it inside a function: the compiled module fails to parse. In a function, wait on `loadPolyfill ()`, which returns a `JS.Promise<unit>`.
 
 ### Key behaviors
 

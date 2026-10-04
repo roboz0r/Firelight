@@ -63,11 +63,16 @@ let private settleScript =
 let private record (problems: ResizeArray<string>) (message: string) =
     lock problems (fun () -> problems.Add message)
 
-/// A blank page in a fresh browser context, recording problems from here on.
-let private openPage (javaScript: bool) =
+/// A blank page in a fresh browser context, recording problems from here on. `initScript`, if any,
+/// runs in every page before the page's own scripts.
+let private openPage (javaScript: bool) (initScript: string option) =
     task {
         let! context =
             Server.browserInstance().NewContextAsync(BrowserNewContextOptions(JavaScriptEnabled = javaScript))
+
+        match initScript with
+        | Some script -> do! context.AddInitScriptAsync(script)
+        | None -> ()
 
         let! page = context.NewPageAsync()
         let problems = ResizeArray()
@@ -114,11 +119,10 @@ let private openPage (javaScript: bool) =
             }
     }
 
-/// Opens `path` on a fresh page and runs `f` once the network is idle and, with JavaScript, the
-/// page's custom elements have rendered. Closes the page's context afterwards.
-let withPage (javaScript: bool) (path: string) (f: OpenPage -> Task<'T>) =
+/// Like `withPage`, with `initScript` run before the page's own scripts, e.g. to remove a browser API.
+let withPageAndScript (initScript: string option) (javaScript: bool) (path: string) (f: OpenPage -> Task<'T>) =
     task {
-        let! opened = openPage javaScript
+        let! opened = openPage javaScript initScript
 
         try
             let! _ =
@@ -136,6 +140,11 @@ let withPage (javaScript: bool) (path: string) (f: OpenPage -> Task<'T>) =
         finally
             opened.Context.CloseAsync().GetAwaiter().GetResult()
     }
+
+/// Opens `path` on a fresh page and runs `f` once the network is idle and, with JavaScript, the
+/// page's custom elements have rendered. Closes the page's context afterwards.
+let withPage (javaScript: bool) (path: string) (f: OpenPage -> Task<'T>) =
+    withPageAndScript None javaScript path f
 
 /// The page's demos (`.demo` boxes, which `::: example` and `::: demo` render) that show
 /// nothing: no custom element in them rendered any content, or the box has no height.

@@ -44,6 +44,8 @@ each break is listed under Changed with how to migrate.
   Nothing checks the function against the event's name.
 - `until (promise)` and `until (promise, placeholder)` overloads.
 - `StaticHTML.mathml`.
+- `loadPolyfill ()` in Firelight.Router: loads `urlpattern-polyfill` when `URLPattern` isn't
+  native and returns a promise, for use inside a function, where `importPolyfill ()` can't go.
 
 ### Changed
 
@@ -106,6 +108,21 @@ Breaking changes, with how to migrate:
   the result as `TemplateResult` still compiles; a function whose type must stay `TemplateResult`
   may need `:> TemplateResult`.
 
+- **Firelight.Router: `EventHandlers.origin` is removed.** It held the page's origin, read from
+  `window` when the module loaded. Read it where you need it: `window.location.origin`.
+- **Firelight.Router: `importPolyfill ()` returns `unit`**, not a generic value. Code that used
+  its result had a value that didn't exist; call it as a statement at the top level of a module.
+  Inside a function, wait on `loadPolyfill ()` instead:
+
+  ```fsharp
+  // 0.2: compiled, then the module failed to parse
+  let start () =
+      importPolyfill ()
+      render ()
+  // 0.3
+  let start () = loadPolyfill().``then`` (fun () -> render ())
+  ```
+
 Other changes:
 
 - **The type of `nothing` is a subtype of `HTMLTemplateResult`, `SVGTemplateResult` and
@@ -132,3 +149,7 @@ Other changes:
   trailing space. Fable trims import names, so they worked; the JavaScript is unchanged.
 - XML docs: `noChange` had `nothing`'s summary; `ChildRenderable` and the template result types
   had none.
+- Firelight.Router read `window.location` when its module loaded, so importing it failed where
+  there is no `window`, such as Node. It now reads it when a link is clicked.
+- `importPolyfill ()`'s docs now say to call it only at the top level of a module: it compiles to
+  a top-level `await`, and inside a function the compiled module fails to parse.

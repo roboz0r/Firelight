@@ -93,7 +93,9 @@ module EventHandlers =
             let url = window.location.href
             url |> router.Match |> dispatch
 
-    let origin =
+    // Read on each click, not when the module loads: importing the module must not touch `window`,
+    // which Node (tests, Lit SSR) doesn't have.
+    let private currentOrigin () =
         let location = window.location
         let origin = location.origin
 
@@ -127,7 +129,7 @@ module EventHandlers =
                         not (String.IsNullOrEmpty a.target)
                         || a.hasAttribute "download"
                         || a.getAttribute "rel" = "external"
-                        || a.origin <> origin
+                        || a.origin <> currentOrigin ()
                         || String.IsNullOrEmpty a.href
                         || a.href.StartsWith "mailto:"
                         || a.href.StartsWith "javascript:"

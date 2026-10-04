@@ -6,6 +6,10 @@ open Firelight
 open Firelight.Router
 open type Firelight.Lit
 open MultiPage
+open Browser.Types.URLPattern
+
+// Loads urlpattern-polyfill in browsers without native URLPattern, before any router is created.
+importPolyfill ()
 
 [<AttachMembers>]
 type MultiPageApp() as this =
