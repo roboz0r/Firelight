@@ -17,6 +17,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@awesome.me/webawesome": "3.14.0",
     "@lit-labs/motion": "1.1.0",
     "@lit-labs/observers": "2.1.0",
     "@lit-labs/signals": "0.3.0",
