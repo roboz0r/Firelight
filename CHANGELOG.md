@@ -83,8 +83,8 @@ each break is listed under Changed with how to migrate.
   `fromAttribute` gets a `string option` (`None` once the attribute is removed); `toAttribute`
   returns one (`None` removes the attribute).
 - `Globals.String`, `Globals.Object` and `Globals.Array`, beside `Boolean` and `Number`, for
-  ``` ``type`` = jsConstructor<Globals.Array> ```. `open System` hides all five behind System's
-  types, so qualify them with `Globals.`.
+  ``` ``type`` = jsConstructor<Globals.Array> ```. `open System` hides `Boolean`, `String`,
+  `Object` and `Array` behind System's types, so qualify them with `Globals.`.
 - `ReactiveControllerBase`, a base class for controllers whose four callbacks do nothing until
   overridden, so a controller overrides only what it needs. The `ReactiveController` interface
   stays, for classes that inherit something else:

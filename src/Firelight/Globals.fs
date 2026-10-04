@@ -6,7 +6,7 @@ open Fable.Core
 open Fable.Core.JsInterop
 
 // JavaScript's global constructors, for `jsConstructor`, as Lit's `type` property option:
-// ``type`` = jsConstructor<Globals.Array>. `open System` hides these names behind System's types,
+// ``type`` = jsConstructor<Globals.Array>. `open System` hides Boolean, String, Object and Array behind System's types,
 // for which Fable says "Only declared types define a function constructor in JS"; write
 // `Globals.Number` and so on to be sure of these.
 

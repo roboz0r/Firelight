@@ -328,7 +328,9 @@ Every option keeps its name, as an optional argument of `PropertyDeclaration`:
   `type MyElement() as this =`.
 - **Private fields.** A `let mutable` field is private to the class, but Lit doesn't see it, so
   changing it doesn't re-render. Declare it with `state = true`, or call `this.requestUpdate()`
-  after changing it.
+  after changing it. It's private only to F#: Fable stores it on the element under its own name,
+  so a field called `title` or `id` sets the element's attribute of that name (see
+  [Properties](/guides/properties/#common-mistakes)).
 - **`HTMLElementTagNameMap`.** TypeScript can map a tag name to its class for
   `document.createElement`. F# has no counterpart; tag names in templates are unchecked in both.
 

@@ -251,5 +251,6 @@ Most compile, because Lit reads the declarations at run time:
 | `<my-list max-items="5">` for `maxItems` | Ignored: Lit listens for `maxitems` | `attribute = "max-items"` |
 | `items="{list}"` or `items={list}` with a list | The list becomes text | `.items={list}` |
 | A list or record built in `render` and passed down | The child renders every time the parent does | `hasChanged`, or build it outside `render` |
+| `let mutable title = "Notes"` in the class, or a `let` named `id`, `hidden`, `lang` or another `HTMLElement` property | Fable makes a class `let` a property of the element itself, so this sets the element's `title`, which adds a `title` attribute. In a template the element gets a tooltip; `document.createElement` fails with "The result must not have attributes" and leaves an `HTMLUnknownElement` | Another name, such as `heading`, or `member val private Heading = "Notes"`, which Fable stores under `Heading@` |
 
 The [Templates guide](/guides/templates/#common-mistakes) lists more mistakes, in templates.
