@@ -138,9 +138,22 @@ pre.shiki {
 pre.shiki code { font: inherit; }
 .example pre.shiki { margin: 0; }
 
-/* `::: compare`: two code blocks side by side, stacked when there isn't room for both. */
+/* `::: compare`: two code blocks side by side, stacked when there isn't room for both. Each is
+   headed by its label ("Lit", "Firelight") in a strip joined to its top, so the label stays with
+   its own block when they stack. */
 .compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; margin-block: 1rem; }
-.compare pre.shiki { margin: 0; }
+.compare figure { margin: 0; min-width: 0; display: flex; flex-direction: column; }
+.compare figcaption {
+  padding: 0.35rem 1.25rem;
+  border-radius: var(--code-radius) var(--code-radius) 0 0;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.compare pre.shiki { margin: 0; flex: 1; border-top-left-radius: 0; border-top-right-radius: 0; }
 @media (prefers-color-scheme: dark) {
   .shiki, .shiki span {
     color: var(--shiki-dark) !important;

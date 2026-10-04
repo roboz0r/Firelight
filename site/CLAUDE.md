@@ -70,7 +70,9 @@ file that doesn't exist, naming the file and line.
   source file that defines it, with the module loaded on the page. `.class` options style the
   demo box. With no body it shows just the code.
 - `::: demo Snippets/Rating.fs` shows the live demo without its code.
-- `::: compare` holds two fenced code blocks (Lit TypeScript, then Firelight) side by side.
+- `::: compare` holds two fenced code blocks (Lit TypeScript, then Firelight) side by side, labelled
+  "Lit" and "Firelight". Other labels go on the opening line, separated by `|`:
+  `::: compare Lit (no decorators) | Firelight`.
 - `::: cards` holds Markdown in which each `### ` heading starts a card, in a grid.
 - `::: package-table` (no body) is the table of packages, from the package pages' `summary`.
 - Add `ssr=false` to `example`/`demo` for a demo that can't prerender (below).

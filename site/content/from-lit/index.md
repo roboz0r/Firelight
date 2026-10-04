@@ -23,11 +23,10 @@ differences you meet on every page:
 - Imports become `open` declarations. `open type Firelight.Lit` brings in `html`, `css`, `nothing`
   and the directives.
 
-Each pair of code blocks does exactly the same thing, with Lit's TypeScript on the left (or first,
-on a narrow screen) and Firelight's F# on the right. The TypeScript uses Lit's decorators with
-`experimentalDecorators: true` and `useDefineForClassFields: false`, the settings Lit's own
-examples assume. Each page ends with what doesn't carry over directly, and with the Lit features
-Firelight doesn't bind yet.
+Each pair of code blocks, Lit's TypeScript and Firelight's F#, does exactly the same thing. The
+TypeScript uses Lit's decorators with `experimentalDecorators: true` and
+`useDefineForClassFields: false`, the settings Lit's own examples assume. Each page ends with what
+doesn't carry over directly, and with the Lit features Firelight doesn't bind yet.
 
 ## Topics
 

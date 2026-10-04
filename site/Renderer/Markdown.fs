@@ -341,6 +341,21 @@ let private demo (settings: Settings) (page: Collected) (c: Container) =
 
     liveDemo settings page c file options + "\n"
 
+let private escapeHtml (text: string) =
+    text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;")
+
+/// `::: compare [left | right]`: the labels of its two columns, "Lit" and "Firelight" unless the
+/// opening line gives others, separated by `|`.
+let compareLabels (c: Container) =
+    match String.Join(" ", c.Args).Trim() with
+    | "" -> "Lit", "Firelight"
+    | args ->
+        match args.Split '|' |> Array.map _.Trim() with
+        | [| left; right |] when left <> "" && right <> "" -> left, right
+        | _ ->
+            failwith
+                $"Line {c.Line + 1}: '::: compare' takes two labels separated by '|', as in '::: compare Lit | Firelight', or none for those two."
+
 /// The `::: name args` block that a `container` token stands for.
 let containerOf (t: Token) =
     {
@@ -500,14 +515,19 @@ let create (settings: Settings) =
 
     md.core.ruler.push ("site_post_process", postProcess settings md)
 
-    // `::: compare`: Markdown holding two code blocks (Lit in TypeScript and Firelight, say), shown
-    // side by side with CSS only. The blocks are ordinary fences, so a plain ```fsharp one is
-    // compiled by tests/Docs.Snippets like any other.
+    // `::: compare [left | right]`: two code blocks (Lit in TypeScript, then Firelight), shown side
+    // by side with CSS only, each under its label. The blocks are ordinary fences, so a plain
+    // ```fsharp one is compiled by tests/Docs.Snippets like any other.
     let compare (env: obj option) (c: Container) =
-        if not c.Args.IsEmpty then
-            failwith $"Line {c.Line + 1}: '::: compare' takes no options."
+        let left, right = compareLabels c
 
-        $"<div class=\"compare\">\n{md.render (c.Body, env.Value)}</div>\n"
+        match md.parse (c.Body, env) with
+        | [| first; second |] when first.``type`` = "fence" && second.``type`` = "fence" ->
+            let column (label: string) (fence: Token) =
+                $"<figure>\n<figcaption>{escapeHtml label}</figcaption>\n{md.renderer.render ([| fence |], md.options, env)}</figure>\n"
+
+            $"<div class=\"compare\">\n{column left first}{column right second}</div>\n"
+        | _ -> failwith $"Line {c.Line + 1}: '::: compare' holds two fenced code blocks and nothing else."
 
     // `::: cards`: Markdown in which each `###` heading starts a card, laid out in a grid.
     let cards (env: obj option) (c: Container) =

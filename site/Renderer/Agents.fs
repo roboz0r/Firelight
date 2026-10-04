@@ -142,7 +142,28 @@ and private container (s: Settings) (c: Markdown.Container) =
         | Some demo -> code + "\n\n" + demo
         | None -> code
     | "demo" -> demo () |> Option.defaultValue ""
-    | "compare"
+    // Each code block under its label, as the page shows them.
+    | "compare" ->
+        let lines = c.Body.Split '\n'
+
+        let blocks =
+            Markdown.parse s.Md c.Body
+            |> Array.filter (fun t -> t.``type`` = "fence")
+            |> Array.map (fun t ->
+                let map: int[] = t?map
+                String.Join("\n", lines[map[0] .. map[1] - 1])
+            )
+
+        // Labels are plain text, as on the page: backslash-escape anything Markdown would read.
+        let plain (label: string) =
+            Regex.Replace(label, "[\\\\`*_{}\\[\\]<>()#+\\-.!|~&]", "\\$&")
+
+        let left, right = Markdown.compareLabels c
+        let left, right = plain left, plain right
+
+        match blocks with
+        | [| first; second |] -> $"**{left}**\n\n{first}\n\n**{right}**\n\n{second}"
+        | _ -> failwith $"Line {c.Line + 1}: '::: compare' holds two fenced code blocks and nothing else."
     | "cards" -> (convert s c.Body).Trim()
     | "package-table" -> packageTable s
     | name -> failwith $"Line {c.Line + 1}: no Markdown form for '::: {name}'; add one in Renderer/Agents.fs."
