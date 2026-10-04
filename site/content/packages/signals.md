@@ -16,14 +16,21 @@ links:
 
 ## Why use it
 
-Context shares state down a tree of components. Signals share it with any component, anywhere on
-the page. A signal is a value that keeps track of who reads it. Components registered with
-`LitSignals.defineElement` re-render when a signal they read changes, and
-`computed` derives values that stay up to date by themselves.
+Lit's context passes state through the DOM hierarchy with providers and consumers. Signals keep
+reactive state outside the DOM.
 
-Updates can also be smaller than a whole render. Interpolate a signal into a template with
-`LitSignals.html` and only that part of the template updates. Lit's signals are based on
-the TC39 Signals proposal and are still experimental.
+A signal is a standalone value that tracks who reads it:
+
+- **Subscriptions without wiring:** any component registered with `LitSignals.defineElement`
+  re-renders when a signal it read while rendering changes. This needs no providers, context keys or
+  manual subscriptions.
+- **Derived state:** `computed` creates values from other signals. They stay up to date, compute
+  lazily and cache their results.
+- **Surgical updates:** with `LitSignals.html`, a signal interpolated into a template updates only
+  that binding, instead of re-rendering the whole component (as long as the render doesn't also read
+  the signal elsewhere).
+
+Lit's signals are based on the TC39 Signals proposal and are still experimental.
 
 ## Example
 

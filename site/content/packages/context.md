@@ -5,7 +5,7 @@ description: "Share a value with every component in a subtree, without passing i
 section: packages
 order: 20
 summary: Share state across a component tree without passing it through every layer
-lead: Share a value with every component inside a subtree, without passing it through each layer in between.
+lead: Implicitly share values with any descendant component in the DOM tree, without prop drilling.
 nuget: Firelight.Context
 links:
   - text: "Lit docs: Context"
@@ -16,14 +16,20 @@ links:
 
 ## Why use it
 
-Some values are needed far from where they're owned: the current theme, the signed-in user,
-an Elmish `dispatch` function. Passing them down as properties means every component
-in between has to accept and forward them, even when it doesn't use them.
+Some values are needed deep in the component tree: the current theme, the active user, or an
+Elmish `dispatch` function. Passing them down as properties forces every component in between to
+accept and forward values it doesn't use.
 
-With context, a provider component holds the value and any descendant asks for it. The
-components in between don't know it exists. When the provider's value changes, subscribed
-consumers re-render. In Firelight the context key is branded with the value's F# type, so a
-consumer that asks for a `Theme` gets a `Theme`.
+Context solves this with an event-based protocol that runs through the DOM:
+
+- **No intermediate plumbing:** a provider component declares a value, and any descendant component
+  can request it. The components in between don't know the value passes through them.
+- **Subtree scoping:** unlike global stores or signals, context follows the DOM hierarchy. Nest
+  providers to scope a value locally, for example a dark theme for a single card while the rest of
+  the page stays light.
+- **Typed keys:** a Firelight context key is branded with the value's F# type, so a consumer that
+  requests a `Theme` receives a `Theme`. When the provider's value changes, subscribed consumers
+  re-render.
 
 ## Example
 
