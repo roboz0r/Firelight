@@ -22,6 +22,7 @@ let main argv =
             testList "Site" [
                 PageTests.all ()
                 DemoTests.all
+                CookbookTests.all
                 RatingTests.all
                 WeightTests.all ()
                 AgentTests.all ()

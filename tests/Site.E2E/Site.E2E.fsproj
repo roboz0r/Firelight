@@ -16,6 +16,7 @@
     <Compile Include="Browser.fs" />
     <Compile Include="PageTests.fs" />
     <Compile Include="DemoTests.fs" />
+    <Compile Include="CookbookTests.fs" />
     <Compile Include="RatingTests.fs" />
     <Compile Include="WeightTests.fs" />
     <Compile Include="AgentTests.fs" />

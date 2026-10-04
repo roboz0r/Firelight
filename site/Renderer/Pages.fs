@@ -78,6 +78,12 @@ let sections =
             PageList = None
         }
         {
+            Id = "cookbook"
+            Name = "Cookbook"
+            Href = "/cookbook/"
+            PageList = None
+        }
+        {
             Id = "demos"
             Name = "Demos"
             Href = "/#demos"
