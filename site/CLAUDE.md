@@ -98,7 +98,9 @@ navigation and demos (`data-pagefind-ignore`). The header links to `/search/` (`
 ## Prerender-safe components
 
 Each demo is rendered in Node at build time by Lit SSR (constructor, `willUpdate` and `render`
-only), shipped as declarative shadow DOM and hydrated in the browser. To prerender:
+only), shipped as declarative shadow DOM and hydrated in the browser. Demo modules load through
+Vite's SSR module runner, in the build as in dev, so they may import what Vite handles, such as CSS
+with `?inline`. To prerender:
 
 - register with `defineElement`, which uses the global `customElements`;
 - reach `window`, `document` and other browser APIs in `connectedCallback`, `firstUpdated`,

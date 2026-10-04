@@ -134,6 +134,9 @@ Prose…
      and the plugin sends one debounced full reload (about 1–2 s from saving an `.fs` file;
      instant for `.md`). Snippet edits update the prerendered shadow DOM too. Re-running a snippet
      logs Lit's harmless "already defined" warning in dev. `npm run dev` chains two `fable watch`es.
+     The build loads them the same way, through the SSR runner of a Vite server in middleware
+     mode started for the build, so a demo can import CSS with `?inline` (Web Awesome's theme)
+     and still prerender; before, Node's own `import()` made such demos `ssr=false`.
      New and deleted snippets need no restart either (Phase 5): `fable watch` only rereads
      `Site.fsproj`'s glob when the project changes, so the plugin touches it (again until Fable
      has caught up, as a touch while it's reading the project is lost), and it never asks Vite's

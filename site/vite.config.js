@@ -1,4 +1,4 @@
-import { defineConfig, normalizePath } from "vite";
+import { createServer, defineConfig, normalizePath } from "vite";
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, utimesSync } from "node:fs";
 import { extname, relative as relativePath, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -13,22 +13,47 @@ const root = import.meta.dirname;
 // Markdown for agents (Renderer/Agents.fs).
 // - Dev: pages are rendered on request. The renderer and the demo modules are loaded through Vite's
 //   SSR module runner, which re-runs whatever Fable recompiles, so edits need no restart.
-// - Build: each page is a virtual .html input that this plugin renders when Rollup loads it.
+// - Build: each page is a virtual .html input that this plugin renders when Rollup loads it. The
+//   renderer and the demo modules load through the SSR module runner of a Vite server in middleware
+//   mode, started for the build, so they load as in dev: a demo may import what Vite understands
+//   and Node doesn't, such as CSS with `?inline`.
 function markdownPages() {
   const rendererUrl = "/build/Renderer/Prerender.js";
   const fileUrl = (url) => pathToFileURL(resolve(root, url.slice(1))).href;
   let base;
+  let mode;
   let server;
+  let buildServer; // build: the Vite server whose SSR runner loads modules
   const inputs = new Map(); // build: absolute output path -> content/...md
 
   // In dev, a module that isn't there yet (a new snippet Fable hasn't compiled) is reported without
   // asking Vite for it: Vite would remember the failed lookup and keep failing after the file
   // appears. The page reloads once it does (see configureServer).
   const load = (url) => {
+    if (buildServer) return buildServer.environments.ssr.runner.import(url);
     if (!server) return import(fileUrl(url));
     if (!existsSync(resolve(root, url.slice(1))))
       return Promise.reject(new Error(`${url} doesn't exist yet. If Fable is still compiling it, the page reloads when it's done.`));
     return server.environments.ssr.runner.import(url);
+  };
+  // Only Vite's own transforms are needed to load modules, not this config's plugins, so the server
+  // has no config file. It doesn't listen, watch or pre-bundle anything.
+  const startBuildServer = async () => {
+    buildServer = await createServer({
+      root,
+      base,
+      mode,
+      configFile: false,
+      logLevel: "warn",
+      appType: "custom",
+      server: { middlewareMode: true, hmr: false, ws: false, watch: null, preTransformRequests: false },
+      optimizeDeps: { noDiscovery: true, include: [] },
+    });
+  };
+  const stopBuildServer = async () => {
+    const stopping = buildServer;
+    buildServer = undefined;
+    await stopping?.close();
   };
   const host = () => ({ root, base, loadModule: load });
   const render = async (source) => (await load(rendererUrl)).renderPage(host(), source);
@@ -79,7 +104,16 @@ function markdownPages() {
     },
     configResolved: (config) => {
       base = config.base;
+      mode = config.mode;
     },
+    // (buildStart also runs in dev, where the dev server itself loads the modules.)
+    async buildStart() {
+      if (inputs.size > 0) await startBuildServer();
+    },
+    async buildEnd(error) {
+      if (error) await stopBuildServer();
+    },
+    closeBundle: stopBuildServer,
     resolveId: (id) => (inputs.has(id) ? id : undefined),
     load: (id) => (inputs.has(id) ? render(inputs.get(id)) : undefined),
     async generateBundle() {

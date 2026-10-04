@@ -93,7 +93,7 @@ the same way, and so do Web Awesome's other form controls and Fluent UI's.
 Both switches below follow the same F# value. The first binds the attribute, the second the
 property. Turn the first switch on, which also turns the second on, then press Turn both off:
 
-::: example Snippets/LibrarySwitches.fs ssr=false
+::: example Snippets/LibrarySwitches.fs
 <my-switch-bindings></my-switch-bindings>
 :::
 
@@ -234,9 +234,11 @@ Check a library's documentation before prerendering its components, since being 
 doesn't make a component safe to render in Node.
 
 The module that prerenders must load in Node, too. The demo on this page imports the theme's CSS
-file, which Vite understands and Node doesn't, so this site renders it in the browser only. Keep
-CSS imports in the module that starts the app, out of the modules you prerender. The [Prerendering
-guide](/guides/prerendering/) covers what Lit SSR runs.
+file with `?inline`, which Vite understands and Node doesn't, so this site's build loads its demos
+through Vite's SSR module runner, as `vite dev` does. A build that imports them with Node's own
+`import()` can't load such a module: there, keep CSS imports in the module that starts the app,
+out of the modules you prerender. The [Prerendering guide](/guides/prerendering/) covers what Lit
+SSR runs.
 
 ## Common mistakes
 

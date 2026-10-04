@@ -153,6 +153,49 @@ let private nameField =
                 )
     }
 
+// The Component libraries guide's Web Awesome demo, whose module imports the theme's CSS with
+// `?inline`: the build loads it through Vite, so it is prerendered (Web Awesome's switches too)
+// and shows without JavaScript; once hydrated, the switches drive the F# value.
+let private webAwesomeSwitches =
+    testTask "the Web Awesome switches are prerendered, and drive the F# value once hydrated" {
+        let page = pageWith "my-switch-bindings"
+
+        do!
+            Browser.withPage
+                false
+                page.Path
+                (fun opened ->
+                    task {
+                        let demo = opened.Page.Locator("my-switch-bindings").First
+                        do! Expect(demo.Locator("wa-switch")).ToHaveCountAsync(2)
+                        do! Expect(demo.Locator("p")).ToHaveTextAsync("The F# value is off.")
+
+                        let! prerendered =
+                            demo.Locator("wa-switch").EvaluateAllAsync<bool>("(all) => all.every((s) => !!s.shadowRoot)")
+
+                        if not prerendered then
+                            failtest $"{page.Path}: without JavaScript, a <wa-switch> has no prerendered shadow root."
+                    }
+                )
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let demo = opened.Page.Locator("my-switch-bindings").First
+                        let switches = demo.Locator("wa-switch")
+                        do! switches.First.ClickAsync()
+                        do! Expect(demo.Locator("p")).ToHaveTextAsync("The F# value is on.")
+                        do! Expect(switches.Nth(1)).ToHaveJSPropertyAsync("checked", true)
+                        do! demo.Locator("button").ClickAsync()
+                        do! Expect(demo.Locator("p")).ToHaveTextAsync("The F# value is off.")
+                        noProblems opened
+                    }
+                )
+    }
+
 let private routing =
     let renders (opened: Browser.OpenPage) (address: string) (description: string) =
         task {
@@ -267,4 +310,4 @@ let private routing =
     ]
 
 let all =
-    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; routing ]
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing ]
