@@ -118,7 +118,7 @@ A property that JavaScript code sets should be an F# array, which is a JavaScrip
 list is a Fable class, so code outside F# can't pass one. Between F# components, a list works
 well: a hole renders it as it renders an array.
 
-Templates<!-- TODO-LINK /from-lit/templates/ --> covers expressions, conditionals and lists.
+[Templates](/from-lit/templates/) covers expressions, conditionals and lists.
 
 ## Reactive properties
 

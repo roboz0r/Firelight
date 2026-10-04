@@ -32,7 +32,10 @@ directly, and with the Lit features Firelight doesn't bind yet.
 ## Topics
 
 - [Components](/from-lit/components/): defining, rendering and reactive properties.
+- [Styles](/from-lit/styles/): static styles, sharing them, and shadow DOM.
 - [Decorators](/from-lit/decorators/): what each Lit decorator becomes in F#.
+- [Templates](/from-lit/templates/): expressions, conditionals, lists, directives and static
+  values.
 
 ## Beyond these pages
 
