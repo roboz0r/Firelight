@@ -68,6 +68,8 @@ Libraries like Web Awesome, Fluent UI and Carbon are also web components, so you
 The core bindings compile away: your components import Lit directly. The [Todo demo](/demos/todo/), Lit included, ships <span data-demo-size="todo">–</span> of gzipped JavaScript.
 :::
 
+[Firelight compared](/why/) sets it beside Fable.Lit, Feliz, Sutil and Lit in TypeScript.
+
 ## Packages {#packages}
 
 Start with `Firelight` and add the others as you need them. Each page explains when you'd want the package and has a live example.
