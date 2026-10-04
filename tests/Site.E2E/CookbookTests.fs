@@ -449,5 +449,96 @@ let private shortcuts =
                 )
     }
 
+let private dragReorder =
+    testTask "drag to reorder: dragging moves a step, and the buttons move it and keep the focus" {
+        do!
+            withDemo
+                "my-reorder-list"
+                (fun opened list ->
+                    task {
+                        let page = opened.Page
+                        let steps = list.Locator("li .text")
+                        let status = list.GetByRole(AriaRole.Status)
+
+                        do!
+                            Expect(steps)
+                                .ToHaveTextAsync([| "Wake up"; "Make coffee"; "Read the news"; "Walk the dog"; "Start work" |])
+
+                        do! list.Locator("li").Nth(3).DragToAsync(list.Locator("li").Nth(0))
+
+                        do!
+                            Expect(steps)
+                                .ToHaveTextAsync([| "Walk the dog"; "Wake up"; "Make coffee"; "Read the news"; "Start work" |])
+
+                        do! Expect(status).ToHaveTextAsync("Walk the dog moved to position 1 of 5.")
+
+                        let down = list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Move Walk the dog down"))
+                        do! down.FocusAsync()
+                        do! page.Keyboard.PressAsync("Enter")
+                        do! page.Keyboard.PressAsync("Enter")
+
+                        do!
+                            Expect(steps)
+                                .ToHaveTextAsync([| "Wake up"; "Make coffee"; "Walk the dog"; "Read the news"; "Start work" |])
+
+                        do! Expect(down).ToBeFocusedAsync()
+                        do! Expect(status).ToHaveTextAsync("Walk the dog moved to position 3 of 5.")
+
+                        let up = list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Move Wake up up"))
+                        do! Expect(up).ToHaveAttributeAsync("aria-disabled", "true")
+                        do! up.ClickAsync(LocatorClickOptions(Force = true))
+                        do! Expect(steps.First).ToHaveTextAsync("Wake up")
+                        noProblems opened
+                    }
+                )
+    }
+
+let private animatedList =
+    testTask "animating list changes: adding and removing work, and the focus moves on after a removal" {
+        do!
+            withDemo
+                "my-animated-list"
+                (fun opened list ->
+                    task {
+                        let page = opened.Page
+                        let people = list.Locator("li")
+                        do! Expect(people).ToHaveCountAsync(3)
+                        do! list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Add someone")).ClickAsync()
+                        do! Expect(people).ToHaveCountAsync(4)
+                        do! Expect(people.First).ToContainTextAsync("Barbara")
+
+                        let remove = list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Remove Ada"))
+                        do! remove.FocusAsync()
+                        do! page.Keyboard.PressAsync("Enter")
+                        // The removed item stays while it fades out, then goes.
+                        do! Expect(people).ToHaveCountAsync(3)
+                        do! Expect(list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Remove Grace"))).ToBeFocusedAsync()
+                        noProblems opened
+                    }
+                )
+    }
+
+let private reducedMotion =
+    testTask "animating list changes: turning on reduced motion stops the animations" {
+        do!
+            withDemo
+                "my-animated-list"
+                (fun opened list ->
+                    task {
+                        let add = list.GetByRole(AriaRole.Button, LocatorGetByRoleOptions(Name = "Add someone"))
+                        let running () = list.EvaluateAsync<int>("el => el.shadowRoot.getAnimations({ subtree: true }).length")
+                        do! add.ClickAsync()
+                        let! animating = running ()
+                        Expect.isGreaterThan animating 0 "animations after Add"
+                        do! opened.Page.EmulateMediaAsync(PageEmulateMediaOptions(ReducedMotion = ReducedMotion.Reduce))
+                        do! opened.Page.WaitForTimeoutAsync(100.0f)
+                        do! add.ClickAsync()
+                        let! animating = running ()
+                        Expect.equal animating 0 "animations after Add, with reduced motion"
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; fetchJson; loadMore; packingList; themePicker; slotCards; dialog; tabs; toasts; shortcuts ]
+    testList "Cookbook" [ signupForm; formSwitch; debouncedSearch; fetchJson; loadMore; packingList; themePicker; slotCards; dialog; tabs; toasts; shortcuts; dragReorder; animatedList; reducedMotion ]

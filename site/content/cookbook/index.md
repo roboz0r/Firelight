@@ -41,3 +41,12 @@ lead: "Short recipes for common tasks, each with a live demo and its code. A rec
   place.
 - [Keyboard shortcuts](/cookbook/keyboard-shortcuts/): page-wide keys that skip fields, in a
   controller any component can use.
+- [Drag to reorder](/cookbook/drag-reorder/): reorder a list by dragging, or with buttons from the
+  keyboard.
+- [Animating list changes](/cookbook/animate-list/): fade new items in, and slide the rest into
+  place.
+
+## Testing
+
+- [Testing components](/cookbook/testing/): test the logic in plain F#, and the component in a
+  browser with Playwright.
