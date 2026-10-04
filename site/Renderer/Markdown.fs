@@ -51,18 +51,28 @@ module Highlight =
     let create () =
         Shiki.createHighlighter (HighlighterOptions(languages, [| "github-light"; "github-dark" |]))
 
-    /// A `<pre class="shiki">` with light colours inline and dark ones as CSS variables (site.css
-    /// switches to them in dark mode). Unknown languages are shown as plain text, with a warning.
+    /// A `<pre class="shiki">` with both themes' colours as CSS variables (`--shiki-light`,
+    /// `--shiki-dark`, and `-bg` for the block), which site.css picks between with `light-dark()`,
+    /// so the code follows the page's theme: the system's, or the one the header's button sets.
+    /// Unknown languages are shown as plain text, with a warning.
     let toHtml (highlighter: Highlighter) (lang: string) (code: string) =
         let lang = if String.IsNullOrWhiteSpace lang then "text" else lang
         // A fence's content ends with a newline, which Shiki would show as an empty last line.
         let code = code.TrimEnd('\n')
 
+        let options lang =
+            MultipleThemeOptions(
+                lang,
+                themes,
+                defaultColor = U2.Case2 false,
+                colorReplacements = colorReplacements
+            )
+
         try
-            highlighter.codeToHtml (code, MultipleThemeOptions(lang, themes, colorReplacements = colorReplacements))
+            highlighter.codeToHtml (code, options lang)
         with e ->
             JS.console.warn ($"Code block language '{lang}' is not loaded; showing it as plain text.", e.Message)
-            highlighter.codeToHtml (code, MultipleThemeOptions("text", themes, colorReplacements = colorReplacements))
+            highlighter.codeToHtml (code, options "text")
 
 /// An h2 or h3, for the table of contents. `Html` is the heading's rendered inline content.
 type Heading =

@@ -29,6 +29,7 @@ let main argv =
                 SearchTests.all ()
                 MobileTests.all ()
                 HeaderTests.all ()
+                ThemeTests.all ()
                 VersionTests.all ()
             ]
             |> runTestsWithCLIArgs [] argv
@@ -36,8 +37,8 @@ let main argv =
             Server.teardown().GetAwaiter().GetResult()
 
     match WeightTests.zeroJavaScriptPages () with
-    | [] -> printfn "No page is checked for shipping zero JavaScript: every page has demos."
-    | zero -> printfn $"Pages checked for shipping zero JavaScript: {zero.Length}."
+    | [] -> printfn "No page is checked for shipping no JavaScript but the theme script: every page has demos."
+    | zero -> printfn $"Pages checked for shipping no JavaScript but the theme script: {zero.Length}."
 
     // Known accessibility violations don't fail the run, so list them every time.
     for known in PageTests.knownViolations do

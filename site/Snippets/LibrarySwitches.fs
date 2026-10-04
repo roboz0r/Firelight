@@ -29,10 +29,17 @@ type SwitchBindings() =
                 display: grid; gap: 0.75rem; justify-items: start;
                 color: inherit; background: none; color-scheme: inherit;
             }
+            /* The switch's colours come from this site's palette, which follows its theme
+               button. An app that loads Web Awesome's theme for the whole document adds the
+               wa-dark class to <html> for dark mode instead. */
             wa-switch {
                 --width: 2.75rem;
                 --wa-form-control-activated-color: var(--accent);
+                --wa-form-control-background-color: var(--bg);
+                --wa-form-control-border-color: var(--muted);
+                --wa-color-surface-default: var(--accent-fg);
                 --wa-form-control-label-color: currentColor;
+                --wa-form-control-value-color: currentColor;
             }
             wa-switch::part(thumb) { box-shadow: 0 1px 3px rgb(0 0 0 / 0.35); }
             p { margin: 0; }

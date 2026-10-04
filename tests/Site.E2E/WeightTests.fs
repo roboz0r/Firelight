@@ -10,7 +10,14 @@ open Expecto
 open Site.E2E.Site
 
 [<CLIMutable>]
-type Inline = { Scripts: int; Js: int; JsGzip: int }
+type Inline =
+    {
+        Scripts: int
+        Js: int
+        JsGzip: int
+        /// Each inline script's id, "" for none.
+        Ids: string[]
+    }
 
 [<CLIMutable>]
 type PageWeight =
@@ -44,14 +51,77 @@ let private html (page: Page) =
 /// A demo is a `.demo` box, as `::: example` and `::: demo` render them.
 let private hasDemos (page: Page) = (html page).Contains "class=\"demo"
 
-let private gzipSize (file: string) =
+let private gzipBytes (bytes: byte[]) =
     use output = new MemoryStream()
 
     do
         use gzip = new GZipStream(output, CompressionLevel.Optimal, leaveOpen = true)
-        gzip.Write(File.ReadAllBytes file)
+        gzip.Write(bytes)
 
     output.Length
+
+let private gzipSize (file: string) = gzipBytes (File.ReadAllBytes file)
+
+/// The header's theme switch (Renderer/Layout.fs): the one script every page carries, inline in
+/// <head>. Pages without demos ship it and nothing else.
+let themeScriptId = "theme-script"
+
+/// The theme script's budget, gzipped. It is about 500 bytes.
+let themeScriptBudget = 1000L
+
+[<CLIMutable>]
+type HeadScript =
+    {
+        Id: string
+        Body: string
+        /// It comes before every stylesheet and every other script in the document.
+        First: bool
+        InHead: bool
+    }
+
+// Every <script> in the built HTML, in order, with whether it precedes the first stylesheet.
+let private scriptsIn (html: string) =
+    let withoutComments = Text.RegularExpressions.Regex.Replace(html, "<!--[\\s\\S]*?-->", "")
+    let headEnd = withoutComments.IndexOf "</head>"
+
+    let firstStylesheet =
+        Text.RegularExpressions.Regex.Match(withoutComments, "<link[^>]*rel=\"?stylesheet")
+
+    [
+        for m in
+            Text.RegularExpressions.Regex.Matches(
+                withoutComments,
+                "<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>",
+                Text.RegularExpressions.RegexOptions.IgnoreCase
+            ) do
+            let id = Text.RegularExpressions.Regex.Match(m.Groups[1].Value, "\\bid=\"([^\"]*)\"")
+
+            {
+                Id = (if id.Success then id.Groups[1].Value else "")
+                Body = m.Groups[2].Value
+                First = not firstStylesheet.Success || m.Index < firstStylesheet.Index
+                InHead = m.Index < headEnd
+            }
+    ]
+
+let private themeScriptTest (page: Page) =
+    test "the theme script is first in <head>, before the stylesheets, and within its budget" {
+        let scripts = scriptsIn (html page)
+
+        match scripts |> List.filter (fun s -> s.Id = themeScriptId) with
+        | [ script ] ->
+            if not (scripts.Head = script && script.InHead && script.First) then
+                failtest
+                    $"{page.Path}: the theme script isn't the first script in <head>, before the stylesheets, so a stored theme could flash."
+
+            let size = gzipBytes (Text.Encoding.UTF8.GetBytes script.Body)
+
+            if size > themeScriptBudget then
+                failtest
+                    $"{page.Path}: the theme script is {size} bytes gzipped, over its {themeScriptBudget}-byte budget."
+        | found ->
+            failtest $"{page.Path}: has {found.Length} scripts with id=\"{themeScriptId}\"; expected one."
+    }
 
 let private pageTests (page: Page) =
     testList page.Path [
@@ -118,21 +188,33 @@ let private pageTests (page: Page) =
                     )
         }
 
-        test "a page without demos ships no JavaScript" {
+        // Only the theme script, by its id: any other script, inline or a file, fails this.
+        test "a page without demos ships no JavaScript but the theme script" {
             if not (hasDemos page) then
                 let weight = weightOf page
 
-                if weight.JsGzip <> 0 then
-                    let sources =
-                        [
-                            yield! weight.Files
-                            if weight.Inline.Scripts > 0 then
-                                $"{weight.Inline.Scripts} inline scripts"
-                        ]
+                let others =
+                    [
+                        yield! weight.Files
 
+                        for id in weight.Inline.Ids do
+                            if id <> themeScriptId then
+                                if id = "" then "an inline script" else $"an inline script with id=\"{id}\""
+                    ]
+
+                if not others.IsEmpty then
                     failtest
-                        $"""{page.Path} has no demos but ships {weight.JsGzip} bytes of gzipped JavaScript: {String.Join(", ", sources)}."""
+                        $"""{page.Path} has no demos but ships JavaScript besides the theme script ({weight.JsGzip} bytes gzipped in all): {String.Join(", ", others)}."""
+
+                if weight.Inline.Ids <> [| themeScriptId |] then
+                    failtest $"{page.Path}: expected the theme script once; page-weights.json lists {weight.Inline.Ids}."
+
+                if int64 weight.JsGzip > themeScriptBudget then
+                    failtest
+                        $"{page.Path} has no demos but ships {weight.JsGzip} bytes of gzipped JavaScript, over the theme script's {themeScriptBudget}-byte budget."
         }
+
+        themeScriptTest page
     ]
 
 let all () =

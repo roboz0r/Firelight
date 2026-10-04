@@ -23,6 +23,7 @@
     <Compile Include="SearchTests.fs" />
     <Compile Include="MobileTests.fs" />
     <Compile Include="HeaderTests.fs" />
+    <Compile Include="ThemeTests.fs" />
     <Compile Include="VersionTests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>

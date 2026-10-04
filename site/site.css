@@ -1,17 +1,26 @@
+/* The palette: each colour is `light-dark(light, dark)`, picked by the page's `color-scheme`. That
+   is the system's setting, followed live, unless the header's theme button (Layout.fs) has set
+   <html data-theme="light"> or "dark". Its script runs in <head>, so a stored theme is set before
+   the first paint. Without JavaScript there is no data-theme and no button. The properties inherit
+   into shadow roots, so demos that read the palette follow the theme too. (Vite's CSS minifier
+   compiles light-dark() to custom-property switches on :root, set by these color-scheme rules, for
+   browsers without it.) */
 :root {
   color-scheme: light dark;
-  --bg: #fffdf9;
-  --fg: #1f1d1a;
-  --muted: #6b645c;
-  --border: #e8e1d8;
-  --surface: #f7f2ec;
+  --bg: light-dark(#fffdf9, #17151a);
+  --fg: light-dark(#1f1d1a, #ece8e3);
+  --muted: light-dark(#6b645c, #a39b92);
+  --border: light-dark(#e8e1d8, #2f2b30);
+  --surface: light-dark(#f7f2ec, #1f1c22);
   /* From the logo (images/logo.svg). --brand, its ember, is for marks and decoration (borders,
      rules); it is too light for text. --accent is the ember darkened for text: links, buttons,
-     anything read. It is 5.1:1 on --bg and 4.6:1 on --surface, and --accent-fg on it is 5.2:1. */
-  --brand: #d9480f;
-  --accent: #c2410c;
-  --accent-fg: #ffffff;
-  --code-bg: #ffffff;
+     anything read. It is 5.1:1 on --bg and 4.6:1 on --surface, and --accent-fg on it is 5.2:1.
+     Dark, both are the logo's light flame: 7.7:1 on --bg, 7.2:1 on --surface, and 7.7:1 with
+     --accent-fg. */
+  --brand: light-dark(#d9480f, #ff8a3d);
+  --accent: light-dark(#c2410c, #ff8a3d);
+  --accent-fg: light-dark(#ffffff, #17151a);
+  --code-bg: light-dark(#ffffff, #24292e);
   --radius: 0.5rem;
   --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
   --code-font: 0.875rem/1.6 var(--mono);
@@ -21,21 +30,8 @@
   /* The sticky header's height on wide screens (4.4rem, and its 1px border), for anchor offsets. */
   --header-height: 4.5rem;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #17151a;
-    --fg: #ece8e3;
-    --muted: #a39b92;
-    --border: #2f2b30;
-    --surface: #1f1c22;
-    /* The logo's light flame: 7.7:1 on --bg, 7.2:1 on --surface, and 7.7:1 with --accent-fg. */
-    --brand: #ff8a3d;
-    --accent: #ff8a3d;
-    --accent-fg: #17151a;
-    --code-bg: #24292e;
-  }
-}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 * { box-sizing: border-box; }
 
@@ -62,7 +58,7 @@ code { font-family: var(--mono); font-size: 0.9em; }
    the wrapped header is over 9rem tall (at 375px), too much of the screen to keep, so it scrolls
    away there. */
 .site-header-bar { background: var(--bg); border-bottom: 1px solid var(--border); }
-@media (width > 58rem) {
+@media (width > 61rem) {
   html { scroll-padding-top: calc(var(--header-height) + 1rem); }
   .site-header-bar { position: sticky; top: 0; z-index: 10; }
 }
@@ -78,13 +74,39 @@ code { font-family: var(--mono); font-size: 0.9em; }
 .site-header nav a { color: var(--fg); text-decoration: none; }
 .site-header nav a:hover { color: var(--accent); }
 /* Narrow screens: the links go on their own rows under the logo, all of them visible, rather than
-   squeezing into a column beside it. (The links fit on one row beside the logo down to about 900px;
-   Site.E2E's HeaderTests fails if a new link makes them wrap above this breakpoint.) */
-@media (max-width: 58rem) {
+   squeezing into a column beside it; the theme button stays beside the logo. (The links and the
+   theme button fit on one row beside the logo down to about 945px; Site.E2E's HeaderTests fails if
+   a new link makes them wrap above this breakpoint.) */
+@media (max-width: 61rem) {
   .site-header { flex-wrap: wrap; row-gap: 0.5rem; }
-  .site-header nav { width: 100%; gap: 0.25rem 1.25rem; }
+  .site-header nav { width: 100%; gap: 0.25rem 1.25rem; order: 1; }
   .site-header nav a { padding-block: 0.25rem; }
 }
+
+/* The theme button (Layout.fs): the current setting's icon. It shows only once the head script has
+   set data-theme, so without JavaScript there is no button that does nothing. On narrow screens it
+   stays beside the logo, above the links. */
+.brand { margin-right: auto; }
+.theme-toggle {
+  display: none;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--fg);
+  cursor: pointer;
+}
+:root[data-theme] .theme-toggle { display: grid; }
+.theme-toggle:hover { color: var(--accent); border-color: var(--brand); }
+.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-icon { display: none; }
+:root[data-theme="system"] .theme-icon[data-for="system"],
+:root[data-theme="light"] .theme-icon[data-for="light"],
+:root[data-theme="dark"] .theme-icon[data-for="dark"] { display: block; }
 .brand { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--fg); text-decoration: none; font-weight: 900; font-size: 1.5rem; letter-spacing: -0.04em; }
 .brand-mark { flex: none; width: 2rem; height: 2rem; }
 
@@ -127,8 +149,10 @@ h2:first-child { margin-top: 0; }
 }
 .demo.routed { display: block; }
 
-/* Code highlighted at build time. Shiki writes the light colours inline and the dark ones as
-   --shiki-dark variables. */
+/* Code highlighted at build time. Shiki writes both themes' colours as variables (Markdown.fs);
+   these pick one, as the palette does. */
+.shiki { background-color: light-dark(var(--shiki-light-bg), var(--shiki-dark-bg)); }
+.shiki, .shiki span { color: light-dark(var(--shiki-light), var(--shiki-dark)); }
 pre.shiki {
   margin-block: 1rem;
   padding: var(--code-padding);
@@ -155,12 +179,6 @@ pre.shiki code { font: inherit; }
   text-transform: uppercase;
 }
 .compare pre.shiki { margin: 0; flex: 1; border-top-left-radius: 0; border-top-right-radius: 0; }
-@media (prefers-color-scheme: dark) {
-  .shiki, .shiki span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg) !important;
-  }
-}
 
 /* Table of contents, for pages with `toc: true` */
 .toc p { margin: 0 0 0.25rem; font-weight: 600; }

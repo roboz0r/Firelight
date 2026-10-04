@@ -292,10 +292,29 @@ Order: guides → `/why/` → From Lit → cookbook. Review the prose. The check
    `unlisted: true`), where `<fl-search>` loads Pagefind's JavaScript with the first search;
    `?q=` searches on arrival and the address keeps the query. No `/` shortcut: it would need
    script on every page.
-6. Mobile navigation (CSS first). Done with CSS only: below 58rem (where the nine header links
-   stop fitting beside the logo; it was 46rem with seven) they move to their own rows under it, all visible, instead of
+6. Mobile navigation (CSS first). Done with CSS only: below 61rem (where the nine header links
+   and the theme button stop fitting beside the logo; it was 46rem with seven links, and 58rem
+   with nine and no button) they move to their own rows under it, all visible, instead of
    a squeezed column beside it. Checked at 375 and 768 px. Site.E2E checks at 375 px that every
    header link on every page is on screen, uncovered and not overlapping another.
+7. **Theme toggle**: System (the default, following `prefers-color-scheme` live), Light and Dark,
+   from one button at the end of the header that cycles them. Done. The palette in `site.css` is
+   `light-dark()` colours, switched by `color-scheme`; `<html data-theme="light|dark">` forces
+   one. Shiki writes both themes' colours as variables and `site.css` picks with `light-dark()`
+   too, and demos follow through the palette (the Web Awesome demo maps its tokens to it). The
+   choice is kept in `localStorage` under `firelight-theme`, not `theme`: the cookbook's theme
+   recipe uses `theme`, and its demo runs on this site, so sharing the key would let the demo
+   restyle the site (and roboz0r.github.io is shared with other project pages). A script first
+   in `<head>` sets `data-theme` before anything paints, so a stored theme doesn't flash.
+   Without JavaScript the button is hidden and the site follows the system.
+   The Firelight way to build this is the cookbook recipe (`/cookbook/theme-toggle/`), a
+   component. On the site it is plain inline JavaScript (`Layout.themeScript`, about 0.5 kB
+   gzipped) for weight: a component in the header would ship Lit to every page, 24 kB against 0.
+   It is the one exception to "built with Firelight", and the one script on pages without demos;
+   Site.E2E's WeightTests allows exactly it, by id, under a 1 kB budget. ThemeTests covers the
+   cycle, persistence, live System, the no-flash head script, blocked or bad storage and axe in
+   forced Light and Dark. The demo apps are separate apps and don't follow the button: Todo
+   follows the system setting, and Kanban is light only.
 
 ## Launch: 0.3.0
 

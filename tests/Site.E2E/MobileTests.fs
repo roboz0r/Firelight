@@ -101,15 +101,19 @@ let private headerLinks (page: Page) =
 
             let! (links: LinkBox[]) =
                 tab.EvaluateAsync<LinkBox[]>(
-                    """() => [...document.querySelectorAll(".site-header a")].map((a) => {
+                    """() => [...document.querySelectorAll(".site-header a, .site-header #theme-toggle")].map((a) => {
                       const r = a.getBoundingClientRect();
                       const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-                      return { text: a.textContent.trim(), href: a.getAttribute("href"), left: r.left, top: r.top, right: r.right, bottom: r.bottom,
+                      return { text: a.id === "theme-toggle" ? "theme button" : a.textContent.trim(), href: a.getAttribute("href"), left: r.left, top: r.top, right: r.right, bottom: r.bottom,
                                onTop: !!hit && (hit === a || a.contains(hit)) };
                     })"""
                 )
 
-            let hrefs = links |> Array.map _.Href |> List.ofArray
+            // The theme button is checked with the links: on screen, uncovered, overlapping none.
+            if not (links |> Array.exists (fun l -> l.Text = "theme button")) then
+                failtest $"{page.Path}: the header has no theme button."
+
+            let hrefs = links |> Array.choose (fun l -> Option.ofObj l.Href) |> List.ofArray
 
             if hrefs <> expected.Value then
                 failtest

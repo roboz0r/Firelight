@@ -32,6 +32,8 @@ type Scrolled =
         BarBackground: string
         PageBackground: string
         Links: Box[]
+        /// The theme button (null if the page has none).
+        Toggle: Box
     }
 
 [<CLIMutable>]
@@ -100,6 +102,7 @@ let private scrollAndMeasure (tab: IPage) (y: int) =
             barBackground: getComputedStyle(bar).backgroundColor,
             pageBackground: getComputedStyle(document.body).backgroundColor,
             links: [...bar.querySelectorAll("a")].map(boxOf),
+            toggle: bar.querySelector("#theme-toggle") && boxOf(bar.querySelector("#theme-toggle")),
           };
         }
         """,
@@ -174,13 +177,23 @@ let private staysOnTop (scheme: ColorScheme) (page: Page) =
                         if s.Links.Length < 2 then
                             failtest $"{where}: the header has {s.Links.Length} links."
 
+                        if isNull (box s.Toggle) then
+                            failtest $"{where}: the header has no theme button."
+
                         let problems =
                             [
-                                for link in s.Links do
+                                for name, link in
+                                    [
+                                        for l in s.Links do
+                                            yield $"\"{l.Text}\"", l
+                                        yield "the theme button", s.Toggle
+                                    ] do
                                     if link.Top < 0.0 || link.Bottom > s.Bar.Bottom then
-                                        $"\"{link.Text}\" is at {link.Top} to {link.Bottom} px, outside the header"
+                                        $"{name} is at {link.Top} to {link.Bottom} px, outside the header"
+                                    elif link.Right - link.Left < 1.0 then
+                                        $"{name} has no size"
                                     elif not link.OnTop then
-                                        $"\"{link.Text}\" is covered by something else"
+                                        $"{name} is covered by something else"
                             ]
 
                         if not problems.IsEmpty then
@@ -265,8 +278,8 @@ let private scrollsAway (page: Page) =
                 )
     }
 
-/// The narrowest width with a sticky header: just above the breakpoint in site.css (58rem = 928px).
-let private narrowestSticky = 929
+/// The narrowest width with a sticky header: just above the breakpoint in site.css (61rem = 976px).
+let private narrowestSticky = 977
 
 /// At the narrowest sticky width the header links still fit on one row beside the logo, so the
 /// sticky header is no taller than --header-height (which the anchor offset assumes). A new header
@@ -289,7 +302,7 @@ let private oneRowWhenSticky =
 
                         if s.Bar.Top <> 0.0 then
                             failtest
-                                $"At {narrowestSticky} px the header isn't sticky (its top is at {s.Bar.Top} px after scrolling). Is the breakpoint in site.css still 58rem?"
+                                $"At {narrowestSticky} px the header isn't sticky (its top is at {s.Bar.Top} px after scrolling). Is the breakpoint in site.css still 61rem?"
 
                         let rows =
                             s.Links
@@ -311,6 +324,21 @@ let private oneRowWhenSticky =
                         if rows.Length <> 1 || s.Bar.Bottom - s.Bar.Top > headerHeight + 1.0 then
                             failtest
                                 $"At {narrowestSticky} px the header links wrap onto {rows.Length} rows and the header is {s.Bar.Bottom - s.Bar.Top} px tall, over --header-height ({headerHeight} px). Raise the header breakpoint in site.css and narrowestSticky here."
+
+                        // The theme button sits on the links' row, after the last of them.
+                        let last = navLinks |> Array.maxBy _.Right
+                        let t = s.Toggle
+
+                        if
+                            isNull (box t)
+                            || not t.OnTop
+                            || t.Left < last.Right
+                            || t.Right > float narrowestSticky
+                            || t.Top > last.Bottom
+                            || t.Bottom < last.Top
+                        then
+                            failtest
+                                $"At {narrowestSticky} px the theme button isn't on the links' row, after them, on screen and uncovered: {t}."
                     }
                 )
     }

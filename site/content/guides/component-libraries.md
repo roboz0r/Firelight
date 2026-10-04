@@ -70,7 +70,8 @@ importSideEffects "@awesome.me/webawesome/dist/styles/themes/default.css"
 
 That file holds the default theme's tokens. It also sets `color`, `font-family` and
 `color-scheme` on the root element, inside a cascade layer, so any rule of your own for those
-wins. `dist/styles/webawesome.css` adds utility classes and styles for native elements: it sets
+wins. The tokens are the light theme's; the `wa-dark` class switches an element and everything in
+it to the dark ones, so a dark mode puts it on `<html>`. `dist/styles/webawesome.css` adds utility classes and styles for native elements: it sets
 the page's background, the `body`'s font, the margins of headings, paragraphs and lists, and more. Use
 it for a page built entirely with Web Awesome, and the theme alone for a page with styles of its
 own.
@@ -168,8 +169,9 @@ theme's design tokens are custom properties too, read by every component:
 | Design tokens | Change the theme for everything inside an element | `--wa-form-control-activated-color: var(--accent);` |
 | Parts | Style an inner element the component exposes | `wa-switch::part(thumb) { box-shadow: none; }` |
 
-The demo above uses all three: a wider switch, the site's ember colour for "on", and a shadow
-on the thumb. They go in your component's `styles`, or in the page's stylesheet for elements
+The demo above uses all three: a wider switch, the site's own colours (its ember for "on"), and a
+shadow on the thumb. Because its tokens come from this site's palette, the demo follows the site's
+theme button, light or dark. They go in your component's `styles`, or in the page's stylesheet for elements
 outside any component.
 
 A part's rules apply only to the element the component marked with `part`. Selectors can't go

@@ -105,13 +105,15 @@ up. The chain falls back to a site-wide `--accent`, and then to a fixed colour. 
 own properties after it, and list them where its users will look, since they are part of its API.
 
 This site works the same way. `site.css` defines a palette on `:root`, with `--accent`, `--border`
-and `--muted`, and redefines it for dark mode in a `prefers-color-scheme` media query. Every demo on
-these pages reads the palette, so the demos follow the site's theme with no code of their own.
+and `--muted`, each with a light and a dark value: `--accent: light-dark(#c2410c, #ff8a3d)`. The
+theme button in the header picks one by switching the page's `color-scheme`, as in the
+[theme recipe](/cookbook/theme-toggle/). Every demo on these pages reads the palette, so the demos
+follow the site's theme with no code of their own.
 
 These three progress bars are one component, styled from the page's CSS, which is under the code.
 A `my-progress` rule gives them their width. The second sets `--progress-color` in its `style`
-attribute, and the third is restyled through its parts, covered next. Switch your system between
-light and dark mode: the first and third follow this site's palette, and the second keeps its own
+attribute, and the third is restyled through its parts, covered next. Switch the theme with the
+button in the header: the first and third follow this site's palette, and the second keeps its own
 colour.
 
 ::: example Snippets/StylingParts.fs .stacked

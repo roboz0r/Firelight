@@ -28,7 +28,7 @@ export function pageWeights({ reportFile }) {
       if (type && type !== "module" && !type.includes("javascript")) continue;
       const src = attribute(attributes, "src");
       if (src) found.files.push(src);
-      else if (body.trim()) found.inline.push(body);
+      else if (body.trim()) found.inline.push({ id: attribute(attributes, "id") ?? "", body });
     }
     return found;
   };
@@ -52,12 +52,13 @@ export function pageWeights({ reportFile }) {
       jsGzip: contents.reduce((n, c) => n + gzipSync(c).length, 0),
     });
     const fromFiles = measure(chunks.map((f) => readFileSync(join(outDir, f))));
-    const fromInline = measure(inline.map((s) => Buffer.from(s)));
+    const fromInline = measure(inline.map((s) => Buffer.from(s.body)));
     return {
       js: fromFiles.js + fromInline.js,
       jsGzip: fromFiles.jsGzip + fromInline.jsGzip,
       files: chunks,
-      inline: { scripts: inline.length, ...fromInline },
+      // Each inline script's id ("" for none): every page has the theme switch's (Layout.fs).
+      inline: { scripts: inline.length, ...fromInline, ids: inline.map((s) => s.id) },
     };
   };
 

@@ -108,9 +108,85 @@ let private headerMark =
     LitSsr.markup
         """<svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="none" stroke="#c92a2a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M11 27 5 40 11 53M53 27 59 40 53 53"/><path fill="#f76707" d="M32 60C22.51 60 16 52 16 41.2 16 29.4 22.83 22.8 26.67 14.8 28.59 10.6 28.91 7.3 28.59 4 34.24 7.3 38.51 12.5 40.43 18.6 41.92 16.2 43.09 13.4 43.41 10.6 46.83 15.8 48 23.8 48 34.6 48 49.7 41.92 60 32 60Z"/><path fill="#ffc145" d="M32 60C27.41 60 24.43 56 24.43 50.6 24.43 44.4 28.16 40.4 30.08 34.1 35.2 38.1 39.57 43.6 39.57 50.6 39.57 56 36.59 60 32 60Z"/></svg>"""
 
+/// The theme switch's `<script>` id: Site.E2E's WeightTests allows exactly this script on pages
+/// without demos.
+let themeScriptId = "theme-script"
+
+/// The `localStorage` key for the theme switch. Not `theme`, the key of the cookbook's theme
+/// recipe: that recipe's demo runs on this site, so sharing its key would let the demo's choice
+/// restyle the whole site on the next page. The site's origin (roboz0r.github.io) is also shared
+/// with every other project page of that account.
+let themeKey = "firelight-theme"
+
+// The theme switch: System (the default, following prefers-color-scheme live), Light or Dark,
+// cycled by the header's button and kept in localStorage. It runs in <head>, before anything is
+// painted, and sets <html data-theme="system|light|dark">; site.css turns light and dark into
+// `color-scheme`, which every `light-dark()` colour follows, and shows the button only once
+// data-theme is set, so without JavaScript there is no button and the site follows the system.
+// A stored value other than light or dark reads as System. Storage that throws (blocked cookies)
+// reads as System on load, and later rereads (another tab's change, a page back from the
+// back/forward cache) keep the current choice, which then lives only in this page. The click
+// handler is delegated, since the button doesn't exist yet when this runs.
+//
+// The Firelight way to build this is the cookbook recipe (content/cookbook/theme-toggle.md), a
+// component with the same head script. Here it is plain JavaScript for weight: a Firelight
+// component in the header would ship Lit to every page (about 24 kB gzipped), and pages without
+// demos ship no JavaScript but this (Site.E2E's WeightTests holds it to a budget).
+let private themeScript =
+    let script =
+        """(() => {
+  const key = "%KEY%", root = document.documentElement;
+  const names = { system: "System", light: "Light", dark: "Dark" };
+  const next = { system: "light", light: "dark", dark: "system" };
+  const stored = (fallback) => {
+    try {
+      const theme = localStorage.getItem(key);
+      return theme === "light" || theme === "dark" ? theme : "system";
+    } catch {
+      return fallback;
+    }
+  };
+  const apply = (theme) => {
+    root.dataset.theme = theme;
+    const button = document.getElementById("theme-toggle");
+    if (button) button.setAttribute("aria-label", (button.title = "Theme: " + names[theme]));
+  };
+  apply(stored("system"));
+  addEventListener("DOMContentLoaded", () => apply(root.dataset.theme));
+  addEventListener("pageshow", (e) => e.persisted && apply(stored(root.dataset.theme)));
+  addEventListener("storage", (e) => (e.key === key || e.key === null) && apply(stored(root.dataset.theme)));
+  addEventListener("click", (e) => {
+    if (!e.target.closest?.("#theme-toggle")) return;
+    const theme = next[root.dataset.theme] ?? "light";
+    apply(theme);
+    try {
+      theme === "system" ? localStorage.removeItem(key) : localStorage.setItem(key, theme);
+    } catch {}
+  });
+})();"""
+
+    LitSsr.markup ($"<script id=\"{themeScriptId}\">\n" + script.Replace("%KEY%", themeKey) + "\n</script>")
+
+// The theme button's icons, one per setting; site.css shows the current one. Half a circle filled
+// for System, a sun for Light, a moon for Dark.
+let private themeButton =
+    let icon (theme: string) (body: string) =
+        $"""<svg class="theme-icon" data-for="{theme}" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{body}</svg>"""
+
+    LitSsr.markup (
+        "<button type=\"button\" id=\"theme-toggle\" class=\"theme-toggle\" aria-label=\"Theme: System\" title=\"Theme: System\">"
+        + icon "system" """<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>"""
+        + icon
+            "light"
+            """<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>"""
+        + icon "dark" """<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/>"""
+        + "</button>"
+    )
+
 /// The site header, on every page.
 /// Its section links come from `Pages.sections`. The outer `.site-header-bar` spans the window, so
 /// the sticky header's background does too (site.css); the header keeps to the page's column.
+/// The theme button (`themeScript`) comes last, after the links.
 let header (``base``: string) =
     let sectionLinks =
         Pages.sections
@@ -129,6 +205,7 @@ let header (``base``: string) =
       <a href={withBase ``base`` "/search/"}>Search</a>
       <a href="https://github.com/roboz0r/Firelight">GitHub</a>
     </nav>
+    {themeButton}
   </header>
   </div>"""
 
@@ -446,6 +523,7 @@ let page (m: Model) =
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {themeScript}
   <title>{title}</title>
   <meta name="description" content={meta.Description}>
   {headTags}

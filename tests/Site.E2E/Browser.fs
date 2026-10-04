@@ -65,10 +65,9 @@ let private record (problems: ResizeArray<string>) (message: string) =
 
 /// A blank page in a fresh browser context, recording problems from here on. `initScript`, if any,
 /// runs in every page before the page's own scripts.
-let private openPage (javaScript: bool) (initScript: string option) =
+let private openPage (options: BrowserNewContextOptions) (initScript: string option) =
     task {
-        let! context =
-            Server.browserInstance().NewContextAsync(BrowserNewContextOptions(JavaScriptEnabled = javaScript))
+        let! context = Server.browserInstance().NewContextAsync(options)
 
         match initScript with
         | Some script -> do! context.AddInitScriptAsync(script)
@@ -119,10 +118,17 @@ let private openPage (javaScript: bool) (initScript: string option) =
             }
     }
 
-/// Like `withPage`, with `initScript` run before the page's own scripts, e.g. to remove a browser API.
-let withPageAndScript (initScript: string option) (javaScript: bool) (path: string) (f: OpenPage -> Task<'T>) =
+/// Like `withPageAndScript`, in a context with the given options (colour scheme, viewport,
+/// JavaScript).
+let withPageIn
+    (options: BrowserNewContextOptions)
+    (initScript: string option)
+    (path: string)
+    (f: OpenPage -> Task<'T>)
+    =
     task {
-        let! opened = openPage javaScript initScript
+        let javaScript = options.JavaScriptEnabled |> Option.ofNullable |> Option.defaultValue true
+        let! opened = openPage options initScript
 
         try
             let! _ =
@@ -140,6 +146,14 @@ let withPageAndScript (initScript: string option) (javaScript: bool) (path: stri
         finally
             opened.Context.CloseAsync().GetAwaiter().GetResult()
     }
+
+/// Like `withPage`, with `initScript` run before the page's own scripts, e.g. to remove a browser API.
+let withPageAndScript (initScript: string option) (javaScript: bool) (path: string) (f: OpenPage -> Task<'T>) =
+    withPageIn (BrowserNewContextOptions(JavaScriptEnabled = javaScript)) initScript path f
+
+/// Waits until the page's custom elements have rendered (as `withPage` does after loading), for a
+/// page reached by clicking or reloading. Returns the tags still rendering after 10 s.
+let settle (page: IPage) = page.EvaluateAsync<string[]>(settleScript)
 
 /// Opens `path` on a fresh page and runs `f` once the network is idle and, with JavaScript, the
 /// page's custom elements have rendered. Closes the page's context afterwards.

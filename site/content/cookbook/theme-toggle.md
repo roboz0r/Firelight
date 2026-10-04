@@ -69,6 +69,11 @@ same key:
 An inline script needs a hash or a nonce under a Content Security Policy that forbids inline
 scripts. Prerendering can't help here: the build doesn't know which theme a visitor chose.
 
+This site's theme button, in the header, works the same way, but in plain JavaScript in that head
+script rather than as a component: a Firelight component in the header would load Lit on every
+page, and pages without demos load no JavaScript but that script. It stores its choice under its
+own key, so this demo's choice doesn't change the site's theme.
+
 ## Related
 
 - [Styling](/guides/styling/), for custom properties, `:host` and parts.
