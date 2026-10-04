@@ -144,6 +144,7 @@ Lit code that already uses the controllers translates line by line:
 | `new ContextConsumer(this, { context, subscribe: true })` | `ContextConsumer(jsThis, ContextConsumer.Options(context, subscribe = true))` |
 | `{ context, callback: (v, unsubscribe) => ... }` | `ContextConsumer.Options(context, callback = fun v unsubscribe -> ...)` |
 | `consumer.value` | `consumer.value`, a `'T option` |
+| `new ContextRoot().attach(document.body)` | `ContextRoot().attach document.body` |
 
 ## No direct equivalent
 
@@ -152,8 +153,6 @@ Lit code that already uses the controllers translates line by line:
   `Context<'T>` and `symbol`.
 - **`this` as the provider's host.** Pass `jsThis`. `ContextProvider` requires a host type that
   `LitElement` doesn't implement, so the F# `this` doesn't compile there.
-- **`ContextRoot`.** For providers that load after their consumers. Firelight's binding imports
-  `ContextProvider` instead of `ContextRoot`, so it doesn't work yet.
 
-The [Firelight.Context](/packages/context/) page has a live example, and the
+The [Firelight.Context](/packages/context/) page has live examples, including a `ContextRoot`, and the
 [Todo demo](/demos/todo/) shares its Elmish state and `dispatch` through context.

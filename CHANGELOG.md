@@ -145,6 +145,12 @@ Other changes:
 
 ### Fixed
 
+- Firelight.Context: `ContextRoot` imported `ContextProvider` from `@lit/context`, so
+  `ContextRoot()` threw. It now imports `ContextRoot`, and a provider defined after its consumers
+  answers them (for consumers with `subscribe = true`).
+- Firelight.Virtualizer: `Virtualizer.defineElement ()` registers with the global
+  `customElements` rather than `window.customElements`, so a module that calls it also loads in
+  Node.
 - The `unsafeHTML` and `unsafeStatic` imports named `"unsafeHTML "` and `"unsafeStatic "`, with a
   trailing space. Fable trims import names, so they worked; the JavaScript is unchanged.
 - XML docs: `noChange` had `nothing`'s summary; `ChildRenderable` and the template result types

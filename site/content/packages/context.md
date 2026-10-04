@@ -47,6 +47,24 @@ plain `<div>`s, and nothing passes the theme to them.
 
 The [Todo demo](/demos/todo/) uses the same pattern to share its Elmish state and `dispatch` with each item.
 
+## Providers that load later
+
+A consumer asks for its value once, when it connects. If the provider's element isn't defined yet,
+because its module loads later or lazily, nobody answers and the consumer waits for good. A
+`ContextRoot` attached to the page keeps those requests and sends them again when a provider
+connects. It keeps only requests from consumers with `subscribe = true`.
+
+Here the consumer connects inside a `<my-late-provider>` that isn't defined yet. Click the button to
+define it:
+
+::: example Snippets/LateProvider.fs ssr=false
+<my-provider-loader></my-provider-loader>
+<my-late-provider data-defined-later><my-late-consumer></my-late-consumer></my-late-provider>
+:::
+
+Attach the root once, before the consumers connect, to an element above both: `document.body`,
+or your app's root element.
+
 ## Install
 
 ```sh

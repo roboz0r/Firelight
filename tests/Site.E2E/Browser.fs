@@ -182,7 +182,9 @@ let unregisteredElements (page: IPage) =
           const walk = (root, where) => {
             for (const el of root.querySelectorAll("*")) {
               const tag = el.localName;
-              if (tag.includes("-") && !reserved.has(tag) && !customElements.get(tag)) {
+              // A demo that defines an element on purpose later (a click) marks it data-defined-later.
+              if (tag.includes("-") && !reserved.has(tag) && !customElements.get(tag) &&
+                  !el.hasAttribute("data-defined-later")) {
                 const key = `<${tag}> ${where}`;
                 missing.set(key, (missing.get(key) ?? 0) + 1);
               }

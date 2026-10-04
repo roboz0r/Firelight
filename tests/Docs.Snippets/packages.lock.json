@@ -90,6 +90,14 @@
           "Firelight": "[0.2.0, )"
         }
       },
+      "firelight.observers": {
+        "type": "Project",
+        "dependencies": {
+          "Fable.Browser.Dom": "[2.20.0, )",
+          "Fable.Core": "[5.0.0, )",
+          "Firelight": "[0.2.0, )"
+        }
+      },
       "firelight.router": {
         "type": "Project",
         "dependencies": {
@@ -107,6 +115,14 @@
         }
       },
       "firelight.task": {
+        "type": "Project",
+        "dependencies": {
+          "Fable.Browser.Dom": "[2.20.0, )",
+          "Fable.Core": "[5.0.0, )",
+          "Firelight": "[0.2.0, )"
+        }
+      },
+      "firelight.virtualizer": {
         "type": "Project",
         "dependencies": {
           "Fable.Browser.Dom": "[2.20.0, )",

@@ -309,5 +309,30 @@ let private routing =
         }
     ]
 
+// ContextRoot keeps the consumer's request until <my-late-provider> is defined, then sends it again.
+let private lateProvider =
+    testTask "a ContextRoot gives a consumer the value of a provider defined after it" {
+        let page = pageWith "my-late-consumer"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let consumer = opened.Page.Locator("my-late-consumer")
+                        do! Expect(consumer).ToHaveTextAsync("Waiting for a provider…")
+
+                        let! definedEarly =
+                            opened.Page.EvaluateAsync<bool>("() => customElements.get('my-late-provider') !== undefined")
+
+                        Expect.isFalse definedEarly $"{page.Path}: <my-late-provider> was defined before the click"
+                        do! opened.Page.Locator("my-provider-loader button").ClickAsync()
+                        do! Expect(consumer).ToHaveTextAsync("Hello from the provider")
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing ]
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider ]

@@ -136,7 +136,12 @@ type Virtualizer =
     static member inline get(element: HTMLElement) : VirtualizerHandle option =
         Virtualizer.getInner (element, Virtualizer.virtualizerRef)
 
-    /// Register <lit-virtualizer>. Call once before rendering the element.
+    // The global registry rather than window.customElements: the same object in a browser, but
+    // Lit SSR's DOM shim provides a global customElements in Node and no window.
+    [<Emit("customElements")>]
+    static member inline private customElements: CustomElementRegistry = nativeOnly
+
+    /// Register <lit-virtualizer>. Call once before rendering the element; a second call does nothing.
     static member inline defineElement() : unit =
-        if window.customElements.get ("lit-virtualizer") |> Option.isNone then
-            window.customElements.define ("lit-virtualizer", jsConstructor<LitVirtualizer<obj>>)
+        if Virtualizer.customElements.get ("lit-virtualizer") |> Option.isNone then
+            Virtualizer.customElements.define ("lit-virtualizer", jsConstructor<LitVirtualizer<obj>>)

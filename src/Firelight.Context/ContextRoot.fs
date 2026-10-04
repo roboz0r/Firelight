@@ -9,9 +9,16 @@ open Firelight
 /// available.
 ///
 /// This allows providers to be added to a DOM tree, or upgraded, after the
-/// consumers.
+/// consumers. Only requests from consumers created with <c>subscribe = true</c>
+/// are kept and re-sent.
+/// <example>
+/// <code>
+/// ContextRoot().attach document.body
+/// </code>
+/// </example>
+/// <seealso href="https://lit.dev/docs/data/context/#contextroot"/>
 [<AllowNullLiteral>]
-[<Import("ContextProvider", "@lit/context")>]
+[<Import("ContextRoot", "@lit/context")>]
 type ContextRoot() =
     /// <summary>
     /// Attach the ContextRoot to a given element to intercept <c>context-request</c> and

@@ -33,9 +33,11 @@
     <ProjectReference Include="..\..\src\Firelight.Context\Firelight.Context.fsproj" />
     <ProjectReference Include="..\..\src\Firelight.Elmish\Firelight.Elmish.fsproj" />
     <ProjectReference Include="..\..\src\Firelight.Motion\Firelight.Motion.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Observers\Firelight.Observers.fsproj" />
     <ProjectReference Include="..\..\src\Firelight.Router\Firelight.Router.fsproj" />
     <ProjectReference Include="..\..\src\Firelight.Signals\Firelight.Signals.fsproj" />
     <ProjectReference Include="..\..\src\Firelight.Task\Firelight.Task.fsproj" />
+    <ProjectReference Include="..\..\src\Firelight.Virtualizer\Firelight.Virtualizer.fsproj" />
   </ItemGroup>
 
   <UsingTask TaskName="ExtractFSharpBlocks" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
