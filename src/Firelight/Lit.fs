@@ -294,6 +294,58 @@ type Lit =
         : RootPart =
         nativeOnly
 
+    /// <summary>
+    /// The options of a reactive property whose value is a <c>'T</c>, for <c>PropertyDeclarations.create</c>:
+    /// <c>"step", PropertyDeclaration&lt;float&gt;()</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Unless you pass <c>type</c>, it comes from <c>'T</c>: <c>Number</c> for <c>float</c>, <c>int</c> and the other
+    /// numeric types Fable compiles to JavaScript numbers (<c>float32</c>, <c>int16</c>, <c>uint16</c>,
+    /// <c>uint32</c>, <c>sbyte</c>, <c>byte</c>), and <c>Boolean</c> for <c>bool</c>. So the attribute
+    /// <c>step="0.5"</c> sets <c>step</c> to the number 0.5, and a present attribute sets a <c>bool</c> to true.
+    /// Any other type, including <c>int64</c>, <c>decimal</c>, enums and options, gets no <c>type</c>: Lit sets the
+    /// attribute's text as it is. Give those a <c>converter</c>.
+    /// </para>
+    /// <para>
+    /// The name of the member that holds the value goes beside it in <c>PropertyDeclarations.create</c>.
+    /// </para>
+    /// </remarks>
+    /// <param name="state">Internal state: renders on change, with no attribute.</param>
+    /// <param name="attribute">The attribute's name, such as <c>"warn-at"</c>, or <c>false</c> for none.
+    /// Default: the property's name in lower case.</param>
+    /// <param name="noAccessor">Don't wrap the member's setter; call <c>requestUpdate</c> yourself.</param>
+    /// <param name="reflect">Copy the property back to its attribute after each change.</param>
+    /// <param name="useDefault">Keep the default out of the attribute, and restore it when the attribute is removed.</param>
+    /// <param name="hasChanged">Decides whether a new value is a change. Default: JavaScript identity.</param>
+    /// <param name="type">Lit's type hint, in place of the one from <c>'T</c>, such as <c>jsConstructor&lt;Globals.Array&gt;</c>.</param>
+    /// <param name="converter">Converts the attribute to and from the property, in place of Lit's default.</param>
+    /// <seealso href="https://lit.dev/docs/components/properties/#property-options"/>
+    static member inline PropertyDeclaration<'T>
+        (
+            ?state: bool,
+            ?attribute: PropertyAttribute,
+            ?noAccessor: bool,
+            ?reflect: bool,
+            ?useDefault: bool,
+            ?hasChanged: PropertyDeclaration.HasChanged<'T>,
+            ?``type``: obj,
+            ?converter: AttributeConverter<'T>
+        ) : PropertyDeclaration<'T> =
+        let options =
+            PropertyDeclarationInternals.Options<'T>(
+                ?state = state,
+                ?attribute = attribute,
+                ?noAccessor = noAccessor,
+                ?reflect = reflect,
+                ?useDefault = useDefault,
+                ?hasChanged = hasChanged,
+                ?``type`` = ``type``,
+                ?converter = converter
+            )
+
+        !!(PropertyDeclarationInternals.withInferredType options (typeof<'T>.FullName))
+
     // The global registry rather than window.customElements: the same object in a browser, but
     // Lit SSR's DOM shim provides a global customElements in Node and no window.
     [<Emit("customElements")>]

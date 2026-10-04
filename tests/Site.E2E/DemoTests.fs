@@ -375,5 +375,35 @@ let private listenRemoves =
                 )
     }
 
+// PropertyDeclaration<float>() reads step="0.5" as a number; the tags' converter parses and reflects.
+let private propertyTypes =
+    testTask "a float property reads its attribute as a number, and a converter parses and reflects" {
+        let page = pageWith "my-tags"
+
+        do!
+            Browser.withPage
+                true
+                page.Path
+                (fun opened ->
+                    task {
+                        let quantity = opened.Page.Locator("my-quantity").First
+                        do! quantity.Locator("button").ClickAsync()
+                        do! quantity.Locator("button").ClickAsync()
+                        // As text, 0 + "0.5" + "0.5" would be "00.50.5".
+                        do! Expect(quantity.Locator("output")).ToHaveTextAsync("1")
+
+                        let tags = opened.Page.Locator("my-tags").First
+                        do! Expect(tags.Locator(".tag")).ToHaveTextAsync([| "lit"; "fable"; "fsharp" |])
+                        do! tags.Locator("button").ClickAsync()
+                        do! Expect(tags).ToHaveAttributeAsync("tags", "lit, fable, fsharp, tag4")
+
+                        // Removing the attribute gives fromAttribute None: an empty list.
+                        let! _ = tags.EvaluateAsync("el => el.removeAttribute('tags')")
+                        do! Expect(tags.Locator(".tag")).ToHaveCountAsync(0)
+                        noProblems opened
+                    }
+                )
+    }
+
 let all =
-    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves ]
+    testList "Demos" [ counter; rating; tutorial; nameField; typedEvents; webAwesomeSwitches; routing; lateProvider; listenRemoves; propertyTypes ]

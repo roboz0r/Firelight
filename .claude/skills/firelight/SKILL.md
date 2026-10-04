@@ -127,19 +127,21 @@ Base class providing the Lit reactive update cycle and shadow DOM.
 Registers the component in the browser's Custom Element Registry. Call once at startup.
 
 ### 4. Reactive Properties (optional)
-Declare with `static member properties`. Use `PropertyDeclaration<'T>()` for type-safe property options.
+Declare with `static member properties`. Use `PropertyDeclaration<'T>()` (from `open type Firelight.Lit`) for type-safe property options. `'T` sets Lit's attribute conversion: `Number` for `float`/`int` and the other JS-number types, `Boolean` for `bool`; anything else (`string`, `int64`, `decimal`, options, lists, records) arrives as the attribute's text unless you give a `converter` or `attribute = false`.
 
 ```fsharp
 static member properties =
     PropertyDeclarations.create [
         "name", PropertyDeclaration<string>()
-        "todoId", PropertyDeclaration<int>(attribute = !^"todo-id")
-        "myData", PropertyDeclaration<string>(attribute = !^false)  // property-only, no attribute
+        "todoId", PropertyDeclaration<int>(attribute = "todo-id")
+        "myData", PropertyDeclaration<string>(attribute = false)  // property-only, no attribute
     ]
 ```
 
 Property options:
-- `attribute` — `!^"attr-name"` for custom attribute name, `!^false` to disable attribute reflection
+- `attribute` — `"attr-name"` for a custom attribute name, `false` for no attribute (property only)
+- `converter` — `AttributeConverter<'T>(fromAttribute = (fun (text: string option) -> ...), toAttribute = (fun v -> Some ...))` for custom text conversion
+- ``` ``type`` ``` — overrides the conversion inferred from `'T`, e.g. ``` ``type`` = jsConstructor<Globals.Array> ``` (JSON); write `Globals.` because `open System` hides `Array`, `Object`, `String`, `Boolean`
 - `reflect` — `true` to reflect property value back to the attribute
 - `state` — `true` for internal reactive state (not exposed as attribute)
 - `hasChanged` — custom change detection function `('T -> 'T -> bool)`
@@ -409,7 +411,7 @@ html $"<todo-item todo-id={item.Id}></todo-item>"
 // Child declaration:
 static member properties =
     PropertyDeclarations.create [
-        "todoId", PropertyDeclaration<int>(attribute = !^"todo-id")
+        "todoId", PropertyDeclaration<int>(attribute = "todo-id")
     ]
 ```
 

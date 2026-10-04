@@ -169,7 +169,6 @@ type Highlightable() =
         PropertyDeclarations.create [
             "highlighted",
             PropertyDeclaration<bool>(
-                ``type`` = jsConstructor<Boolean>,
                 reflect = true)
         ]
 

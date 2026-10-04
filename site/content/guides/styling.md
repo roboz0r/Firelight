@@ -35,7 +35,7 @@ type Card() =
     static member properties =
         PropertyDeclarations.create [
             "heading", PropertyDeclaration<string>()
-            "compact", PropertyDeclaration<bool>(``type`` = jsConstructor<Boolean>, reflect = true)
+            "compact", PropertyDeclaration<bool>(reflect = true)
         ]
 
     static member styles =

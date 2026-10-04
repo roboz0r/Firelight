@@ -5,13 +5,30 @@ open System
 open Fable.Core
 open Fable.Core.JsInterop
 
-/// Placeholder for the primitive `Boolean` type. Used with `jsConstructor` to specify the type of a property.
+// JavaScript's global constructors, for `jsConstructor`, as Lit's `type` property option:
+// ``type`` = jsConstructor<Globals.Array>. `open System` hides these names behind System's types,
+// for which Fable says "Only declared types define a function constructor in JS"; write
+// `Globals.Number` and so on to be sure of these.
+
+/// JavaScript's <c>Boolean</c>, for <c>jsConstructor&lt;Globals.Boolean&gt;</c>.
 [<Global>]
 type Boolean = interface end
 
-/// Placeholder for the primitive `Number` type. Used with `jsConstructor` to specify the type of a property.
+/// JavaScript's <c>Number</c>, for <c>jsConstructor&lt;Globals.Number&gt;</c>.
 [<Global>]
 type Number = interface end
+
+/// JavaScript's <c>String</c>, for <c>jsConstructor&lt;Globals.String&gt;</c>.
+[<Global>]
+type String = interface end
+
+/// JavaScript's <c>Object</c>, for <c>jsConstructor&lt;Globals.Object&gt;</c>: Lit parses the attribute as JSON.
+[<Global>]
+type Object = interface end
+
+/// JavaScript's <c>Array</c>, for <c>jsConstructor&lt;Globals.Array&gt;</c>: Lit parses the attribute as JSON.
+[<Global>]
+type Array = interface end
 
 [<Global>]
 type TemplateStringsArray = interface end

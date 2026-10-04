@@ -177,7 +177,7 @@ html $"<todo-item todo-id={item.Id}></todo-item>"
 // Child declaration:
 static member properties =
     PropertyDeclarations.create [
-        "todoId", PropertyDeclaration<int>(attribute = !^"todo-id")
+        "todoId", PropertyDeclaration<int>(attribute = "todo-id")
     ]
 ```
 

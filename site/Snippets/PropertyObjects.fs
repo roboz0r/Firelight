@@ -29,7 +29,7 @@ type Ranking() =
     inherit LitElement()
 
     static member properties =
-        PropertyDeclarations.create [ "players", PropertyDeclaration<Player list>(attribute = !^false) ]
+        PropertyDeclarations.create [ "players", PropertyDeclaration<Player list>(attribute = false) ]
 
     static member styles = rankingStyles
 
@@ -47,7 +47,7 @@ type EqualityRanking() =
 
     static member properties =
         PropertyDeclarations.create [
-            "players", PropertyDeclaration<Player list>(attribute = !^false, hasChanged = fun next prev -> next <> prev)
+            "players", PropertyDeclaration<Player list>(attribute = false, hasChanged = fun next prev -> next <> prev)
         ]
 
     static member styles = rankingStyles

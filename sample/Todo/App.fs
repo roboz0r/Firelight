@@ -60,7 +60,7 @@ type TodoItemComponent() =
         )
 
     static member properties =
-        PropertyDeclarations.create [ "todoId", PropertyDeclaration<int>(attribute = !^"todo-id") ]
+        PropertyDeclarations.create [ "todoId", PropertyDeclaration<int>(attribute = "todo-id") ]
 
     static member styles =
         cssResultGroup {

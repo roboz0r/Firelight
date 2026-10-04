@@ -236,7 +236,7 @@ type SalesChart() =
     let mutable chart: Chart option = None
 
     static member properties =
-        PropertyDeclarations.create [ "values", PropertyDeclaration<float list>(attribute = !^false) ]
+        PropertyDeclarations.create [ "values", PropertyDeclaration<float list>(attribute = false) ]
 
     static member styles = css $$""":host { display: block; position: relative; }"""
 

@@ -12,7 +12,7 @@ type MyPage() =
     // attribute = false means this property is never reflected to/from an HTML attribute.
     // It is only set programmatically, so the type hint in PropertyDeclaration is irrelevant.
     static member properties =
-        PropertyDeclarations.create [ "article", PropertyDeclaration<obj>(attribute = !^false) ]
+        PropertyDeclarations.create [ "article", PropertyDeclaration<obj>(attribute = false) ]
 
     member val article =
         {|

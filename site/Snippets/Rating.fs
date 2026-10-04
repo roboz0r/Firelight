@@ -20,7 +20,7 @@ type Rating() =
 
     static member properties =
         PropertyDeclarations.create [
-            "value", PropertyDeclaration<int>(``type`` = jsConstructor<Number>, reflect = true)
+            "value", PropertyDeclaration<int>(reflect = true)
         ]
 
     static member styles =

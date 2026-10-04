@@ -95,7 +95,7 @@ type OrderTotal() =
         PropertyDeclarations.create [
             "prices",
             PropertyDeclaration<float[]>(
-                attribute = !^false)
+                attribute = false)
         ]
 
     member val prices: float[] = [||] with get, set
@@ -156,12 +156,9 @@ type StockMeter() =
     static member properties =
         PropertyDeclarations.create [
             "label", PropertyDeclaration<string>()
-            "level",
-            PropertyDeclaration<float>(
-                ``type`` = jsConstructor<Number>)
+            "level", PropertyDeclaration<float>()
             "low",
             PropertyDeclaration<bool>(
-                ``type`` = jsConstructor<Boolean>,
                 reflect = true)
         ]
 
@@ -177,16 +174,17 @@ defineElement<StockMeter> "stock-meter"
 ```
 :::
 
-The type argument of `PropertyDeclaration<bool>` is for F#. Lit still reads `type` to convert
-an attribute, as in TypeScript. Without it, `<stock-meter low>` sets `low` to the empty string,
-which is falsy, and `level="0.5"` stays a string.
+Lit reads `type` to convert an attribute, as in TypeScript. `PropertyDeclaration<'T>` sets it
+from `'T`: `Number` for `float`, `int` and the other numeric types, `Boolean` for `bool`. So
+`<stock-meter low>` sets `low` to `true`, and `level="0.5"` sets the number 0.5. Other types get
+no `type`; pass ``` ``type`` ``` (`type` is an F# keyword) to choose one yourself.
 
 A JavaScript number is a `float`. An `int` member's setter truncates what it's given, so
 `level="40.5"` would become 40.
 
 ### Attribute names
 
-`attribute` takes a string or `false`. `!^` converts either to the union type it expects.
+`attribute` takes a string or `false`, as in TypeScript.
 
 ::: compare
 ```ts
@@ -222,10 +220,10 @@ type TagList() =
         PropertyDeclarations.create [
             "emptyText",
             PropertyDeclaration<string>(
-                attribute = !^"empty-text")
+                attribute = "empty-text")
             "tags",
             PropertyDeclaration<string[]>(
-                attribute = !^false)
+                attribute = false)
         ]
 
     member val emptyText = "No tags" with get, set
@@ -309,14 +307,14 @@ Every option keeps its name, as an optional argument of `PropertyDeclaration`:
 
 | Lit | Firelight |
 |---|---|
-| `{ attribute: 'empty-text' }` | `attribute = !^"empty-text"` |
-| `{ type: Number }` | `` ``type`` = jsConstructor<Number> `` |
+| `{ attribute: 'empty-text' }` | `attribute = "empty-text"` |
+| `{ type: Number }` | Nothing, for a numeric `'T`; or `` ``type`` = jsConstructor<Globals.Number> `` |
 | `{ reflect: true }` | `reflect = true` |
 | `{ state: true }` | `state = true` |
 | `{ hasChanged: (v, old) => ... }` | `hasChanged = PropertyDeclaration.HasChanged(fun v old -> ...)` |
 | `{ noAccessor: true }` | `noAccessor = true` |
 | `{ useDefault: true }` | `useDefault = true` |
-| `{ converter: ... }` | `converter = unbox (createObj [ ... ])`: the `AttributeConverter` type is an empty placeholder |
+| `{ converter: { fromAttribute, toAttribute } }` | `converter = AttributeConverter(fromAttribute = ..., toAttribute = ...)` |
 
 ## No direct equivalent
 
@@ -340,7 +338,7 @@ Every option keeps its name, as an optional argument of `PropertyDeclaration`:
 |---|---|---|
 | No `[<AttachMembers>]` | Renders once, then never updates: Lit can't see the properties | `[<AttachMembers>]` on every component |
 | `"nmae", PropertyDeclaration<string>()` | Setting `name` doesn't re-render | The `member val`'s exact name |
-| `PropertyDeclaration<bool>()` for an attribute | `<stock-meter low>` sets `low` to `""`, which is falsy | `` ``type`` = jsConstructor<Boolean> `` |
+| `PropertyDeclaration<int64>()` or `<decimal>` for an attribute | The property holds the attribute's text: Lit's default converter has no 64-bit or decimal type | A `converter` that parses it |
 | `let mutable count` changed in a handler | Nothing re-renders | A declared property, or `this.requestUpdate()` |
 
 The [Properties and attributes guide](/guides/properties/) covers the Firelight side in more

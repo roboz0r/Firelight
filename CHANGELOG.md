@@ -69,6 +69,22 @@ each break is listed under Changed with how to migrate.
   ```
 
   Nothing checks the function against the event's name.
+- `AttributeConverter<'T>(fromAttribute = ..., toAttribute = ...)` for a property's `converter`
+  option, for attribute text Lit's default conversion can't read. It replaces the empty
+  `AttributeConverter` placeholder:
+
+  ```fsharp
+  // 0.2: no members, so
+  converter = unbox (createObj [ "fromAttribute", box parse ])
+  // 0.3
+  converter = AttributeConverter<string list>(fromAttribute = parse, toAttribute = format)
+  ```
+
+  `fromAttribute` gets a `string option` (`None` once the attribute is removed); `toAttribute`
+  returns one (`None` removes the attribute).
+- `Globals.String`, `Globals.Object` and `Globals.Array`, beside `Boolean` and `Number`, for
+  ``` ``type`` = jsConstructor<Globals.Array> ```. `open System` hides all five behind System's
+  types, so qualify them with `Globals.`.
 - `until (promise)` and `until (promise, placeholder)` overloads.
 - `StaticHTML.mathml`.
 - `loadPolyfill ()` in Firelight.Router: loads `urlpattern-polyfill` when `URLPattern` isn't
@@ -117,6 +133,45 @@ Breaking changes, with how to migrate:
 
   For non-null values Lit receives the same arguments. A `null` value used to reach Lit wrapped
   in a Fable `Some` object; Lit now gets the `null`.
+- **`PropertyDeclaration<'T>(...)` sets Lit's `type` from `'T`.** `Number` for `float`, `int`,
+  `float32`, `int16`, `uint16`, `uint32`, `sbyte` and `byte`, and `Boolean` for `bool`, unless you
+  pass ``` ``type`` ```. Before, Lit never saw `'T`, so `<my-quantity step="0.5">` set a `float`
+  property to the string `"0.5"`, and `0 + step` gave `"00.5"`. An explicit ``` ``type`` ``` still
+  wins, so existing declarations behave as before; drop the ones that only repeat `'T`:
+
+  ```fsharp
+  // 0.2
+  "step", PropertyDeclaration<float>(``type`` = jsConstructor<Number>)
+  "open", PropertyDeclaration<bool>(``type`` = jsConstructor<Boolean>, reflect = true)
+  // 0.3
+  "step", PropertyDeclaration<float>()
+  "open", PropertyDeclaration<bool>(reflect = true)
+  ```
+
+  A numeric or `bool` property declared without `type` and set from an attribute now gets a number
+  or a Boolean where it got the text. `int64`, `decimal` and other types still get the text.
+- **`PropertyDeclaration<'T>(...)` is a method of `Lit`**, so it needs `open type Firelight.Lit`,
+  which a component has for `html` (or write `Lit.PropertyDeclaration<'T>(...)`). A constructor
+  can't see `'T` at compile time; an inline method can. Without the `open type`, the compiler says
+  "Invalid use of a type name". The type `PropertyDeclaration<'T>`, what `properties` holds, is now
+  an interface for reading options, with no constructor. A generic helper of your own that calls it
+  must be `inline` too: `let prop<'T> () = PropertyDeclaration<'T>()` compiles in .NET, but Fable
+  says "Cannot get type info of generic parameter T"; write `let inline prop<'T> () = ...`.
+- **`attribute` takes a string or a Boolean**, as a `PropertyAttribute`, which F# converts either
+  to. `!^` still compiles:
+
+  ```fsharp
+  // 0.2
+  PropertyDeclaration<int>(attribute = !^"todo-id")
+  PropertyDeclaration<Player list>(attribute = !^false)
+  // 0.3
+  PropertyDeclaration<int>(attribute = "todo-id")
+  PropertyDeclaration<Player list>(attribute = false)
+  ```
+
+  A `U2<bool, string>` value no longer fits; unwrap it, or pass `!!value`.
+- **`AttributeConverter` is `AttributeConverter<'T>`**, a typed options object (see Added). The
+  old empty interface could only be created by `unbox`.
 - **`until` takes promises and values directly.** The `ParamArray` of
   `U2<Promise<ChildRenderable>, ChildRenderable>` is now `until (promise)`,
   `until (promise, placeholder)`, or `until (values: obj[])` for more than one promise:
@@ -172,6 +227,9 @@ Other changes:
 
 ### Fixed
 
+- `PropertyDeclaration<float>()`, and other numeric or `bool` properties declared without
+  ``` ``type`` ```, set from an attribute held the attribute's text: `0 + "0.5"` was `"00.5"`.
+  See Changed.
 - Firelight.Context: `ContextRoot` imported `ContextProvider` from `@lit/context`, so
   `ContextRoot()` threw. It now imports `ContextRoot`, and a provider defined after its consumers
   answers them (for consumers with `subscribe = true`).

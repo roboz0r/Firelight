@@ -4,50 +4,75 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Browser.Types
 open System.Collections.Generic
+open System.ComponentModel
 
 module PropertyDeclaration =
     type HasChanged<'T> = delegate of value: 'T * oldValue: 'T -> bool
 
+/// <summary>
+/// Converts a property to and from its attribute's text, for types Lit's default conversion doesn't
+/// handle: <c>PropertyDeclaration&lt;int64&gt;(converter = AttributeConverter(fromAttribute = ..., toAttribute = ...))</c>.
+/// </summary>
+/// <remarks>
+/// <c>fromAttribute</c> gets the attribute's text, <c>None</c> when the attribute was removed, and returns the
+/// property's value. <c>toAttribute</c> runs only for a property with <c>reflect = true</c>, and returns the
+/// attribute's text, <c>None</c> to remove the attribute. Leave either out to use Lit's default for that direction.
+/// </remarks>
+/// <seealso href="https://lit.dev/docs/components/properties/#conversion-converter"/>
 [<AllowNullLiteral>]
-type AttributeConverter = // TODO: Implement this type
-    interface end
+[<Global>]
+type AttributeConverter<'T>
+    [<ParamObject; Emit("$0")>]
+    (?fromAttribute: string option -> 'T, ?toAttribute: 'T -> string option) =
+    /// Converts the attribute's text, <c>None</c> when it was removed, to the property's value.
+    member val fromAttribute: (string option -> 'T) option = jsNative with get, set
+    /// Converts the property's value to the attribute's text, or <c>None</c> to remove the attribute.
+    member val toAttribute: ('T -> string option) option = jsNative with get, set
 
 /// <summary>
-/// Defines options for a property accessor.
-/// <see cref="PropertyDeclaration&lt;'Type, 'TypeHint&gt;" />
+/// The <c>attribute</c> option of a property: the attribute's name, or <c>false</c> for no attribute.
+/// Write a string or a Boolean: <c>attribute = "warn-at"</c>, <c>attribute = false</c>.
+/// </summary>
+/// <remarks>
+/// It's a string or a Boolean at run time. F# converts either to it in a method argument; <c>!^</c> from
+/// <c>Fable.Core.JsInterop</c> also works, as it did when the option was a <c>U2&lt;bool, string&gt;</c>.
+/// </remarks>
+[<Erase>]
+type PropertyAttribute =
+    private
+    | PropertyAttribute of obj
+
+    /// The attribute's name, such as <c>"warn-at"</c>.
+    static member inline op_Implicit(name: string) : PropertyAttribute = !!name
+    /// <c>false</c> for no attribute; <c>true</c> for the default, the property's name in lower case.
+    static member inline op_Implicit(enabled: bool) : PropertyAttribute = !!enabled
+    /// For <c>!^"name"</c>.
+    static member inline op_ErasedCast(name: string) : PropertyAttribute = !!name
+    /// For <c>!^false</c>.
+    static member inline op_ErasedCast(enabled: bool) : PropertyAttribute = !!enabled
+
+/// <summary>
+/// Options for a reactive property, as Lit reads them. Create one with <c>PropertyDeclaration&lt;'T&gt;(...)</c>,
+/// from <c>open type Firelight.Lit</c>.
 /// </summary>
 [<AllowNullLiteral>]
 type PropertyDeclaration = interface end
 
 /// <summary>
-/// Defines options for a property accessor.
+/// The options of a reactive property whose value is a <c>'Type</c>. Create one with
+/// <c>PropertyDeclaration&lt;'Type&gt;(...)</c>, from <c>open type Firelight.Lit</c>.
 /// </summary>
 /// <seealso href="https://lit.dev/docs/components/properties/#property-options"/>
 [<AllowNullLiteral>]
-[<Global>]
-type PropertyDeclaration<'Type>
-    [<ParamObject; Emit("$0")>]
-    (
-        ?state: bool,
-        ?attribute: U2<bool, string>,
-        ?noAccessor: bool,
-        ?reflect: bool,
-        ?useDefault: bool,
-        ?hasChanged: PropertyDeclaration.HasChanged<'Type>,
-        ?``type``: obj,
-        ?converter: AttributeConverter
-    ) =
-
-    interface PropertyDeclaration
+type PropertyDeclaration<'Type> =
+    inherit PropertyDeclaration
 
     /// <summary>
     /// When set to `true`, indicates the property is internal private state. The
-    /// property should not be set by users. When using TypeScript, this property
-    /// should be marked as `private` or `protected`, and it is also a common
-    /// practice to use a leading `_` in the name. The property is not added to
+    /// property should not be set by users. The property is not added to
     /// `observedAttributes`.
     /// </summary>
-    member val state: bool option = jsNative with get, set
+    abstract state: bool option
 
     /// <summary>
     /// Indicates how and whether the property becomes an observed attribute.
@@ -56,64 +81,89 @@ type PropertyDeclaration<'Type>
     /// becomes `foobar`). If a string, the string value is observed (e.g
     /// `attribute: 'foo-bar'`).
     /// </summary>
-    member val attribute: U2<bool, string> option = jsNative with get
+    abstract attribute: U2<bool, string> option
 
     /// <summary>
-    /// Indicates the type of the property. This is used only as a hint for the
-    /// `converter` to determine how to convert the attribute
-    /// to/from a property.
-    /// use `jsConstructor` to specify a value. e.g `jsConstructor<Boolean>`.
+    /// The type Lit's default converter converts the attribute's text to: <c>Number</c>, <c>Boolean</c>,
+    /// <c>Object</c> or <c>Array</c>, or none for text.
     /// </summary>
-    member val ``type``: obj option = jsNative with get
+    abstract ``type``: obj option
 
     /// <summary>
-    /// Indicates how to convert the attribute to/from a property. If this value
-    /// is a function, it is used to convert the attribute value a the property
-    /// value. If it's an object, it can have keys for `fromAttribute` and
-    /// `toAttribute`. If no `toAttribute` function is provided and
-    /// `reflect` is set to `true`, the property value is set directly to the
-    /// attribute. A default `converter` is used if none is provided; it supports
-    /// `Boolean`, `String`, `Number`, `Object`, and `Array`. Note,
-    /// when a property changes and the converter is used to update the attribute,
-    /// the property is never updated again as a result of the attribute changing,
-    /// and vice versa.
+    /// Converts the attribute to and from the property, in place of Lit's default converter.
     /// </summary>
-    member val converter: AttributeConverter option = jsNative with get
+    abstract converter: AttributeConverter<'Type> option
 
     /// <summary>
     /// Indicates if the property should reflect to an attribute.
-    /// If `true`, when the property is set, the attribute is set using the
-    /// attribute name determined according to the rules for the `attribute`
-    /// property option and the value of the property converted using the rules
-    /// from the `converter` property option.
     /// </summary>
-    member val reflect: bool option = jsNative with get
+    abstract reflect: bool option
 
     /// <summary>
     /// When `true`, the property's initial default value is not treated as a
-    /// change when the property is reflected to an attribute. This avoids an
-    /// unnecessary update cycle on first render when <c>reflect</c> is <c>true</c>.
-    /// Only applicable when <c>reflect</c> is <c>true</c>.
+    /// change when the property is reflected to an attribute, and removing the attribute restores it.
     /// </summary>
-    /// <seealso href="https://lit.dev/docs/components/properties/#property-options"/>
-    member val useDefault: bool option = jsNative with get
+    abstract useDefault: bool option
 
     /// <summary>
     /// A function that indicates if a property should be considered changed when
     /// it is set. The function should take the `newValue` and `oldValue` and
     /// return `true` if an update should be requested.
     /// </summary>
-    member val hasChanged: PropertyDeclaration.HasChanged<'Type> option = jsNative with get
+    abstract hasChanged: PropertyDeclaration.HasChanged<'Type> option
 
     /// <summary>
-    /// Indicates whether an accessor will be created for this property. By
-    /// default, an accessor will be generated for this property that requests an
-    /// update when set. If this flag is `true`, no accessor will be created, and
-    /// it will be the user's responsibility to call
-    /// `this.requestUpdate(propertyName, oldValue)` to request an update when
-    /// the property changes.
+    /// Indicates whether an accessor will be created for this property. If this flag is `true`, no
+    /// accessor is created, and it's the element's job to call `this.requestUpdate(propertyName, oldValue)`.
     /// </summary>
-    member val noAccessor: bool option = jsNative with get
+    abstract noAccessor: bool option
+
+/// <summary>
+/// Used by <c>PropertyDeclaration&lt;'T&gt;(...)</c>. Public only because inline members call it; not for direct use.
+/// </summary>
+[<EditorBrowsable(EditorBrowsableState.Never)>]
+module PropertyDeclarationInternals =
+    [<Emit("$0 === undefined")>]
+    let private isUndefined (value: obj) : bool = jsNative
+
+    /// The options object, with the arguments that were given.
+    [<Global>]
+    type Options<'Type>
+        [<ParamObject; Emit("$0")>]
+        (
+            ?state: bool,
+            ?attribute: PropertyAttribute,
+            ?noAccessor: bool,
+            ?reflect: bool,
+            ?useDefault: bool,
+            ?hasChanged: PropertyDeclaration.HasChanged<'Type>,
+            ?``type``: obj,
+            ?converter: AttributeConverter<'Type>
+        ) =
+        class
+        end
+
+    /// <summary>
+    /// Sets <c>type</c> from the property's F# type, named by <c>typeName</c>, unless the options already have
+    /// one: <c>Number</c> for the numeric types Fable compiles to JavaScript numbers, <c>Boolean</c> for
+    /// <c>bool</c>.
+    /// </summary>
+    let withInferredType (options: obj) (typeName: string) : obj =
+        // undefined, not null: an explicit ``type`` = null is a choice to keep, as Lit's text conversion.
+        if isUndefined options?``type`` then
+            match typeName with
+            | "System.Double"
+            | "System.Single"
+            | "System.Int32"
+            | "System.UInt32"
+            | "System.Int16"
+            | "System.UInt16"
+            | "System.SByte"
+            | "System.Byte" -> options?``type`` <- jsConstructor<Number>
+            | "System.Boolean" -> options?``type`` <- jsConstructor<Boolean>
+            | _ -> ()
+
+        options
 
 type PropertyDeclarations = interface end
 

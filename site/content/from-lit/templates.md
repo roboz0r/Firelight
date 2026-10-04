@@ -141,9 +141,7 @@ type SaveStatus() =
     static member properties =
         PropertyDeclarations.create [
             "status", PropertyDeclaration<string>()
-            "dirty",
-            PropertyDeclaration<bool>(
-                ``type`` = jsConstructor<Boolean>)
+            "dirty", PropertyDeclaration<bool>()
         ]
 
     member val status = "idle" with get, set
@@ -299,9 +297,7 @@ type FillBar() =
 
     static member properties =
         PropertyDeclarations.create [
-            "value",
-            PropertyDeclaration<float>(
-                ``type`` = jsConstructor<Number>)
+            "value", PropertyDeclaration<float>()
         ]
 
     member val value = 0.0 with get, set
@@ -382,9 +378,7 @@ type SectionTitle() =
 
     static member properties =
         PropertyDeclarations.create [
-            "level",
-            PropertyDeclaration<int>(
-                ``type`` = jsConstructor<Number>)
+            "level", PropertyDeclaration<int>()
         ]
 
     member val level = 2 with get, set

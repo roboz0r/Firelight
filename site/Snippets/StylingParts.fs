@@ -14,7 +14,7 @@ type Progress() =
     static member properties =
         PropertyDeclarations.create [
             "label", PropertyDeclaration<string>()
-            "value", PropertyDeclaration<float>(``type`` = jsConstructor<Number>)
+            "value", PropertyDeclaration<float>()
         ]
 
     static member styles =

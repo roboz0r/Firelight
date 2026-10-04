@@ -50,50 +50,56 @@ update. The string in `properties` is how Lit finds the member, so it must match
 exactly, case included. The compiler doesn't check it. To have it checked, write
 `nameof Unchecked.defaultof<Greeting>.name` in place of `"name"`.
 
-The type argument of `PropertyDeclaration<'T>` should be the member's type, but it only types the
-`hasChanged` option. Lit never sees it, so it has no say in how an attribute is read. That's the
-job of the options:
+The type argument of `PropertyDeclaration<'T>` is the member's type. It types the `hasChanged` and
+`converter` options, and it decides how Lit reads the attribute, as the [next
+section](#attributes-are-text) shows. `PropertyDeclaration<'T>` comes with `open type Firelight.Lit`,
+like `html`. Its options:
 
 | Option | What it does | Example |
 |---|---|---|
-| ``` ``type`` ``` | Converts the attribute's text to a number or a Boolean | ``` ``type`` = jsConstructor<Number> ``` |
-| `attribute` | Names the attribute, or turns it off | `attribute = !^"warn-at"` |
+| `attribute` | Names the attribute, or turns it off | `attribute = "warn-at"`, `attribute = false` |
 | `reflect` | Copies the property back to its attribute | `reflect = true` |
 | `useDefault` | Keeps the default out of the attribute and restores it when the attribute is removed | `useDefault = true` |
 | `state` | Marks internal state, with no attribute | `state = true` |
 | `hasChanged` | Decides what counts as a change | `hasChanged = fun next prev -> next <> prev` |
+| `converter` | Converts the attribute to and from the property | `converter = AttributeConverter(fromAttribute = parse)` |
+| ``` ``type`` ``` | Replaces the conversion chosen from `'T` | ``` ``type`` = jsConstructor<Globals.Array> ``` |
 | `noAccessor` | Leaves the setter to you; call `requestUpdate` yourself | `noAccessor = true` |
 
-`type` is an F# keyword, so the option is written in double backticks. `attribute` takes a
-`U2<bool, string>`, which `!^` from `Fable.Core.JsInterop` builds from either. Lit's `converter`
-option is there too, but Firelight's `AttributeConverter` type has no members yet, so a custom
-conversion is better written in a property setter.
+`type` is an F# keyword, so that option is written in double backticks.
 
 ## Attributes are text
 
 HTML can only set attributes, and an attribute's value is always text. A property can hold any
 value. Lit links each declared property to an attribute named after it in lower case (`maxItems`
-to `maxitems`), and converts the attribute's text according to `type`:
+to `maxitems`), and converts the attribute's text by the property's type:
 
-| ``` ``type`` ``` | `step="0.5"` becomes | When the attribute is removed |
+| `'T` | `step="0.5"` becomes | When the attribute is removed |
 |---|---|---|
-| none | `"0.5"`, a string | `null` |
-| `jsConstructor<Number>` | `0.5` | `null` |
-| `jsConstructor<Boolean>` | `true`: any value, even `"false"` | `false` |
+| `float`, `int` and the other numeric types | `0.5` | `null` |
+| `bool` | `true`: any value, even `"false"` | `false` |
+| `string`, and any other type | `"0.5"`, a string | `null` |
 
-F# can't see this. The member says `float`, and the attribute arrives at run time as whatever
-the page wrote. Both of these elements are `<my-quantity step="0.5">`, but the second one's
-`step` has no `type`. Click Add on each:
+`PropertyDeclaration<'T>` sets Lit's `type` option to `Number` for the types Fable
+compiles to JavaScript numbers (`float`, `float32`, `int`, `int16`, `uint16`, `uint32`, `sbyte`
+and `byte`) and to `Boolean` for `bool`. Any other type gets the text as it is, whatever its F#
+type says. `int64` and `decimal` are numbers in F# but not JavaScript numbers, and a list, an option
+or a record has no text form. Give those a `converter`, or turn the attribute off.
+
+Here `step` is a `float`, so `step="0.5"` arrives as the number 0.5. The tags are a `string list`,
+with a converter that splits `tags="lit, fable, fsharp"` into a list, and joins the list back into
+the attribute, which it reflects. Click both buttons, and watch the second element's `tags`
+attribute in your browser's developer tools:
 
 ::: example Snippets/PropertyTypes.fs .stacked
 <my-quantity step="0.5"></my-quantity>
-<my-untyped-quantity step="0.5"></my-untyped-quantity>
+<my-tags tags="lit, fable, fsharp"></my-tags>
 :::
 
-The second total becomes `00.5`, then `00.50.5`. Its `step` is the string `"0.5"`, so the F#
-`+` compiles to JavaScript's `+`, which joins strings. An `int` happens to survive, because Fable
-truncates ints with `| 0` on the way in. A `float` or a `bool` doesn't. Give every number or
-Boolean property a `type`.
+`fromAttribute` gets the attribute's text as a `string option`, `None` once the attribute is
+removed. `toAttribute` returns the text to write, or `None` to remove the attribute; Lit calls it
+only for a property with `reflect = true`. Leave either out to keep Lit's conversion for that
+direction.
 
 A Boolean attribute works like HTML's own `disabled`: present means `true`, absent means `false`.
 `open="false"` is still present, so it's `true`. Give a Boolean property a `false` default, since
@@ -105,8 +111,8 @@ later sets the property, as in the table's last column, whatever its F# type say
 into `0`; a `string` or a `float` stays `null`. `useDefault = true` restores the default instead.
 
 For a different attribute name, such as `warn-at` for `warnAt`, set
-`attribute = !^"warn-at"`. For a value that can't be text, such as a list, a record or a function,
-set `attribute = !^false`, and pass it as a property instead.
+`attribute = "warn-at"`. For a value that can't be text, such as a list, a record or a function,
+set `attribute = false`, and pass it as a property instead.
 
 ### Passing F# values with .prop
 
@@ -164,7 +170,7 @@ type Disclosure() =
 
     static member properties =
         PropertyDeclarations.create [
-            "expanded", PropertyDeclaration<bool>(``type`` = jsConstructor<Boolean>, reflect = true)
+            "expanded", PropertyDeclaration<bool>(reflect = true)
         ]
 
     static member styles =
@@ -228,8 +234,10 @@ The compiler catches a few:
 
 | You wrote | The compiler says | Write instead |
 |---|---|---|
-| `attribute = "warn-at"` | This expression was expected to have type 'U2<bool,string>' but here has type 'string' | `attribute = !^"warn-at"`, with `open Fable.Core.JsInterop` |
-| `PropertyDeclaration<int>(type = …)` | Unmatched '(' | ``` ``type`` = jsConstructor<Number> ``` |
+| `PropertyDeclaration<int>()` without `open type Firelight.Lit` | Invalid use of a type name | `open type Firelight.Lit` |
+| `attribute = 5` | This expression was expected to have type 'PropertyAttribute' but here has type 'int' | A name, `attribute = "count"`, or `false` |
+| `PropertyDeclaration<int>(type = …)` | Unmatched '(' | ``` ``type`` = … ``` |
+| `jsConstructor<Array>` with `open System` | Fable: Only declared types define a function constructor in JS | `jsConstructor<Globals.Array>` |
 | `hasChanged` with the wrong types | This expression was expected to have type 'Player list' but here has type 'string' | A function of two `'T`s, the type in `PropertyDeclaration<'T>` |
 
 Most compile, because Lit reads the declarations at run time:
@@ -238,9 +246,9 @@ Most compile, because Lit reads the declarations at run time:
 |---|---|---|
 | `"Name"` in `properties`, `member val name` | The greeting never changes: the `name` attribute sets a separate `Name` property, and setting `name` doesn't render | The member's exact name, or `nameof` |
 | No `[<AttachMembers>]` | Lit can't find the members: attributes and property sets are ignored | `[<AttachMembers>]` on every component |
-| `PropertyDeclaration<float>()` set from an attribute | The value is a string: `0 + "0.5"` is `"00.5"` | ``` ``type`` = jsConstructor<Number> ``` |
-| `PropertyDeclaration<bool>()` set from an attribute | `open` gives `""`, which is false; `open="false"` gives true | ``` ``type`` = jsConstructor<Boolean> ``` |
-| `<my-list max-items="5">` for `maxItems` | Ignored: Lit listens for `maxitems` | `attribute = !^"max-items"` |
+| `PropertyDeclaration<int64>()` or `<decimal>` set from an attribute | The value is the attribute's text, a string | A `converter` that parses it |
+| `open="false"` on a `bool` property | `true`: the attribute is present | Leave the attribute out, or bind `?open={isOpen}` |
+| `<my-list max-items="5">` for `maxItems` | Ignored: Lit listens for `maxitems` | `attribute = "max-items"` |
 | `items="{list}"` or `items={list}` with a list | The list becomes text | `.items={list}` |
 | A list or record built in `render` and passed down | The child renders every time the parent does | `hasChanged`, or build it outside `render` |
 

@@ -11,7 +11,7 @@ type MyReactive() =
 
     static member properties =
         PropertyDeclarations.create [
-            "active", PropertyDeclaration<bool>(``type`` = jsConstructor<Boolean>, reflect = true)
+            "active", PropertyDeclaration<bool>(reflect = true)
         ]
 
     // In $$""" strings, single { and } are literal — no escaping needed.
@@ -41,7 +41,6 @@ type CustomChangeDetection() =
         PropertyDeclarations.create [
             "value",
             PropertyDeclaration<int>(
-                ``type`` = jsConstructor<Number>,
                 reflect = true,
                 // Only re-render on odd values.
                 hasChanged = fun value _ -> value % 2 = 1

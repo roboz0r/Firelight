@@ -16,7 +16,7 @@ type SwatchPicker() =
 
     static member properties =
         PropertyDeclarations.create [
-            "colors", PropertyDeclaration<string list>(attribute = !^false)
+            "colors", PropertyDeclaration<string list>(attribute = false)
             "selected", PropertyDeclaration<string>()
         ]
 

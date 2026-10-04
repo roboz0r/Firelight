@@ -41,7 +41,7 @@ type MyContextApp() =
 
     static member properties =
         PropertyDeclarations.create [
-            nameof Unchecked.defaultof<MyContextAppProps>.myData, PropertyDeclaration<string>(attribute = !^false)
+            nameof Unchecked.defaultof<MyContextAppProps>.myData, PropertyDeclaration<string>(attribute = false)
         ]
 
     member this.Click() =
