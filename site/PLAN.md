@@ -292,9 +292,10 @@ Order: guides → `/why/` → From Lit → cookbook. Review the prose. The check
    `unlisted: true`), where `<fl-search>` loads Pagefind's JavaScript with the first search;
    `?q=` searches on arrival and the address keeps the query. No `/` shortcut: it would need
    script on every page.
-6. Mobile navigation (CSS first). Done with CSS only: below 61rem (where the nine header links
-   and the theme button stop fitting beside the logo; it was 46rem with seven links, and 58rem
-   with nine and no button) they move to their own rows under it, all visible, instead of
+6. Mobile navigation (CSS first). Done with CSS only: below 65rem (where the nine header links
+   and the theme button stop fitting beside the logo in Linux's DejaVu Sans, at 1031px; Segoe UI
+   fits them down to about 945px. It was 46rem with seven links, 58rem with nine and no button,
+   and 61rem before Site.E2E ran on Linux) they move to their own rows under it, all visible, instead of
    a squeezed column beside it. Checked at 375 and 768 px. Site.E2E checks at 375 px that every
    header link on every page is on screen, uncovered and not overlapping another.
 7. **Theme toggle**: System (the default, following `prefers-color-scheme` live), Light and Dark,

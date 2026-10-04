@@ -278,8 +278,8 @@ let private scrollsAway (page: Page) =
                 )
     }
 
-/// The narrowest width with a sticky header: just above the breakpoint in site.css (61rem = 976px).
-let private narrowestSticky = 977
+/// The narrowest width with a sticky header: just above the breakpoint in site.css (65rem = 1040px).
+let private narrowestSticky = 1041
 
 /// At the narrowest sticky width the header links still fit on one row beside the logo, so the
 /// sticky header is no taller than --header-height (which the anchor offset assumes). A new header
@@ -302,7 +302,7 @@ let private oneRowWhenSticky =
 
                         if s.Bar.Top <> 0.0 then
                             failtest
-                                $"At {narrowestSticky} px the header isn't sticky (its top is at {s.Bar.Top} px after scrolling). Is the breakpoint in site.css still 61rem?"
+                                $"At {narrowestSticky} px the header isn't sticky (its top is at {s.Bar.Top} px after scrolling). Is the breakpoint in site.css still 65rem?"
 
                         let rows =
                             s.Links

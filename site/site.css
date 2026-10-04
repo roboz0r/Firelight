@@ -58,7 +58,7 @@ code { font-family: var(--mono); font-size: 0.9em; }
    the wrapped header is over 9rem tall (at 375px), too much of the screen to keep, so it scrolls
    away there. */
 .site-header-bar { background: var(--bg); border-bottom: 1px solid var(--border); }
-@media (width > 61rem) {
+@media (width > 65rem) {
   html { scroll-padding-top: calc(var(--header-height) + 1rem); }
   .site-header-bar { position: sticky; top: 0; z-index: 10; }
 }
@@ -75,9 +75,10 @@ code { font-family: var(--mono); font-size: 0.9em; }
 .site-header nav a:hover { color: var(--accent); }
 /* Narrow screens: the links go on their own rows under the logo, all of them visible, rather than
    squeezing into a column beside it; the theme button stays beside the logo. (The links and the
-   theme button fit on one row beside the logo down to about 945px; Site.E2E's HeaderTests fails if
-   a new link makes them wrap above this breakpoint.) */
-@media (max-width: 61rem) {
+   theme button fit on one row beside the logo down to about 945px in Segoe UI, but Linux's DejaVu
+   Sans is wider and needs 1031px; Site.E2E, which runs on Linux, fails if a new link makes them
+   wrap above this breakpoint.) */
+@media (max-width: 65rem) {
   .site-header { flex-wrap: wrap; row-gap: 0.5rem; }
   .site-header nav { width: 100%; gap: 0.25rem 1.25rem; order: 1; }
   .site-header nav a { padding-block: 0.25rem; }
