@@ -30,6 +30,7 @@ let private expected =
         Server.basePath + "start/"
         Server.basePath + "#packages"
         Server.basePath + "guides/"
+        Server.basePath + "from-lit/"
         Server.basePath + "#demos"
         Server.basePath + "search/"
         "https://github.com/roboz0r/Firelight"
